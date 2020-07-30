@@ -1,0 +1,143 @@
+import asyncio
+
+from collections import Counter, namedtuple
+from typing import Dict
+
+import asyncpg
+
+import discord
+from discord.ext import commands, tasks
+
+from bot import BotBase, Context
+from utils.tools import plural
+
+
+CommandInvoke = namedtuple('CommandInvoke', ('message_id', 'guild_id', 'channel_id', 'user_id', 'invoked_at', 'prefix', 'command', 'failed'))
+
+
+class Stats(commands.Cog):
+
+    def __init__(self, bot: BotBase):
+        self.bot = bot
+
+        self._batch_lock = asyncio.Lock()
+        self._batch_data = []
+
+        self.bulk_insert.add_exception_type(asyncpg.PostgresConnectionError)
+        self.bulk_insert.start()
+
+    def cog_unload(self):
+        self.bulk_insert.stop()
+
+    async def cog_check(self, ctx: Context):
+        return await commands.is_owner().predicate(ctx)
+
+    @commands.group(name='command', invoke_without_command=True, hidden=True)
+    async def command(self, ctx: Context):
+        """Comamnd usage statistics commands."""
+        pass
+
+    @command.command(name='stats')
+    async def command_stats(self, ctx: Context):
+        """Displays basic information about command usage."""
+        total_occurunces = sum(self.bot._command_stats.values())
+        total_per_min = total_occurunces / (self.bot.uptime / 60)
+
+        embed = discord.Embed(
+            colour=ctx.me.colour,
+            description=f'Recieved {total_occurunces} command invokes. ({total_per_min:.2f}/min)'
+        ).set_author(name=f'{self.bot.user.name} command usage stats:', icon_url=self.bot.user.avatar_url)
+
+        for command, occurunces in self.bot._command_stats.most_common(5):
+            per_minute = occurunces / (self.bot.uptime / 60)
+            embed.add_field(name=f'`{command}`', value=f'{occurunces} ({per_minute:.2f}/min)', inline=False)
+
+        await ctx.send(embed=embed)
+
+    @command.group(name='history', invoke_without_command=True)
+    async def command_history(self, ctx: Context):
+        """Returns information on the 10 most recently used commands."""
+        async with ctx.db as connection:
+            records = await connection.fetch('SELECT * FROM core.commands ORDER BY invoked_at DESC LIMIT 10')
+
+        embed = discord.Embed(
+            colour=ctx.me.colour
+        ).set_author(name=f'{self.bot.user.name} command history:', icon_url=self.bot.user.avatar_url).set_footer(text='commands marked with a [!] failed.')
+
+        for message_id, _, channel_id, user_id, invoked_at, prefix, command, failed in records:
+            embed.add_field(
+                name=f'`{prefix}{command}` @ {invoked_at}',
+                value=f'{"[!]" if failed else ""} <@!{user_id}> in <#{channel_id}>', inline=False
+            )
+
+        await ctx.send(embed=embed)
+
+    @commands.group(name='socket', invoke_without_command=True, hidden=True)
+    async def socket(self, ctx: Context):
+        """Websocket event statistics commands."""
+        pass
+
+    @socket.command(name='stats')
+    async def socket_stats(self, ctx: Context):
+        """Displays basic information about socket statistics."""
+        total_occurunces = sum(self.bot._socket_stats.values())
+        total_per_min = total_occurunces / (self.bot.uptime / 60)
+
+        embed = discord.Embed(
+            colour=ctx.me.colour,
+            description=f'Observed {total_occurunces} sockket events. ({total_per_min:.2f}/min)'
+        ).set_author(name=f'{self.bot.user.name} socket event stats:', icon_url=self.bot.user.avatar_url)
+
+        for event, occurunces in self.bot._socket_stats.most_common(25):
+            per_minute = occurunces / (self.bot.uptime / 60)
+            embed.add_field(name=f'`{event}`', value=f'{occurunces} ({per_minute:.2f}/min)', inline=True)
+
+        await ctx.send(embed=embed)
+
+    # region event recording
+
+    async def _record_command(self, ctx: Context):
+        command = ctx.command
+
+        if command is None:
+            return
+
+        guild_id = ctx.guild.id if ctx.guild is not None else None
+
+        self.bot._command_stats[command.qualified_name] += 1
+
+        invoke = CommandInvoke(message_id=ctx.message.id, guild_id=guild_id, channel_id=ctx.channel.id, user_id=ctx.author.id,
+                               invoked_at=ctx.message.created_at, prefix=ctx.prefix, command=command.qualified_name, failed=ctx.command_failed)
+
+        async with self._batch_lock:
+            self._batch_data.append(invoke)
+
+    @commands.Cog.listener()
+    async def on_command_completion(self, ctx: Context):
+        await self._record_command(ctx)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: Context, error: Exception):
+        await self._record_command(ctx)
+
+    @commands.Cog.listener()
+    async def on_socket_response(self, msg: Dict):
+        self.bot._socket_stats[msg.get('t')] += 1
+
+    @tasks.loop(seconds=10)
+    async def bulk_insert(self):
+        async with self._batch_lock:
+            if self._batch_data:
+                await self.bot.pool.executemany('INSERT INTO core.commands VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', self._batch_data)
+                self.bot.log.debug(f'Recorded {plural(len(self._batch_data)):command invoke} in the database.')
+                self._batch_data.clear()
+
+    # endregion
+
+
+def setup(bot: BotBase):
+    if not hasattr(bot, '_command_stats'):
+        bot._command_stats = Counter()
+    if not hasattr(bot, '_socket_stats'):
+        bot._socket_stats = Counter()
+    bot.add_cog(Stats(bot))

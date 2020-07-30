@@ -1,0 +1,7 @@
+asyncpg>=0.20.0
+numpy>=1.19.1
+Pillow>=7.2.0
+websockets==6.0
+git+https://github.com/Rapptz/discord.py@b77af199392209017e59eff366b46354fa210f64
+git+https://github.com/Rapptz/discord-ext-menus@cc108bed812d0e481a628ca573c2eeeca9226b42
+git+https://github.com/NCplayz/discord-ext-alternatives@41317721c33e27468a85faf342c6d9f4da324404
