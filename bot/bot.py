@@ -34,7 +34,7 @@ class BotBase(commands.Bot):
         log.addHandler(handler)
         log.addHandler(logging.StreamHandler())
 
-        super().__init__(command_prefix=commands.when_mentioned_or([self.config['BOT']['prefix']]), help_command=EmbedHelpCommand())
+        super().__init__(command_prefix=commands.when_mentioned_or(self.config['BOT']['prefix']), help_command=EmbedHelpCommand())
 
         for extension in self.config['BOT']['startup_extensions'].split(','):
             try:

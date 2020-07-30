@@ -35,8 +35,11 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 
 
 async def get_status_log(user: discord.User, connection: asyncpg.Connection, *, days: int = 30) -> List[LogEntry]:
-    records = await connection.fetch('SELECT * FROM status_log.log WHERE user_id = $1\
+    records = await connection.fetch(f'SELECT * FROM status_log.log WHERE user_id = $1\
         AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\' ORDER BY "timestamp" ASC', user.id)
+
+    if not records:
+        return list()
 
     # Add padding for missing data
     status_log = [
@@ -93,6 +96,8 @@ class StatusLogging(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 
+        self._opted_in = set()
+
         self._status_logging_task.add_exception_type(asyncpg.PostgresConnectionError)
         self._status_logging_task.start()
 
@@ -112,7 +117,8 @@ class StatusLogging(commands.Cog):
             if opt_in_status is not None:
                 raise commands.BadArgument('You have already opted into status logging.')
 
-            await connection.execute('INSERT INTO status_log.opt_in_status VALUES $1, $2', ctx.author.id, False)
+            await connection.execute('INSERT INTO status_log.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
+            self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
 
@@ -125,6 +131,7 @@ class StatusLogging(commands.Cog):
                 raise commands.BadArgument('You have not opted in to status logging.')
 
             await connection.execute('DELETE FROM status_log.opt_in_status WHERE user_id = $1', ctx.author.id)
+            self._opted_in.remove(ctx.author.id)
 
         await ctx.tick()
 
@@ -193,11 +200,18 @@ class StatusLogging(commands.Cog):
     @tasks.loop(seconds=60)
     async def _status_logging_task(self):
         async with ConnectionContext(pool=self.bot.pool) as connection:
-            await connection.executemany('INSERT INTO status_log.log VALUES $1, $2, $3', self.bot._status_log)
+            await connection.executemany('INSERT INTO status_log.log VALUES ($1, $2, $3)', self.bot._status_log)
+            self.bot._status_log = list()
 
     @_status_logging_task.before_loop
     async def _before_status_logging_task(self):
         await self.bot.wait_until_ready()
+
+        async with ConnectionContext(pool=self.bot.pool) as connection:
+            records = await connection.fetch('SELECT * FROM status_log.opt_in_status')
+
+        for record in records:
+            self._opted_in.add(record['user_id'])
 
 
 def setup(bot: BotBase):
