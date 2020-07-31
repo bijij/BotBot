@@ -3,12 +3,12 @@ import datetime
 from collections import namedtuple
 from io import BytesIO
 from functools import partial
-from typing import List
+from typing import List, Optional, Set
 
 import asyncpg
 import numpy
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 import discord
 from discord.ext import commands, tasks
@@ -16,13 +16,16 @@ from discord.ext import commands, tasks
 from bot import BotBase, Context, ConnectionContext
 
 
-IMAGE_SIZE = 2048
-SUPERSAMPLE = 4
+IMAGE_SIZE = 2970
+FINAL_SIZE = 1024
+SUPERSAMPLE = IMAGE_SIZE / FINAL_SIZE
+
+ONE_DAY = 60 * 60 * 24
 
 COLOURS = {
     None: (0, 0, 0, 0),
     discord.Status.online: (67, 181, 129, 255),
-    discord.Status.offline: (32, 34, 37, 255),
+    discord.Status.offline: (116, 127, 141, 255),
     discord.Status.idle: (250, 166, 26, 255),
     discord.Status.dnd: (240, 71, 71, 255)
 }
@@ -54,17 +57,22 @@ async def get_status_log(user: discord.User, connection: asyncpg.Connection, *, 
     return status_log
 
 
-def draw_status_log(status_log: List[LogEntry], *, timezone: float = 0) -> BytesIO:
+def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_dates: bool = False) -> BytesIO:
 
     # Setup Base Image
-    image = Image.new('RGBA', (IMAGE_SIZE * 31, 1))
+    image = Image.new('RGBA', (IMAGE_SIZE * 30, 1))
     draw = ImageDraw.Draw(image)
 
     day_width = IMAGE_SIZE / (60 * 60 * 24)
-    time_offset = 60 * 60 * timezone
+
+    now = datetime.datetime.now(timezone)
+    timezone_offset = int(now.utcoffset().total_seconds())
+    time_offset = 60 * 60 * timezone_offset
+    total_duration = 0
 
     # Draw status log entries
     for status, duration in status_log:
+        total_duration += duration
         new_time_offset = time_offset + duration
 
         start_x = round(time_offset * day_width)
@@ -75,13 +83,24 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: float = 0) -> Bytes
 
     # Reshape Image
     pixels = numpy.array(image)
-    pixels = pixels[:, IMAGE_SIZE:]
+    # pixels = pixels[:, IMAGE_SIZE:]
     pixels = pixels.reshape(30, IMAGE_SIZE, 4)
     pixels = pixels.repeat(IMAGE_SIZE // 30, 0)
     image = Image.fromarray(pixels, 'RGBA')
+    draw = ImageDraw.Draw(image)
+
+    # Add date labels
+    if show_dates:
+        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
+
+        date = now - datetime.timedelta(seconds=total_duration)
+        for day in range(int(total_duration // ONE_DAY) + 1):
+            y_offset = (IMAGE_SIZE // 30 * day) + IMAGE_SIZE // 200
+            draw.text((IMAGE_SIZE // 100, y_offset), date.strftime('%b. %d'), font=font, align='left', fill=(255, 255, 255, 255))
+            date = date + datetime.timedelta(days=1)
 
     # Apply AA
-    image = image.resize((IMAGE_SIZE // SUPERSAMPLE,) * 2, resample=Image.LANCZOS)
+    image = image.resize((int(IMAGE_SIZE // SUPERSAMPLE),) * 2, resample=Image.LANCZOS)
 
     # Return as BytesIO
     image_fp = BytesIO()
@@ -96,7 +115,7 @@ class StatusLogging(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-        self._opted_in = set()
+        self._opted_in: Set[int] = set()
 
         self._status_logging_task.add_exception_type(asyncpg.PostgresConnectionError)
         self._status_logging_task.start()
@@ -148,10 +167,11 @@ class StatusLogging(commands.Cog):
         await ctx.tick()
 
     @commands.command(name='status_log', aliases=['sl'])
-    async def status_log(self, ctx: Context, *, user: discord.User = None):
+    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, show_dates: bool = False):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
+        `show_dates`: Sets whether date labels should be shown, defaults to False.
         """
         user = user or ctx.author
 
@@ -169,7 +189,7 @@ class StatusLogging(commands.Cog):
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has not status log data, please try again later.')
 
-        draw_call = partial(draw_status_log, data, timezone=0)
+        draw_call = partial(draw_status_log, data, timezone=datetime.timezone.utc, show_dates=show_dates)
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))

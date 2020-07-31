@@ -48,6 +48,9 @@ class BotBase(commands.Bot):
 
     async def on_ready(self):
         self.log.info(f'Logged in as {self.user} ({self.user.id})')
+        await self.is_owner(self.user)  # fetch owner id
+        if self.owner_id:
+            self.owner = self.get_user(self.owner_id)
 
     async def on_error(self, event_method, *args, **kwargs):
         self.log.exception(f'Ignoring exception in {event_method}\n')
