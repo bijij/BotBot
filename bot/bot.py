@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import traceback
@@ -36,6 +37,10 @@ class BotBase(commands.Bot):
         log.addHandler(logging.StreamHandler())
 
         super().__init__(command_prefix=commands.when_mentioned_or(self.config['BOT']['prefix']), help_command=EmbedHelpCommand())
+
+        self._active_timer = asyncio.Event()
+        self._current_timer = None
+        self._timer_task = self.loop.create_task(dispatch_timers(self))
 
         for extension in self.config['BOT']['startup_extensions'].split(','):
             try:
@@ -94,7 +99,6 @@ class BotBase(commands.Bot):
 
     async def connect(self, *args, **kwargs):
         self.pool = await create_pool(self.config['DATABASE']['dsn'])
-        await dispatch_timers(self)
         return await super().connect(*args, **kwargs)
 
     def run(self):
