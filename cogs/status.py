@@ -206,8 +206,8 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
         date = now - datetime.timedelta(seconds=total_duration)
         for day in range(int(total_duration // ONE_DAY) + 1):
-            y_offset += IMAGE_SIZE // 30
             draw.text((x_offset, y_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
+            y_offset += IMAGE_SIZE // 30
             date += datetime.timedelta(days=1)
 
     return as_bytes(resample(image))
