@@ -295,7 +295,7 @@ class StatusLogging(commands.Cog):
             data = await get_status_totals(user, conn, days=30)
 
             if not data:
-                raise commands.BadArgument(f'User "{user}" currently has not status log data, please try again later.')
+                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
         avatar_fp = BytesIO()
         await user.avatar_url_as(format='png', size=PIE_SIZE // 2).save(avatar_fp)
@@ -319,7 +319,7 @@ class StatusLogging(commands.Cog):
             data = await get_status_log(user, conn, days=30)
 
             if not data:
-                raise commands.BadArgument(f'User "{user}" currently has not status log data, please try again later.')
+                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
         draw_call = partial(draw_status_log, data, timezone=datetime.timezone.utc, show_dates=show_dates)
         image = await self.bot.loop.run_in_executor(None, draw_call)

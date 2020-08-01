@@ -85,7 +85,7 @@ class Stats(commands.Cog):
 
         embed = discord.Embed(
             colour=ctx.me.colour,
-            description=f'Observed {total_occurunces} sockket events. ({total_per_min:.2f}/min)'
+            description=f'Observed {total_occurunces} socket events. ({total_per_min:.2f}/min)'
         ).set_author(name=f'{self.bot.user.name} socket event stats:', icon_url=self.bot.user.avatar_url)
 
         for event, occurunces in self.bot._socket_stats.most_common(25):
