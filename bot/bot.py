@@ -11,6 +11,7 @@ from .context import Context
 from .db import create_pool
 from .handler import WebhookHandler
 from .help import EmbedHelpCommand
+from .timers import dispatch_timers
 
 
 class BotBase(commands.Bot):
@@ -93,6 +94,7 @@ class BotBase(commands.Bot):
 
     async def connect(self, *args, **kwargs):
         self.pool = await create_pool(self.config['DATABASE']['dsn'])
+        await dispatch_timers(self)
         return await super().connect(*args, **kwargs)
 
     def run(self):

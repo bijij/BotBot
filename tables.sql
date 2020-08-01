@@ -2,6 +2,15 @@
 
 CREATE SCHEMA IF NOT EXISTS core;
 
+CREATE TABLE IF NOT EXISTS core.timers (
+    id SERIAL,
+    created_at TIMESTAMP NOT NULL DEFUALT NOW() AT TIME ZONE 'UTC',
+    expires_at TIMESTAMP NOT NULL,
+    event_type TEXT NOT NULL,
+    data JSONB DEFAULT '{}'::jsonb,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS core.commands (
     message_id BIGINT,
     guild_id BIGINT,
@@ -14,6 +23,8 @@ CREATE TABLE IF NOT EXISTS core.commands (
     PRIMARY KEY (message_id)
 );
 
+CREATE INDEX IF NOT EXISTS timers_expires_at_idx ON core.commands (expires_at);
+CREATE INDEX IF NOT EXISTS timers_event_type_idx ON core.commands (event_type);
 CREATE INDEX IF NOT EXISTS commands_guild_id_idx ON core.commands (guild_id);
 CREATE INDEX IF NOT EXISTS commands_user_id_idx ON core.commands (user_id);
 
