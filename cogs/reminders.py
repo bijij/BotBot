@@ -28,7 +28,7 @@ class Reminders(commands.Cog):
 
         expires_at, reminder = when_and_what
 
-        if expires_at < ctx.message.creaed_at:
+        if expires_at < ctx.message.created_at:
             raise commands.BadArgument('You cannot set a reminder in the past.')
 
         if reminder.lower().startswith(('me to ', 'me that ')):
