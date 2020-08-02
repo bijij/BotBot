@@ -137,7 +137,7 @@ async def dispatch_timers(bot: commands.Bot):
         traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
 
 
-async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_type: str, *args, **kwargs):
+async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_type: str, *args, **kwargs) -> Timer:
     now = datetime.datetime.utcnow()
     timer = Timer.temporary(now, expires_at, event_type, *args, **kwargs)
 
@@ -161,6 +161,8 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
     if bot._current_timer and expires_at < bot._current_timer.expires_at:
         bot._timer_task.cancel()
         bot._timer_task = bot.loop.create_task(dispatch_timers(bot))
+
+    return timer
 
 
 async def delete_timer(bot: commands.Bot, record: asyncpg.Record, *, connection: asyncpg.Connection):
