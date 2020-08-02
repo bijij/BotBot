@@ -3,10 +3,28 @@ from collections import namedtuple
 import discord
 from discord.ext import commands, menus
 
-EmbedPage = namedtuple('EmbedPage', ('description', 'fields'))
+EmbedPage = namedtuple('EmbedPage', 'description fields')
 
 
-class EmbedPaginator(discord.Embed, commands.Paginator, menus.PageSource):
+class PaginatorSource(commands.Paginator, menus.PageSource):
+
+    def __len__(self):
+        return len(self._pages)
+
+    def is_paginating(self):
+        return len(self._pages) > 1
+
+    def get_max_pages(self):
+        return len(self._pages)
+
+    def _get_page(self, page_number: int):
+        return self.pages[page_number]
+
+    async def get_page(self, page_number: int):
+        return self._get_page(page_number)
+
+
+class EmbedPaginator(discord.Embed, PaginatorSource):
     def __init__(self, max_size=5000, max_description=2048, max_fields=25, **kwargs):
 
         description = kwargs.pop('description', '')
@@ -74,21 +92,6 @@ class EmbedPaginator(discord.Embed, commands.Paginator, menus.PageSource):
         self._current_page = EmbedPage([], [])
         self._description_count = 0
         self._count = 0
-
-    def __len__(self):
-        return len(self._pages)
-
-    def is_paginating(self):
-        return len(self._pages) > 1
-
-    def get_max_pages(self):
-        return len(self._pages)
-
-    def _get_page(self, page_number: int):
-        return self.pages[page_number]
-
-    async def get_page(self, page_number: int):
-        return self._get_page(page_number)
 
     def _format_page(self, page):
         embed = discord.Embed.from_dict(self.to_dict())
