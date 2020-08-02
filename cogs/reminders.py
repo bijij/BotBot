@@ -27,8 +27,8 @@ class Reminders(commands.Cog):
         """
 
         expires_at, reminder = when_and_what
-        if reminder.lower().startswith('me '):
-            reminder = reminder[3:]
+        if reminder.lower().startswith(('me to ', 'me that ')):
+            reminder = reminder.split(maxsplit=2)[-1]
 
         timer = await timers.create_timer(self.bot, expires_at, 'reminder', ctx.author.id, ctx.channel.id, ctx.message.id, reminder)
 
