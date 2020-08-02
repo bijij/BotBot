@@ -36,6 +36,8 @@ class BotBase(commands.Bot):
         log.addHandler(handler)
         log.addHandler(logging.StreamHandler())
 
+        self.prefix = self.config['BOT']['prefix']
+
         super().__init__(command_prefix=commands.when_mentioned_or(self.config['BOT']['prefix']), help_command=EmbedHelpCommand())
 
         self._active_timer = asyncio.Event()

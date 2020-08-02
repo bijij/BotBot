@@ -106,7 +106,7 @@ class Admin(commands.Cog):
         new_message = copy(ctx.message)
         new_message.author = user
         new_message.content = ctx.prefix + command
-        new_ctx = await self.bot.get_context(new_message)
+        new_ctx = await self.bot.get_context(new_message, cls=Context)
         try:
             await self.bot.invoke(new_ctx)
         except commands.CommandInvokeError as e:

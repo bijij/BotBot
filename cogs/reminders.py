@@ -43,12 +43,13 @@ class Reminders(commands.Cog):
         )
 
         if timer.id is not None:
-            embed.set_footer(text=f'Reminder ID #{timer.id} | Use {ctx.prefix}reminder cancel {timer.id} to cancel this reminder.')
+            embed.set_footer(text=f'Reminder ID #{timer.id} | Use {self.bot.prefix}reminder cancel {timer.id} to cancel this reminder.')
 
         await ctx.send(embed=embed)
 
     @reminder.group(name='list')
     async def reminder_list(self, ctx: Context):
+        """List your upcoming reminders."""
 
         async with ctx.db as conn:
             records = await conn.fetch('SELECT * FROM core.timers WHERE event_type = \'reminder\' AND data #>> \'{args,0}\' = $1', str(ctx.author.id))
@@ -60,7 +61,7 @@ class Reminders(commands.Cog):
             colour=discord.Colour.blurple(), max_fields=10
         ).set_author(
             name=f'{ctx.author.name}\'s reminders.', icon_url=ctx.author.avatar_url
-        ).set_footer(text=f'Use {ctx.prefix}reminder cancel id to cancel a reminder.')
+        ).set_footer(text=f'Use {self.bot.prefix}reminder cancel id to cancel a reminder.')
 
         for id, _, expires_at, _, data in records:
             delta = expires_at - ctx.message.created_at
@@ -71,6 +72,7 @@ class Reminders(commands.Cog):
 
     @reminder.group(name='cancel', aliases=['delete'])
     async def reminder_cancel(self, ctx: Context, id: int):
+        """Cancel an upcoming reminder."""
 
         async with ctx.db as conn:
             record = await conn.fetchrow('SELECT * FROM core.timers \

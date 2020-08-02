@@ -216,7 +216,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 async def is_opted_in(ctx: Context, conn: asyncpg.Connection):
     opt_in_status = await conn.fetchrow('SELECT * FROM status_log.opt_in_status WHERE user_id = $1', ctx.author.id)
     if opt_in_status is None:
-        raise commands.BadArgument('You have not opted in to status logging.')
+        raise commands.BadArgument(f'You have not opted in to status logging. You can do so with `{ctx.bot.prefix}logging start`')
 
 
 async def is_not_opted_in(ctx: Context, conn: asyncpg.Connection):
