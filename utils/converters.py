@@ -18,7 +18,7 @@ class CodeConverter(commands.Converter):
 _DATEPARSER_SETTINGS = {
     'PREFER_DATES_FROM': 'future',
     'PREFER_DAY_OF_MONTH': 'first',
-    'PARSERS': ['relative-time', 'absolute_time', 'timestamp', 'base-formats']
+    'PARSERS': ['relative-time', 'absolute-time', 'timestamp', 'base-formats']
 }
 
 
