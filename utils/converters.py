@@ -15,9 +15,16 @@ class CodeConverter(commands.Converter):
         return Code(argument)
 
 
+_DATEPARSER_SETTINGS = {
+    'PREFER_DATES_FROM': 'future',
+    'PREFER_DAY_OF_MONTH': 'first',
+    'PARSERS': ['relative-time', 'absolute_time', 'timestamp', 'base-formats']
+}
+
+
 class WhenAndWhat(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
-        find_dates = partial(search_dates, argument, languages=['en'])
+        find_dates = partial(search_dates, argument, languages=['en'], settings=_DATEPARSER_SETTINGS)
         dates = await ctx.bot.loop.run_in_executor(None, find_dates)
 
         if not dates:
