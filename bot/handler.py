@@ -22,7 +22,7 @@ class WebhookHandler(logging.Handler):
         super().__init__(level)
         self._webhook_logger = EmbedWebhookLogger(webhook_url)
 
-    def emit(self, record: logging.LogRecord):
+    def emit(self, record: logging.statusRecord):
         self.format(record)
 
         message = f'{record.message}\n{record.exc_text or ""}'

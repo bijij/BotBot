@@ -40,22 +40,22 @@ CREATE TABLE IF NOT EXISTS logging.opt_in_status (
     PRIMARY KEY (user_id)
 );
 
-CREATE TABLE IF NOT EXISTS logging.log (
+CREATE TABLE IF NOT EXISTS logging.status_log (
     user_id BIGINT,
     timestamp TIMESTAMP AT TIME ZONE 'UTC',
     status logging.status,
     PRIMARY KEY (user_id, timestamp)
 );
 
-CREATE TABLE IF NOT EXISTS logging.messages (
+CREATE TABLE IF NOT EXISTS logging.message_log (
     channel_id BIGINT,
     message_id BIGINT,
     guild_id BIGINT,
     user_id BIGINT,
-    content TEXT
+    content TEXT,
     PRIMARY KEY (channel_id, message_id)
 )
 
-CREATE INDEX IF NOT EXISTS log_user_id_idx ON logging.log (user_id);
+CREATE INDEX IF NOT EXISTS log_user_id_idx ON logging.status_log (user_id);
 CREATE INDEX IF NOT EXISTS opt_in_status_user_id_idx ON logging.opt_in_status(user_id);
-CREATE INDEX IF NOT EXISTS user_id_idx ON logging.messages (user_id);
+CREATE INDEX IF NOT EXISTS user_id_idx ON logging.message_log (user_id);

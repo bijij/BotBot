@@ -3,7 +3,7 @@ import datetime
 from collections import Counter, namedtuple
 from io import BytesIO
 from functools import partial
-from typing import Dict, List, Optional, Set, Tuple
+from typing import List, Optional, Tuple
 
 import asyncpg
 import numpy
@@ -11,9 +11,10 @@ import numpy
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from bot import BotBase, Context, ConnectionContext
+from bot import BotBase, Context
+from cogs.logging import is_public
 
 
 IMAGE_SIZE = 2970
@@ -41,7 +42,7 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 
 
 async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
-    return await conn.fetch(f'SELECT * FROM logging.log WHERE user_id = $1\
+    return await conn.fetch(f'SELECT * FROM logging.status_log WHERE user_id = $1\
         AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\' ORDER BY "timestamp" ASC', user.id)
 
 
@@ -213,73 +214,13 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     return as_bytes(resample(image))
 
 
-async def is_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
-    if opt_in_status is None:
-        raise commands.BadArgument(f'You have not opted in to status logging. You can do so with `{ctx.bot.prefix}logging start`')
-
-
-async def is_not_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
-    if opt_in_status is not None:
-        raise commands.BadArgument('You have already opted into status logging.')
-
-
-async def is_public(ctx: Context, user: discord.User, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', user.id)
-    if opt_in_status is None:
-        raise commands.BadArgument(f'User "{user}" has not opted in for status logging.')
-
-    if user != ctx.author and not opt_in_status['public']:
-        raise commands.BadArgument(f'User "{user}" has not made their status log public.')
-
-
 class StatusLogging(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-        self._opted_in: Set[int] = set()
-
-        self._status_logging_task.add_exception_type(asyncpg.PostgresConnectionError)
-        self._status_logging_task.start()
-
     def cog_unload(self):
         self._status_logging_task.stop()
-
-    @commands.group(name='logging')
-    async def logging(self, ctx: Context):
-        """Status logging management commands."""
-        pass
-
-    @logging.command(name='start')
-    async def logging_start(self, ctx: Context):
-        """Opt into status logging."""
-        async with ctx.db as conn:
-            await is_not_opted_in(ctx, conn)
-            await conn.execute('INSERT INTO logging.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
-            self._opted_in.add(ctx.author.id)
-
-        await ctx.tick()
-
-    @logging.command(name='stop')
-    async def logging_stop(self, ctx: Context):
-        """Opt out of logging."""
-        async with ctx.db as conn:
-            await is_opted_in(ctx, conn)
-            await conn.execute('DELETE FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
-            self._opted_in.remove(ctx.author.id)
-
-        await ctx.tick()
-
-    @logging.command(name='public')
-    async def logging_public(self, ctx: Context, public: bool):
-        """Set your status log visibility preferences."""
-        async with ctx.db as conn:
-            await is_opted_in(ctx, conn)
-            await conn.execute('UPDATE logging.opt_in_status SET public = $2 WHERE user_id = $1', ctx.author.id, public)
-
-        await ctx.tick()
 
     @commands.command(name='status_pie', aliases=['sp'])
     async def status_pie(self, ctx: Context, user: Optional[discord.User] = None, show_totals: bool = True):
@@ -326,49 +267,6 @@ class StatusLogging(commands.Cog):
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
-    @commands.command(name='vaccum_status_log')
-    @commands.is_owner()
-    async def vaccum_status_log(self, ctx: Context, days: int = 35):
-        """Remove entries from the status log older than n days."""
-        raise commands.BadArgument('This Command is not yet implemented.')
-
-    @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if before.status == after.status:
-            return
-
-        if before.id not in self._opted_in:
-            return
-
-        if after.status not in COLOURS:
-            return
-
-        if after.status == self.bot._last_status.get(after.id):
-            return
-
-        self.bot._logging.append((after.id, datetime.datetime.utcnow(), after.status.name))
-        self.bot._last_status[after.id] = after.status
-
-    @tasks.loop(seconds=60)
-    async def _status_logging_task(self):
-        async with ConnectionContext(pool=self.bot.pool) as conn:
-            await conn.executemany('INSERT INTO logging.log VALUES ($1, $2, $3)', self.bot._status_log)
-            self.bot._status_log = list()
-
-    @_status_logging_task.before_loop
-    async def _before_status_logging_task(self):
-        await self.bot.wait_until_ready()
-
-        async with ConnectionContext(pool=self.bot.pool) as conn:
-            records = await conn.fetch('SELECT * FROM logging.opt_in_status')
-
-        for record in records:
-            self._opted_in.add(record['user_id'])
-
 
 def setup(bot: BotBase):
-    if not hasattr(bot, '_status_log'):
-        bot._status_log = list()
-        bot._last_status = dict()
-
     bot.add_cog(StatusLogging(bot))
