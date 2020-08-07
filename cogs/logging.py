@@ -50,6 +50,9 @@ class Logging(commands.Cog):
         self._logging_task.add_exception_type(asyncpg.PostgresConnectionError)
         self._logging_task.start()
 
+    def cog_unload(self):
+        self._logging_task.stop()
+
     @commands.group(name='logging')
     async def logging(self, ctx: Context):
         """Status logging management commands."""

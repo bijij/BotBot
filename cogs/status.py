@@ -219,9 +219,6 @@ class StatusLogging(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-    def cog_unload(self):
-        self._status_logging_task.stop()
-
     @commands.command(name='status_pie', aliases=['sp'])
     async def status_pie(self, ctx: Context, user: Optional[discord.User] = None, show_totals: bool = True):
         """Display a status pie.
