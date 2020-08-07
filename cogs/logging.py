@@ -130,7 +130,7 @@ class Logging(commands.Cog):
                 await conn.executemany('INSERT INTO logging.status_log VALUES ($1, $2, $3)', self.bot._status_log)
                 self.bot._status_log = list()
             if self.bot._message_log:
-                await conn.executemany('INSERT INTO logging.message_log VALUES ($1, $2, $3, $4, $5)', self.bot._status_log)
+                await conn.executemany('INSERT INTO logging.message_log VALUES ($1, $2, $3, $4, $5)', self.bot._message_log)
                 self.bot._message_log = list()
 
     @_logging_task.before_loop
