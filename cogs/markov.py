@@ -58,7 +58,7 @@ class Markov(commands.Cog):
 
     @commands.command(name='guild_markov', aliases=['gm'])
     @commands.guild_only()
-    async def user_markov(self, ctx: Context):
+    async def guild_markov(self, ctx: Context):
         """Generate a markov chain based off messages in the server.
         """
         async with ctx.db as conn:
