@@ -30,22 +30,32 @@ CREATE INDEX IF NOT EXISTS commands_user_id_idx ON core.commands (user_id);
 
 /* Status Log */
 
-CREATE SCHEMA IF NOT EXISTS status_log;
+CREATE SCHEMA IF NOT EXISTS logging;
 
-CREATE TYPE status_log.status as ENUM ('online', 'offline', 'idle', 'dnd');
+CREATE TYPE logging.status as ENUM ('online', 'offline', 'idle', 'dnd');
 
-CREATE TABLE IF NOT EXISTS status_log.opt_in_status (
+CREATE TABLE IF NOT EXISTS logging.opt_in_status (
     user_id BIGINT,
     public BOOLEAN,
     PRIMARY KEY (user_id)
 );
 
-CREATE TABLE IF NOT EXISTS status_log.log (
+CREATE TABLE IF NOT EXISTS logging.log (
     user_id BIGINT,
     timestamp TIMESTAMP AT TIME ZONE 'UTC',
-    status status_log.status,
+    status logging.status,
     PRIMARY KEY (user_id, timestamp)
 );
 
-CREATE INDEX IF NOT EXISTS log_user_id_idx ON status_log.log (user_id);
-CREATE INDEX IF NOT EXISTS opt_in_status_user_id_idx ON status_log.opt_in_status(user_id);
+CREATE TABLE IF NOT EXISTS logging.messages (
+    channel_id BIGINT,
+    message_id BIGINT,
+    guild_id BIGINT,
+    user_id BIGINT,
+    content TEXT
+    PRIMARY KEY (channel_id, message_id)
+)
+
+CREATE INDEX IF NOT EXISTS log_user_id_idx ON logging.log (user_id);
+CREATE INDEX IF NOT EXISTS opt_in_status_user_id_idx ON logging.opt_in_status(user_id);
+CREATE INDEX IF NOT EXISTS user_id_idx ON logging.messages (user_id);

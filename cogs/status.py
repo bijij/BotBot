@@ -41,7 +41,7 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 
 
 async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
-    return await conn.fetch(f'SELECT * FROM status_log.log WHERE user_id = $1\
+    return await conn.fetch(f'SELECT * FROM logging.log WHERE user_id = $1\
         AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\' ORDER BY "timestamp" ASC', user.id)
 
 
@@ -214,19 +214,19 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
 
 async def is_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM status_log.opt_in_status WHERE user_id = $1', ctx.author.id)
+    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
     if opt_in_status is None:
         raise commands.BadArgument(f'You have not opted in to status logging. You can do so with `{ctx.bot.prefix}logging start`')
 
 
 async def is_not_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM status_log.opt_in_status WHERE user_id = $1', ctx.author.id)
+    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
     if opt_in_status is not None:
         raise commands.BadArgument('You have already opted into status logging.')
 
 
 async def is_public(ctx: Context, user: discord.User, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM status_log.opt_in_status WHERE user_id = $1', user.id)
+    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', user.id)
     if opt_in_status is None:
         raise commands.BadArgument(f'User "{user}" has not opted in for status logging.')
 
@@ -257,7 +257,7 @@ class StatusLogging(commands.Cog):
         """Opt into status logging."""
         async with ctx.db as conn:
             await is_not_opted_in(ctx, conn)
-            await conn.execute('INSERT INTO status_log.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
+            await conn.execute('INSERT INTO logging.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
             self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
@@ -267,7 +267,7 @@ class StatusLogging(commands.Cog):
         """Opt out of logging."""
         async with ctx.db as conn:
             await is_opted_in(ctx, conn)
-            await conn.execute('DELETE FROM status_log.opt_in_status WHERE user_id = $1', ctx.author.id)
+            await conn.execute('DELETE FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
             self._opted_in.remove(ctx.author.id)
 
         await ctx.tick()
@@ -277,7 +277,7 @@ class StatusLogging(commands.Cog):
         """Set your status log visibility preferences."""
         async with ctx.db as conn:
             await is_opted_in(ctx, conn)
-            await conn.execute('UPDATE status_log.opt_in_status SET public = $2 WHERE user_id = $1', ctx.author.id, public)
+            await conn.execute('UPDATE logging.opt_in_status SET public = $2 WHERE user_id = $1', ctx.author.id, public)
 
         await ctx.tick()
 
@@ -346,13 +346,13 @@ class StatusLogging(commands.Cog):
         if after.status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, datetime.datetime.utcnow(), after.status.name))
+        self.bot._logging.append((after.id, datetime.datetime.utcnow(), after.status.name))
         self.bot._last_status[after.id] = after.status
 
     @tasks.loop(seconds=60)
     async def _status_logging_task(self):
         async with ConnectionContext(pool=self.bot.pool) as conn:
-            await conn.executemany('INSERT INTO status_log.log VALUES ($1, $2, $3)', self.bot._status_log)
+            await conn.executemany('INSERT INTO logging.log VALUES ($1, $2, $3)', self.bot._status_log)
             self.bot._status_log = list()
 
     @_status_logging_task.before_loop
@@ -360,7 +360,7 @@ class StatusLogging(commands.Cog):
         await self.bot.wait_until_ready()
 
         async with ConnectionContext(pool=self.bot.pool) as conn:
-            records = await conn.fetch('SELECT * FROM status_log.opt_in_status')
+            records = await conn.fetch('SELECT * FROM logging.opt_in_status')
 
         for record in records:
             self._opted_in.add(record['user_id'])
