@@ -104,6 +104,9 @@ class Logging(commands.Cog):
         if message.guild is None:
             return
 
+        if message.channel.is_nsfw():
+            return
+
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content))
 
     @commands.Cog.listener()
