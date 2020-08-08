@@ -1,4 +1,5 @@
 from functools import partial
+from random import randint
 from typing import Optional
 
 import asyncpg
@@ -8,18 +9,22 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging import is_public
+from cogs.logging import is_opted_in, is_public
 
 
 async def get_user_message_log(user: discord.User, conn: asyncpg.Connection) -> str:
     record = await conn.fetchrow('SELECT string_agg(content, \'\n\') AS data FROM logging.message_log WHERE user_id = $1', user.id)
     return record['data']
 
+
 async def get_guild_message_log(guild: discord.Guild, conn: asyncpg.Connection) -> str:
     record = await conn.fetchrow('SELECT string_agg(content, \'\n\') AS data FROM logging.message_log WHERE guild_id = $1', guild.id)
     return record['data']
 
-def get_markov(data: str, *, state_size: int = 2, seed: str = None) -> Optional[str]:
+
+def get_markov(data: str, *, state_size: int = None, seed: str = None) -> Optional[str]:
+    state_size = state_size or randint(2, 4)
+
     model = markovify.NewlineText(input_text=data, state_size=state_size)
 
     tries = round(54.375 * state_size ** 4 - 602.92 * state_size ** 3 + 2460.6 * state_size ** 2 - 3932.1 * state_size + 2025)
@@ -36,7 +41,7 @@ class Markov(commands.Cog):
         self.bot = bot
 
     @commands.command(name='user_markov', aliases=['um'])
-    async def user_markov(self, ctx: Context, user: Optional[discord.User] = None):
+    async def user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
         """Generate a markov chain based off a users messages.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
@@ -52,9 +57,60 @@ class Markov(commands.Cog):
 
         async with ctx.typing():
             markov_call = partial(get_markov, data)
-            markov = await self.bot.loop.run_in_executor(None, markov_call) or '> Markov could not be generated.'
-            await ctx.send(markov)
+            markov = await self.bot.loop.run_in_executor(None, markov_call)
+            if not markov:
+                raise commands.BadArgument('Markov coult not be generated')
 
+        await ctx.send(markov)
+
+    @commands.command(name='seeded_user_markov', aliases=['sum'])
+    async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
+        """Generate a markov chain based off a users messages which starts with a given seed.
+
+        `user`: The user who's messages should be used to generate the markov chain, defaults to you.
+        `seed`: The string to attempt to seed the markov chain with.
+        """
+        user = user or ctx.author
+
+        async with ctx.db as conn:
+            await is_public(ctx, user, conn)
+            data = await get_user_message_log(user, conn)
+
+            if not data:
+                raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
+
+        async with ctx.typing():
+            markov_call = partial(get_markov, data, state_size=2, seed=seed)
+            markov = await self.bot.loop.run_in_executor(None, markov_call)
+            if not markov:
+                raise commands.BadArgument('Markov coult not be generated')
+
+        await ctx.send(markov)
+
+    @commands.command(name='dual_user_markov', aliases=['dum'])
+    async def dual_user_markov(self, ctx: Context, *, user: Optional[discord.User]):
+        """Generate a markov chain based off you and another users messages.
+
+        `user`: The user who's messages should be used to generate the markov chain.
+        """
+        if user == ctx.author:
+            raise commands.BadArgument('You can\'t generate a dual user markov with yourself.')
+
+        async with ctx.db as conn:
+            await is_opted_in(ctx, ctx.author, conn)
+            await is_public(ctx, user, conn)
+            data = await get_user_message_log(ctx.author, conn) + await get_user_message_log(user, conn)
+
+            if not data:
+                raise commands.BadArgument('There was not enough message log data, please try again later.')
+
+        async with ctx.typing():
+            markov_call = partial(get_markov, data)
+            markov = await self.bot.loop.run_in_executor(None, markov_call)
+            if not markov:
+                raise commands.BadArgument('Markov coult not be generated')
+
+        await ctx.send(markov)
 
     @commands.command(name='guild_markov', aliases=['gm'])
     @commands.guild_only()
@@ -65,12 +121,16 @@ class Markov(commands.Cog):
             data = await get_guild_message_log(ctx.guild, conn)
 
             if not data:
-                raise commands.BadArgument(f'Server "{guild.name}" currently has no message log data, please try again later.')
+                raise commands.BadArgument(f'Server "{ctx.guild.name}" currently has no message log data, please try again later.')
 
         async with ctx.typing():
             markov_call = partial(get_markov, data)
-            markov = await self.bot.loop.run_in_executor(None, markov_call) or '> Markov could not be generated.'
-            await ctx.send(markov)
+            markov = await self.bot.loop.run_in_executor(None, markov_call)
+            if not markov:
+                raise commands.BadArgument('Markov coult not be generated')
+
+        await ctx.send(markov)
+
 
 def setup(bot: BotBase):
     bot.add_cog(Markov(bot))

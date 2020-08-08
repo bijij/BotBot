@@ -55,12 +55,12 @@ class Logging(commands.Cog):
 
     @commands.group(name='logging')
     async def logging(self, ctx: Context):
-        """Status logging management commands."""
+        """Logging management commands."""
         pass
 
     @logging.command(name='start')
     async def logging_start(self, ctx: Context):
-        """Opt into status logging."""
+        """Opt into logging."""
         async with ctx.db as conn:
             await is_not_opted_in(ctx, conn)
             await conn.execute('INSERT INTO logging.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
@@ -80,7 +80,7 @@ class Logging(commands.Cog):
 
     @logging.command(name='public')
     async def logging_public(self, ctx: Context, public: bool):
-        """Set your status log visibility preferences."""
+        """Set your logging visibility preferences."""
         async with ctx.db as conn:
             await is_opted_in(ctx, conn)
             await conn.execute('UPDATE logging.opt_in_status SET public = $2 WHERE user_id = $1', ctx.author.id, public)
@@ -132,6 +132,7 @@ class Logging(commands.Cog):
             if self.bot._status_log:
                 await conn.executemany('INSERT INTO logging.status_log VALUES ($1, $2, $3)', self.bot._status_log)
                 self.bot._status_log = list()
+
             if self.bot._message_log:
                 await conn.executemany('INSERT INTO logging.message_log VALUES ($1, $2, $3, $4, $5)', self.bot._message_log)
                 self.bot._message_log = list()
