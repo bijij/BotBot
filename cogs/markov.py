@@ -81,7 +81,7 @@ class Markov(commands.Cog):
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data, state_size=2, seed=seed)
+            markov_call = partial(get_markov, data, state_size=max(len(seed.split()), 2), seed=seed)
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
                 raise commands.BadArgument('Markov coult not be generated')
