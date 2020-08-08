@@ -97,7 +97,7 @@ class Markov(commands.Cog):
             raise commands.BadArgument('You can\'t generate a dual user markov with yourself.')
 
         async with ctx.db as conn:
-            await is_opted_in(ctx, ctx.author, conn)
+            await is_opted_in(ctx, conn)
             await is_public(ctx, user, conn)
             data = await get_user_message_log(ctx.author, conn) + await get_user_message_log(user, conn)
 
