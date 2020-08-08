@@ -32,7 +32,8 @@ def get_markov(data: str, *, state_size: int = None, seed: str = None) -> Option
     if seed is None:
         return model.make_sentence(tries=tries)
     else:
-        return model.make_sentence(beginning=seed, strict=False, tries=tries)
+        tries *= 2
+        return model.make_sentence_with_start(beginning=seed, strict=False, tries=tries)
 
 
 class Markov(commands.Cog):
