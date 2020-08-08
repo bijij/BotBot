@@ -23,8 +23,9 @@ async def get_guild_message_log(guild: discord.Guild, conn: asyncpg.Connection) 
     return record['data']
 
 
-def get_markov(data: str, *, state_size: int = None, seed: str = None) -> Optional[str]:
-    state_size = state_size or randint(2, 4)
+def get_markov(data: str, *, state_size: int = 2, seed: str = None) -> Optional[str]:
+    if state_size > 5:
+        raise commands.BadArgument('State size too large to generate markov chain.')
 
     model = markovify.NewlineText(input_text=data, state_size=state_size)
 
@@ -61,7 +62,7 @@ class Markov(commands.Cog):
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data)
+            markov_call = partial(get_markov, data, state_size=randint(2, 4))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
                 raise commands.BadArgument('Markov coult not be generated')
@@ -110,7 +111,7 @@ class Markov(commands.Cog):
                 raise commands.BadArgument('There was not enough message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data)
+            markov_call = partial(get_markov, data, state_size=randint(2, 4))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
                 raise commands.BadArgument('Markov coult not be generated')
@@ -129,7 +130,7 @@ class Markov(commands.Cog):
                 raise commands.BadArgument(f'Server "{ctx.guild.name}" currently has no message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data)
+            markov_call = partial(get_markov, data, state_size=randint(2, 4))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
                 raise commands.BadArgument('Markov coult not be generated')
