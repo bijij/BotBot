@@ -4,6 +4,7 @@ from typing import Optional
 
 import asyncpg
 import markovify
+from markovify.text import ParamError
 
 import discord
 from discord.ext import commands
@@ -33,7 +34,10 @@ def get_markov(data: str, *, state_size: int = None, seed: str = None) -> Option
         return model.make_sentence(tries=tries)
     else:
         tries *= 2
-        return model.make_sentence_with_start(beginning=seed, strict=False, tries=tries)
+        try:
+            return model.make_sentence_with_start(beginning=seed, strict=False, tries=tries)
+        except ParamError:
+            return None
 
 
 class Markov(commands.Cog):
