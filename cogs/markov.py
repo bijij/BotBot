@@ -62,10 +62,10 @@ class Markov(commands.Cog):
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data, state_size=randint(2, 4))
+            markov_call = partial(get_markov, data, state_size=randint(2, 3))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
-                raise commands.BadArgument('Markov coult not be generated')
+                raise commands.BadArgument('Markov could not be generated')
 
         await ctx.send(markov)
 
@@ -89,7 +89,7 @@ class Markov(commands.Cog):
             markov_call = partial(get_markov, data, state_size=max(len(seed.split()), 2), seed=seed)
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
-                raise commands.BadArgument('Markov coult not be generated')
+                raise commands.BadArgument('Markov could not be generated')
 
         await ctx.send(markov)
 
@@ -111,10 +111,10 @@ class Markov(commands.Cog):
                 raise commands.BadArgument('There was not enough message log data, please try again later.')
 
         async with ctx.typing():
-            markov_call = partial(get_markov, data, state_size=randint(2, 4))
+            markov_call = partial(get_markov, data, state_size=randint(2, 3))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
-                raise commands.BadArgument('Markov coult not be generated')
+                raise commands.BadArgument('Markov could not be generated')
 
         await ctx.send(markov)
 
@@ -133,7 +133,7 @@ class Markov(commands.Cog):
             markov_call = partial(get_markov, data, state_size=randint(2, 4))
             markov = await self.bot.loop.run_in_executor(None, markov_call)
             if not markov:
-                raise commands.BadArgument('Markov coult not be generated')
+                raise commands.BadArgument('Markov could not be generated')
 
         await ctx.send(markov)
 
