@@ -137,6 +137,28 @@ class Markov(commands.Cog):
 
         await ctx.send(markov)
 
+    @commands.command(name='seeded_guild_markov', aliases=['sgm'])
+    async def seeded_guild_markov(self, ctx: Context, *, seed: str):
+        """Generate a markov chain based off messages in the server which starts with a given seed.
+
+        `seed`: The string to attempt to seed the markov chain with.
+        """
+        user = user or ctx.author
+
+        async with ctx.db as conn:
+            data = await get_guild_message_log(ctx.guild, conn)
+
+            if not data:
+                raise commands.BadArgument('There was not enough message log data, please try again later.')
+
+        async with ctx.typing():
+            markov_call = partial(get_markov, data, state_size=max(len(seed.split()), 2), seed=seed)
+            markov = await self.bot.loop.run_in_executor(None, markov_call)
+            if not markov:
+                raise commands.BadArgument('Markov could not be generated')
+
+        await ctx.send(markov)
+
 
 def setup(bot: BotBase):
     bot.add_cog(Markov(bot))
