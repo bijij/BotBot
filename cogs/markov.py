@@ -143,8 +143,6 @@ class Markov(commands.Cog):
 
         `seed`: The string to attempt to seed the markov chain with.
         """
-        user = user or ctx.author
-
         async with ctx.db as conn:
             data = await get_guild_message_log(ctx.guild, conn)
 
