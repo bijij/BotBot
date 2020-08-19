@@ -13,7 +13,7 @@ import wavelink
 import discord
 from discord.ext import commands
 
-from bot.utils import tools
+from utils import tools
 
 
 class Track:

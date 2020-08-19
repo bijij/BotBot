@@ -7,8 +7,7 @@ from discord.ext import commands, menus, tasks
 
 import wavelink
 
-from bot.utils import checks, tools
-from bot.utils.paginator import EmbedPaginator
+from utils.paginator import EmbedPaginator
 
 from .session import Session
 from .track import YouTubeTrack, SoundCloudTrack, AttachmentTrack
@@ -315,9 +314,8 @@ class Player(commands.Cog):
         except discord.HTTPException:
             raise commands.BadArgument('I couldn\'t post the queue in this channel.')
 
-    @tools.auto_help
     @player.group(name='force')
-    @commands.check_any(commands.check(checks.is_administrator), commands.check(checks.is_owner))
+    @commands.check_any(commands.is_owner(), commands.has_permissions(administrator=True))
     async def force(self, ctx):
         """Admin commands."""
         pass
