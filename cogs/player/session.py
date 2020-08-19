@@ -31,7 +31,7 @@ class Session(wavelink.Player):
         self.queue_config = self.config.get('queue')
 
         self.not_alone = asyncio.Event()
-        self.timeout = self.config.get('timeout') or int(self.bot.config['PLAYER']['default_timeout'])
+        self.timeout = self.config.get('timeout') or int(self.client.config['PLAYER']['default_timeout'])
 
         self.skip_requests: List[discord.User] = list()
         self.repeat_requests: List[discord.User] = list()
@@ -44,7 +44,7 @@ class Session(wavelink.Player):
         if request is not None:
             self.queue.add_request(request)
 
-        self.volume = self.config.get('default_volume') or int(self.bot.config['PLAYER']['default_volume'])
+        self.volume = self.config.get('default_volume') or int(self.client.config['PLAYER']['default_volume'])
 
         self.play_next_song = asyncio.Event()
 

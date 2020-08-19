@@ -163,7 +163,7 @@ class StreamableTrack(Track):
     async def convert(cls, ctx: commands.Converter, argument: str):
         async with ctx.typing():
 
-            tracks = await ctx.guild.voice_client.node.get_tracks(cls._search_type + argument)
+            tracks = await wavelink.Node.get_best_node(ctx.bot).get_tracks(cls._search_type + argument)
             if not isinstance(tracks, list):
                 raise commands.BadArgument('No search results were found.')
 
