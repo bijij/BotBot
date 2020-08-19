@@ -1,4 +1,5 @@
 from numbers import Number
+from typing import Union, Iterable
 
 __all__ = (
     'add_reactions',
