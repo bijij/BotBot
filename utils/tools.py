@@ -1,3 +1,5 @@
+import discord
+
 from numbers import Number
 from typing import Union, Iterable
 
