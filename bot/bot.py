@@ -8,7 +8,7 @@ from configparser import ConfigParser
 import discord
 from discord.ext import commands
 
-from donphan import create_pool, create_tables, create_views, connection
+from donphan import create_pool, create_tables, create_views, MaybeAcquire
 from ampharos import setup as setup_ampharos
 
 from .context import Context
@@ -106,7 +106,7 @@ class BotBase(commands.Bot):
         await create_pool(self.config['DATABASE']['dsn'], server_settings={
             'application_name': 'BotBot'}
         )
-        self.pool = connection._pool
+        self.pool = MaybeAcquire().pool
         await create_tables(drop_if_exists=False)
         await create_views(drop_if_exists=False)
         await setup_ampharos()
