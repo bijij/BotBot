@@ -8,11 +8,10 @@ from configparser import ConfigParser
 import discord
 from discord.ext import commands
 
-from donphan import create_pool, create_tables, create_views
+from donphan import create_pool, create_tables, create_views, connection
 from ampharos import setup as setup_ampharos
 
 from .context import Context
-from .db import create_pool
 from .handler import WebhookHandler
 from .help import EmbedHelpCommand
 from .timers import dispatch_timers
@@ -103,12 +102,11 @@ class BotBase(commands.Bot):
         await self.invoke(ctx)
 
     async def connect(self, *args, **kwargs):
-        self.pool = await create_pool(self.config['DATABASE']['dsn'])
-
         # setup database
         await create_pool(self.config['DATABASE']['dsn'], server_settings={
             'application_name': 'BotBot'}
         )
+        self.pool = connection._pool
         await create_tables(drop_if_exists=False)
         await create_views(drop_if_exists=False)
         await setup_ampharos()
