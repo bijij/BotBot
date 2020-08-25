@@ -9,3 +9,5 @@ git+https://github.com/Rapptz/discord.py@b7f18278e11bc1912b14a16faf20ff3cf82392a
 git+https://github.com/Rapptz/discord-ext-menus@cc108bed812d0e481a628ca573c2eeeca9226b42
 git+https://github.com/NCplayz/discord-ext-alternatives@41317721c33e27468a85faf342c6d9f4da324404
 git+https://github.com/Bijij/wavelink/@fa880abf3307ff3e6a8a3b6830e06574757d0409
+git+https://github.com/bijij/Donphan.git
+git+https://github.com/bijij/Ampharos.git
