@@ -8,7 +8,7 @@ from random import randint
 from PIL import Image, ImageDraw
 
 
-ASSETS_DIR = 'bot/cogs/events/mystery_monday/assets'
+ASSETS_DIR = 'res/pokemon'
 MAX_TRIES = 1000
 
 
