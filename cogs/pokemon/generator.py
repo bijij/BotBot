@@ -140,7 +140,7 @@ async def generate_random(loop, *, difficulty=1, min_gen=1, max_gen=8):
             pkmn = await ampharos.random_pokemon()
 
             # do generation validation
-            if not min_gen <= get_generation(pokemon) <= max_gen:
+            if not min_gen <= get_generation(pkmn) <= max_gen:
                 continue
 
             # Skip alternate forms for now.
