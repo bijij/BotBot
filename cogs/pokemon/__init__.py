@@ -93,6 +93,7 @@ class SpeedSight(commands.Cog):
         # Send game over message
         message += f'\n\nCongratulations, you achieved a  score of **{streak}**!'
         await ctx.send(message, file=discord.File(guide, 'ss.png'))
+        del self.current_games[ctx.author]
 
     @commands.check(_user_is_playing)
     @ss.command(name='guess')
@@ -105,6 +106,12 @@ class SpeedSight(commands.Cog):
             return await ctx.send('No Pokemon specified please try again.')
         self.bot.dispatch('ss_next', ctx.author, pokemon)
 
+    @commands.check(_user_is_playing)
+    @ss.command(name='stop', aliases=['cancel'])
+    async def guess(self, ctx):
+        """Stops the current game.
+        """
+        self.bot.dispatch('ss_next', ctx.author, None)
 
 def setup(bot: commands.Bot):
     bot.add_cog(SpeedSight(bot))
