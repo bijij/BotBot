@@ -12,6 +12,15 @@ async def _user_is_playing(ctx: commands.Context) -> bool:
         raise commands.CheckFailure('You are currently not playing a game.')
     return True
 
+def parse_generation(value):
+    try:
+        generation = int(value)
+        if not 1 <= generation <= 8:
+            raise commands.BadArgument('Generation must be between 1 and 8')
+    except ValueError:
+        raise commands.BadArgument('Invalid generation specified.')
+    return generation
+
 class SpeedSight(commands.Cog):
     """Swellow Sight"""
 
@@ -25,11 +34,30 @@ class SpeedSight(commands.Cog):
         pass
 
     @ss.command(name='start')
-    async def start(self, ctx):
+    async def start(self, ctx, *, generations: str = None):
         """Starts a Swellow Sight game.
 
         You'll have 120 seconds to guess which pokemon it is, go for the highest score you can.
+
+        `generations`: What generations the pokemon should be from, can be a range or singular. e.g. 1-3 or 6.
         """
+
+        min_gen = 1
+        max_gen = 8
+        if generations is not None:
+            generations = generations.split('-')
+            if len(generations) > 2:
+                raise commands.BadArgument('Invalid generation range.')
+
+            if len(generations) == 1:
+                min_gen = max_gen = parse_generation(generations[0])
+            
+            else:
+                min_gen = parse_generation(generations[0])
+                max_gen = parse_generation(generations[1])
+
+        if min_gen > max_gen:
+            raise commands.BadArgument('Invalid generation range.')
 
         # Create record in database
         self.current_games[ctx.author] = 0
@@ -44,7 +72,7 @@ class SpeedSight(commands.Cog):
         while True:
 
             # Send the mm image
-            image, guide, answer = await generate_random(self.bot.loop, difficulty=3)
+            image, guide, answer = await generate_random(self.bot.loop, difficulty=3, min_gen=min_gen, max_gen=max_gen)
             await ctx.send(file=discord.File(image, 'ss.png'))
 
             streak += 1

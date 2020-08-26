@@ -113,11 +113,35 @@ def generate(pokemon: str, *, difficulty=1):
     return (render_image(crop, difficulty), render_guide(im, crop, left, top))
 
 
-async def generate_random(loop, *, difficulty=1):
+def get_generation(pokemon):
+    dex_no = pokemon.pokedex_number
+
+    if dex_no <= 151:
+        return 1
+    if dex_no <= 251:
+        return 2
+    if dex_no <= 386:
+        return 3
+    if dex_no <= 493:
+        return 4
+    if dex_no <= 649:
+        return 5
+    if dex_no <= 721:
+        return 6
+    if dex_no <= 809:
+        return 7
+    return 8
+
+
+async def generate_random(loop, *, difficulty=1, min_gen=1, max_gen=8):
     """Generates a random mystery monday image"""
     while True:
         try:
             pkmn = await ampharos.random_pokemon()
+
+            # do generation validation
+            if not min_gen <= get_generation(pokemon) <= max_gen:
+                continue
 
             # Skip alternate forms for now.
             # Will remove this eventually.
