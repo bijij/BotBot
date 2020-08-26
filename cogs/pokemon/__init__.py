@@ -108,7 +108,7 @@ class SpeedSight(commands.Cog):
 
     @commands.check(_user_is_playing)
     @ss.command(name='stop', aliases=['cancel'])
-    async def guess(self, ctx):
+    async def stop(self, ctx):
         """Stops the current game.
         """
         self.bot.dispatch('ss_next', ctx.author, None)
