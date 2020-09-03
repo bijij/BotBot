@@ -176,8 +176,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     day_width = IMAGE_SIZE / (60 * 60 * 24)
 
     now = datetime.datetime.now(timezone)
-    timezone_offset = int(now.utcoffset().total_seconds())
-    time_offset = 60 * 60 * timezone_offset
+    time_offset = int(now.utcoffset().total_seconds())
     total_duration = 0
 
     # Draw status log entries
