@@ -244,13 +244,17 @@ class StatusLogging(commands.Cog):
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.command(name='status_log', aliases=['sl'])
-    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, show_dates: bool = False):
+    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, show_dates: Optional[bool] = False, timezone_offset: float = 0):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
         `show_dates`: Sets whether date labels should be shown, defaults to False.
+        `timezone_offset`: The timezone offset to use in hours, defaults to 0.
         """
         user = user or ctx.author
+
+        if not -14 < timezone_offset < 14:
+            raise commands.BadArgument("Invalid timezone offset passed.")
 
         async with ctx.db as conn:
             await is_public(ctx, user, conn)
@@ -259,7 +263,7 @@ class StatusLogging(commands.Cog):
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
-        draw_call = partial(draw_status_log, data, timezone=datetime.timezone.utc, show_dates=show_dates)
+        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_dates=show_dates)
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
