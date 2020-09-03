@@ -6,10 +6,20 @@ from typing import Union, Iterable
 
 __all__ = (
     'add_reactions',
+    'format_dt',
     'regional_indicator',
     'keycap_digit',
     'plural'
 )
+
+
+def format_dt(dt: datetime.datetime) -> str:
+    """Formats datetime strings.
+
+    Args:
+        dt: (datetime.datetime): The datetime object to format.
+    """
+    return dt.strftime('%F @ %T UTC')
 
 
 class plural:
