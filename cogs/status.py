@@ -215,8 +215,11 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
             y_offset += IMAGE_SIZE // row_count
             date += datetime.timedelta(days=1)
 
-        # Add time labels
+        # Add timezone label
         y_offset = x_offset
+        draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
+
+        # Add time labels
         time = start_of_day(now)
         for x_offset in (IMAGE_SIZE // 4, IMAGE_SIZE // 2, int(IMAGE_SIZE // 1.33)):
             time += datetime.timedelta(hours=6)
