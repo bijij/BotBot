@@ -168,9 +168,10 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
     return as_bytes(resample(image))
 
 
-def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_dates: bool = False) -> BytesIO:
+def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_labels: bool = False) -> BytesIO:
 
-    image, draw = base_image(IMAGE_SIZE * 30, 1)
+    row_count = 30 + show_labels
+    image, draw = base_image(IMAGE_SIZE * row_count, 1)
 
     # Set consts
     day_width = IMAGE_SIZE / (60 * 60 * 24)
@@ -178,6 +179,9 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     now = datetime.datetime.now(timezone)
     time_offset = int(now.utcoffset().total_seconds())
     total_duration = 0
+
+    if show_labels:
+        time_offset += 60 * 60 * 24
 
     # Draw status log entries
     for status, duration in status_log:
@@ -193,22 +197,29 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     # Reshape Image
     pixels = numpy.array(image)
     # pixels = pixels[:, IMAGE_SIZE:]
-    pixels = pixels.reshape(30, IMAGE_SIZE, 4)
-    pixels = pixels.repeat(IMAGE_SIZE // 30, 0)
+    pixels = pixels.reshape(row_count, IMAGE_SIZE, 4)
+    pixels = pixels.repeat(IMAGE_SIZE // row_count, 0)
     image = Image.fromarray(pixels, 'RGBA')
     draw = ImageDraw.Draw(image)
 
-    # Add date labels
-    if show_dates:
+    if show_labels:
         font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
+
+        # Add date labels
         x_offset = IMAGE_SIZE // 100
-        y_offset = IMAGE_SIZE // 200
+        y_offset = IMAGE_SIZE // 200 + IMAGE_SIZE // row_count
 
         date = now - datetime.timedelta(seconds=total_duration)
         for day in range(int(total_duration // ONE_DAY) + 1):
             draw.text((x_offset, y_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
-            y_offset += IMAGE_SIZE // 30
+            y_offset += IMAGE_SIZE // row_count
             date += datetime.timedelta(days=1)
+
+        # Add time labels
+        y_offset = x_offset
+        for x_offset in (IMAGE_SIZE // 4, IMAGE_SIZE // 2, int(IMAGE_SIZE // 1.33)):
+            now += datetime.timedelta(hours=6)
+            draw.text((x_offset, y_offset), now.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
     return as_bytes(resample(image))
 
@@ -242,13 +253,13 @@ class StatusLogging(commands.Cog):
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
-    @commands.command(name='status_log', aliases=['sl'])
-    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, show_dates: Optional[bool] = False, timezone_offset: float = 0):
+    @commands.command(name='status_log', aliases=['sl', 'sc'])
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: float = 0):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
-        `show_dates`: Sets whether date labels should be shown, defaults to False.
-        `timezone_offset`: The timezone offset to use in hours, defaults to 0.
+        `show_labels`: Sets whether date and time labels should be shown, defaults to False.
+        `timezone_offset`: The timezone offset to use in hours, defaults to UTC+0.
         """
         user = user or ctx.author
 
@@ -262,7 +273,7 @@ class StatusLogging(commands.Cog):
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
-        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_dates=show_dates)
+        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_labels=show_labels)
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
