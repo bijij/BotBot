@@ -217,8 +217,9 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
         # Add time labels
         y_offset = x_offset
+        time = start_of_day(now)
         for x_offset in (IMAGE_SIZE // 4, IMAGE_SIZE // 2, int(IMAGE_SIZE // 1.33)):
-            now += datetime.timedelta(hours=6)
+            time += datetime.timedelta(hours=6)
             draw.text((x_offset, y_offset), now.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
     return as_bytes(resample(image))
