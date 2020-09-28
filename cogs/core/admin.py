@@ -93,7 +93,7 @@ class Admin(commands.Cog):
             value = stdout.getvalue()
             await ctx.send(f'```py\n{value}{format_exc()}\n```')
         else:
-            value = stdout.getvalue() or '...'
+            value = stdout.getvalue() or self._ or '...'
             await ctx.send(f'```py\n{value}\n```')
 
     @commands.command()

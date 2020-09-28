@@ -14,7 +14,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging import is_public
+from cogs.logging.logging import is_public
 
 
 IMAGE_SIZE = 2970
