@@ -1,9 +1,12 @@
-from collections import namedtuple
+from typing import Any, Dict, NamedTuple, List
 
 import discord
 from discord.ext import commands, menus
 
-EmbedPage = namedtuple('EmbedPage', 'description fields')
+
+class EmbedPage(NamedTuple):
+    description: List[str]
+    fields: List[Dict[str, Any]]
 
 
 class PaginatorSource(commands.Paginator, menus.PageSource):

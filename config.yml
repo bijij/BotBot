@@ -17,14 +17,16 @@
         WEBHOOK: !ENV "LOGGING_WEBHOOK"
 
     EXTENSIONS:
-        admin: ~
-        meta: ~
-        stats: ~
+        core.admin: ~
+        core.meta: ~
+        core.stats: ~
+        core.info: ~
 
-        logging: ~
-        markov: ~
-        status: ~        
+        logging.logging: ~
+        logging.status: ~        
         
+        memes.markov: ~
+        memes.timecard: ~
+
         reminders: ~
         pokemon: ~
-        timecard: ~
