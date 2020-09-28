@@ -1,0 +1,30 @@
+# Bot Configuration File
+!Config
+
+    BOT: !Config
+        PREFIX: !ENV BOT_PREFIX
+        TOKEN: !ENV BOT_TOKEN
+
+    DATABASE: !Config
+        USERNAME: !ENV DB_USERNAME
+        PASSWORD: !ENV DB_PASSWORD
+        DATABASE: !ENV DB_DATABASE
+
+    LOGGING: !Config
+        LOG_LEVEL: "INFO"
+        LOG_LEVEL_ALL: "ERROR"
+
+        LOG_TO_FILE: true
+
+    EXTENSIONS:
+        admin: ~
+        meta: ~
+        stats: ~
+
+        logging: ~
+        markov: ~
+        status: ~        
+        
+        reminders: ~
+        pokemon: ~
+        timecard: ~

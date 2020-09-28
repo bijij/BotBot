@@ -3,14 +3,13 @@ import datetime
 import logging
 import traceback
 
-from configparser import ConfigParser
-
 import discord
 from discord.ext import commands
 
 from donphan import create_pool, create_tables, create_views, MaybeAcquire
 from ampharos import setup as setup_ampharos
 
+from .config import CONFIG
 from .context import Context
 from .handler import WebhookHandler
 from .help import EmbedHelpCommand
@@ -20,8 +19,6 @@ from .timers import dispatch_timers
 class BotBase(commands.Bot):
     def __init__(self):
         self.start_time = datetime.datetime.utcnow()
-        self.config = ConfigParser()
-        self.config.read('./config.ini')
 
         from utils.converters import __converters__
 
@@ -29,24 +26,24 @@ class BotBase(commands.Bot):
             self.converters[o] = c
 
         self.log = logging.getLogger(__name__)
-        self.log.setLevel(self.config['BOT']['log_level'])
+        self.log.setLevel(CONFIG.LOGGING.LOG_LEVEL)
 
         log = logging.getLogger()
-        log.setLevel(self.config['BOT']['log_level_all'])
+        log.setLevel(CONFIG.LOGGING.LOG_LEVEL_ALL)
 
-        handler = WebhookHandler(self.config['DISCODO']['WEBHOOK'])
+        handler = WebhookHandler(CONFIG.LOGGING.WEBHOOK)
         log.addHandler(handler)
         log.addHandler(logging.StreamHandler())
 
-        self.prefix = self.config['BOT']['prefix']
+        self.prefix = CONFIG.BOT.PREFIX
 
-        super().__init__(command_prefix=commands.when_mentioned_or(self.config['BOT']['prefix']), help_command=EmbedHelpCommand())
+        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand())
 
         self._active_timer = asyncio.Event()
         self._current_timer = None
         self._timer_task = self.loop.create_task(dispatch_timers(self))
 
-        for extension in self.config['BOT']['startup_extensions'].split(','):
+        for extension in CONFIG.EXTENSIONS.keys():
             try:
                 self.load_extension(f'cogs.{extension}')
             except commands.ExtensionFailed as e:
@@ -79,7 +76,7 @@ class BotBase(commands.Bot):
                 )
             )
 
-        error = error.__cause__
+        error = error.__cause__  # type: ignore
 
         await ctx.send(
             embed=discord.Embed(
@@ -103,7 +100,9 @@ class BotBase(commands.Bot):
 
     async def connect(self, *args, **kwargs):
         # setup database
-        await create_pool(self.config['DATABASE']['dsn'], server_settings={
+        dsn = f"postgres://{CONFIG.DATABASE.USERNAME}:{CONFIG.DATABASE.PASSWORD}@localhost/{CONFIG.DATABASE.DATABASE}"
+
+        await create_pool(dsn, server_settings={
             'application_name': 'BotBot'}
         )
         self.pool = MaybeAcquire().pool
@@ -114,4 +113,4 @@ class BotBase(commands.Bot):
         return await super().connect(*args, **kwargs)
 
     def run(self):
-        super().run(self.config['DISCODO']['token'])
+        super().run(CONFIG.BOT.TOKEN)
