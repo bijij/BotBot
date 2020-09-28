@@ -45,11 +45,17 @@ class BotBase(commands.Bot):
         self._current_timer = None
         self._timer_task = self.loop.create_task(dispatch_timers(self))
 
-        for extension in CONFIG.EXTENSIONS.keys():
+        def load_extension(extension, prefix='cogs'):
             try:
-                self.load_extension(f'cogs.{extension}')
+                self.load_extension(f'{prefix}.{extension}')
             except commands.ExtensionFailed as e:
                 self.log.error(f'Failed to load extension {extension}\n{type(e).__name__}: {e}')
+
+        for extension in CONFIG.SECRET_EXTENSIONS.split(';'):
+            load_extension(extension, prefix='cogs.secret')
+
+        for extension in CONFIG.EXTENSIONS.keys():
+            load_extension(extension)
 
     @property
     def uptime(self) -> float:

@@ -34,7 +34,15 @@ from discord.ext import commands
 
 import asyncpg
 
-from .db import ConnectionContext
+from donphan import Column, SQLType, Table
+
+
+class Timers(Table, schema='core'):  # type: ignore
+    id: SQLType.Serial = Column(primary_key=True)
+    created_at: SQLType.Timestamp = Column(default='NOW() AT TIME ZONE \'UTC\'')
+    expires_at: SQLType.Timestamp = Column(index=True)
+    event_type: str = Column(nullable=False, index=True)
+    data: SQLType.JSONB = Column(default='\'{}\'::jsonb')
 
 
 class Timer:
@@ -80,19 +88,17 @@ expires_at={self.expires_at} event_type={self.event_type}>'
         event_name = f'{self.event_type}_timer_complete'
         bot.dispatch(event_name, *self.args, **self.kwargs)
 
-    async def call(self, bot: commands.Bot, *, connection: asyncpg.Connection = None):
+    async def call(self, bot: commands.Bot):
         if self.id is None:
             await discord.utils.sleep_until(self.expires_at)
         else:
-            async with ConnectionContext(connection=connection, pool=bot.pool) as connection:
-                await connection.execute('DELETE FROM core.timers WHERE id = $1', self.id)
+            await Timers.delete(id=self.id)
         self.dispatch_event(bot)
 
 
 async def _get_active_timer(bot: commands.Bot, *, connection: asyncpg.Connection = None, days: int = 7) -> Optional[Timer]:
-    async with ConnectionContext(connection=connection, pool=bot.pool) as connection:
-        record = await connection.fetchrow('SELECT * FROM core.timers WHERE expires_at < (CURRENT_DATE + $1::interval)', datetime.timedelta(days=days))
-        return Timer(record) if record else None
+    record = await Timers.fetchrow_where('expires_at < (CURRENT_DATE + $1::interval)', datetime.timedelta(days=days))
+    return Timer(record) if record else None
 
 
 async def _wait_for_active(bot: commands.Bot, *, days: int = 7) -> Timer:
@@ -146,9 +152,7 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
         bot.loop.create_task(timer.call(bot))
         return timer
 
-    async with ConnectionContext(pool=bot.pool) as connection:
-        record = await connection.fetchrow('INSERT INTO core.timers (expires_at, event_type, data)\
-            VALUES ($1, $2, $3) RETURNING id', expires_at, event_type, dict(args=args, kwargs=kwargs))
+    record = await Timers.insert(returning=Timers.id, expires_at=expires_at, event_type=event_type, data=dict(args=args, kwargs=kwargs))
 
     # Set the timer's ID
     timer.id = record[0]
@@ -166,8 +170,7 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
 
 
 async def delete_timer(bot: commands.Bot, record: asyncpg.Record, *, connection: asyncpg.Connection):
-    async with ConnectionContext(connection=connection, pool=bot.pool) as connection:
-        await connection.execute('DELETE FROM core.timers WHERE id = $1', record['id'])
+    await Timers.delete(id=record['id'])
 
     # if the current timer is being deleted skip it
     if bot._current_timer and bot._current_timer.id == record['id']:

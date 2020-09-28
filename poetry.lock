@@ -32,7 +32,6 @@ donphan = ">=1.0.2a"
 reference = "8b53817ea749a38c406e1e0c15850b4628af3e7d"
 type = "git"
 url = "https://github.com/bijij/Ampharos.git"
-
 [[package]]
 category = "main"
 description = "Timeout context manager for asyncio programs"
@@ -120,14 +119,13 @@ version = "1.0.0a26+g84caae8"
 reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
 type = "git"
 url = "https://github.com/rapptz/discord-ext-menus.git"
-
 [[package]]
 category = "main"
 description = "A Python wrapper for the Discord API"
 name = "discord.py"
 optional = false
 python-versions = ">=3.5.3"
-version = "1.5.0a2531+gbf42cf7"
+version = "1.5.0"
 
 [package.dependencies]
 aiohttp = ">=3.6.0,<3.7.0"
@@ -137,10 +135,9 @@ docs = ["sphinx (1.8.5)", "sphinxcontrib_trio (1.1.1)", "sphinxcontrib-websuppor
 voice = ["PyNaCl (1.3.0)"]
 
 [package.source]
-reference = "bf42cf72326a6fd6b64c697506be04c46acae26f"
+reference = "6d1bcf89da7b35b39e319544c2f4fd2a8e2e60c1"
 type = "git"
 url = "https://github.com/rapptz/discord.py.git"
-
 [[package]]
 category = "main"
 description = "Asyncronous Database ORM for Postgres"

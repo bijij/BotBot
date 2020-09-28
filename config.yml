@@ -30,3 +30,5 @@
 
         reminders: ~
         pokemon: ~
+
+    SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS

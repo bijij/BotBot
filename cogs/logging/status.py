@@ -14,7 +14,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging.logging import is_public
+from cogs.logging.logging import Opt_In_Status
 
 
 IMAGE_SIZE = 2970
@@ -52,7 +52,7 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
     if not records:
         return Counter()
 
-    status_totals = Counter()
+    status_totals = Counter()  # type: ignore
 
     total_duration = (records[-1]['timestamp'] - records[0]['timestamp']).total_seconds()
 
@@ -177,7 +177,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     day_width = IMAGE_SIZE / (60 * 60 * 24)
 
     now = datetime.datetime.now(timezone)
-    time_offset = int(now.utcoffset().total_seconds())
+    time_offset = int(now.utcoffset().total_seconds())  # type: ignore
     total_duration = 0
 
     if show_labels:
@@ -243,7 +243,7 @@ class StatusLogging(commands.Cog):
         user = user or ctx.author
 
         async with ctx.db as conn:
-            await is_public(ctx, user, conn)
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
             data = await get_status_totals(user, conn, days=30)
 
             if not data:
@@ -271,7 +271,7 @@ class StatusLogging(commands.Cog):
             raise commands.BadArgument("Invalid timezone offset passed.")
 
         async with ctx.db as conn:
-            await is_public(ctx, user, conn)
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
             data = await get_status_log(user, conn, days=30)
 
             if not data:

@@ -2,7 +2,6 @@ from functools import partial
 from random import randint
 from typing import Optional
 
-import asyncpg
 import markovify
 from markovify.text import ParamError
 
@@ -10,17 +9,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging.logging import is_opted_in, is_public
-
-
-async def get_user_message_log(user: discord.User, conn: asyncpg.Connection) -> str:
-    record = await conn.fetchrow('SELECT string_agg(content, \'\n\') AS data FROM logging.message_log WHERE user_id = $1', user.id)
-    return record['data']
-
-
-async def get_guild_message_log(guild: discord.Guild, conn: asyncpg.Connection) -> str:
-    record = await conn.fetchrow('SELECT string_agg(content, \'\n\') AS data FROM logging.message_log WHERE guild_id = $1', guild.id)
-    return record['data']
+from cogs.logging.logging import Message_Log, Opt_In_Status
 
 
 def get_markov(data: str, *, state_size: int = 2, seed: str = None) -> Optional[str]:
@@ -55,8 +44,8 @@ class Markov(commands.Cog):
         user = user or ctx.author
 
         async with ctx.db as conn:
-            await is_public(ctx, user, conn)
-            data = await get_user_message_log(user, conn)
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
+            data = await Message_Log.get_user_log(user, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
@@ -79,8 +68,8 @@ class Markov(commands.Cog):
         user = user or ctx.author
 
         async with ctx.db as conn:
-            await is_public(ctx, user, conn)
-            data = await get_user_message_log(user, conn)
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
+            data = await Message_Log.get_user_log(user, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
@@ -103,9 +92,9 @@ class Markov(commands.Cog):
             raise commands.BadArgument('You can\'t generate a dual user markov with yourself.')
 
         async with ctx.db as conn:
-            await is_opted_in(ctx, conn)
-            await is_public(ctx, user, conn)
-            data = await get_user_message_log(ctx.author, conn) + await get_user_message_log(user, conn)
+            await Opt_In_Status.is_opted_in(ctx, connection=conn)
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
+            data = await Message_Log.get_user_log(ctx.author, connection=conn) + "\n" + await Message_Log.get_user_log(user, connection=conn)
 
             if not data:
                 raise commands.BadArgument('There was not enough message log data, please try again later.')
@@ -124,7 +113,7 @@ class Markov(commands.Cog):
         """Generate a markov chain based off messages in the server.
         """
         async with ctx.db as conn:
-            data = await get_guild_message_log(ctx.guild, conn)
+            data = await Message_Log.get_guild_log(ctx.guild, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'Server "{ctx.guild.name}" currently has no message log data, please try again later.')
@@ -144,7 +133,7 @@ class Markov(commands.Cog):
         `seed`: The string to attempt to seed the markov chain with.
         """
         async with ctx.db as conn:
-            data = await get_guild_message_log(ctx.guild, conn)
+            data = await Message_Log.get_guild_log(ctx.guild, connection=conn)
 
             if not data:
                 raise commands.BadArgument('There was not enough message log data, please try again later.')

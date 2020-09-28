@@ -4,12 +4,24 @@ from collections import Counter, namedtuple
 from typing import Dict
 
 import asyncpg
+from donphan import Column, SQLType, Table
 
 import discord
 from discord.ext import commands, tasks
 
 from bot import BotBase, Context
 from utils.tools import plural
+
+
+class Commands(Table, schema='core'):  # type: ignore
+    message_id: SQLType.BigInt = Column(primary_key=True)
+    guild_id: SQLType.BigInt = Column(index=True)
+    channel_id: SQLType.BigInt
+    user_id: SQLType.BigInt = Column(index=True)
+    invoked_at: SQLType.Timestamp
+    prefix: str
+    command: str
+    failed: bool
 
 
 CommandInvoke = namedtuple('CommandInvoke', ('message_id', 'guild_id', 'channel_id', 'user_id', 'invoked_at', 'prefix', 'command', 'failed'))
@@ -21,7 +33,7 @@ class Stats(commands.Cog):
         self.bot = bot
 
         self._batch_lock = asyncio.Lock()
-        self._batch_data = []
+        self._batch_data = []  # type: ignore
 
         self.bulk_insert.add_exception_type(asyncpg.PostgresConnectionError)
         self.bulk_insert.start()
@@ -57,8 +69,7 @@ class Stats(commands.Cog):
     @command.group(name='history', invoke_without_command=True)
     async def command_history(self, ctx: Context):
         """Returns information on the 10 most recently used commands."""
-        async with ctx.db as connection:
-            records = await connection.fetch('SELECT * FROM core.commands ORDER BY invoked_at DESC LIMIT 10')
+        records = await Commands.fetch(order_by='invoked_at DESC', limit=10)
 
         embed = discord.Embed(
             colour=ctx.me.colour
@@ -128,7 +139,7 @@ class Stats(commands.Cog):
     async def bulk_insert(self):
         async with self._batch_lock:
             if self._batch_data:
-                await self.bot.pool.executemany('INSERT INTO core.commands VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', self._batch_data)
+                await Commands.insert_many(Commands._columns.values(), *self._batch_data)
                 self.bot.log.debug(f'Recorded {plural(len(self._batch_data)):command invoke} in the database.')
                 self._batch_data.clear()
 

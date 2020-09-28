@@ -3,6 +3,7 @@ import datetime
 from typing import Set
 
 import asyncpg
+from donphan import Column, MaybeAcquire, Table, SQLType
 
 import discord
 from discord.ext import commands, tasks
@@ -19,25 +20,50 @@ COLOURS = {
 }
 
 
-async def is_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
-    if opt_in_status is None:
-        raise commands.BadArgument(f'You have not opted in to logging. You can do so with `{ctx.bot.prefix}logging start`')
+class Message_Log(Table, schema='logging'):  # type: ignore
+    channel_id: SQLType.BigInt = Column(primary_key=True)
+    message_id: SQLType.BigInt = Column(primary_key=True)
+    guild_id: SQLType.BigInt = Column(index=True)
+    user_id: SQLType.BigInt = Column(index=True)
+    content: str
+
+    @classmethod
+    async def get_user_log(cls, user: discord.User, *, connection: asyncpg.Connection = None) -> str:
+        async with MaybeAcquire(connection=connection) as connection:
+            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name} WHERE user_id = $1', user.id)
+        return data
+
+    @classmethod
+    async def get_guild_log(cls, guild: discord.Guild, *, connection: asyncpg.Connection = None) -> str:
+        async with MaybeAcquire(connection=connection) as connection:
+            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') AS data FROM {cls._name} WHERE guild_id = $1', guild.id)
+        return data
 
 
-async def is_not_opted_in(ctx: Context, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
-    if opt_in_status is not None:
-        raise commands.BadArgument('You have already opted into logging.')
+class Opt_In_Status(Table, schema='logging'):  # type: ignore
+    user_id: SQLType.BigInt = Column(primary_key=True, index=True)
+    public: bool
 
+    @classmethod
+    async def is_opted_in(cls, ctx: Context, *, connection: asyncpg.Connection = None):
+        opt_in_status = await cls.fetchrow(connection=connection, user_id=ctx.author.id)
+        if opt_in_status is None:
+            raise commands.BadArgument(f'You have not opted in to logging. You can do so with `{ctx.bot.prefix}logging start`')
 
-async def is_public(ctx: Context, user: discord.User, conn: asyncpg.Connection):
-    opt_in_status = await conn.fetchrow('SELECT * FROM logging.opt_in_status WHERE user_id = $1', user.id)
-    if opt_in_status is None:
-        raise commands.BadArgument(f'User "{user}" has not opted in to logging.')
+    @classmethod
+    async def is_not_opted_in(cls, ctx: Context, *, connection: asyncpg.Connection = None):
+        opt_in_status = await cls.fetchrow(connection=connection, user_id=ctx.author.id)
+        if opt_in_status is not None:
+            raise commands.BadArgument('You have already opted into logging.')
 
-    if user != ctx.author and not opt_in_status['public']:
-        raise commands.BadArgument(f'User "{user}" has not made their logs public.')
+    @classmethod
+    async def is_public(cls, ctx: Context, user: discord.User, *, connection: asyncpg.Connection = None):
+        opt_in_status = await cls.fetchrow(connection=connection, user_id=user.id)
+        if opt_in_status is None:
+            raise commands.BadArgument(f'User "{user}" has not opted in to logging.')
+
+        if user != ctx.author and not opt_in_status['public']:
+            raise commands.BadArgument(f'User "{user}" has not made their logs public.')
 
 
 class Logging(commands.Cog):
@@ -62,8 +88,8 @@ class Logging(commands.Cog):
     async def logging_start(self, ctx: Context):
         """Opt into logging."""
         async with ctx.db as conn:
-            await is_not_opted_in(ctx, conn)
-            await conn.execute('INSERT INTO logging.opt_in_status VALUES ($1, $2)', ctx.author.id, False)
+            await Opt_In_Status.is_not_opted_in(ctx, connection=conn)
+            await Opt_In_Status.insert(connection=conn, user_id=ctx.author.id, public=False)
             self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
@@ -72,8 +98,8 @@ class Logging(commands.Cog):
     async def logging_stop(self, ctx: Context):
         """Opt out of logging."""
         async with ctx.db as conn:
-            await is_opted_in(ctx, conn)
-            await conn.execute('DELETE FROM logging.opt_in_status WHERE user_id = $1', ctx.author.id)
+            await Opt_In_Status.is_opted_in(ctx, connection=conn)
+            await Opt_In_Status.delete(connection=conn, user_id=ctx.author.id)
             self._opted_in.remove(ctx.author.id)
 
         await ctx.tick()
@@ -82,8 +108,8 @@ class Logging(commands.Cog):
     async def logging_public(self, ctx: Context, public: bool):
         """Set your logging visibility preferences."""
         async with ctx.db as conn:
-            await is_opted_in(ctx, conn)
-            await conn.execute('UPDATE logging.opt_in_status SET public = $2 WHERE user_id = $1', ctx.author.id, public)
+            await Opt_In_Status.is_opted_in(ctx, connection=conn)
+            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, public=public)
 
         await ctx.tick()
 
@@ -134,17 +160,15 @@ class Logging(commands.Cog):
                 self.bot._status_log = list()
 
             if self.bot._message_log:
-                await conn.executemany('INSERT INTO logging.message_log VALUES ($1, $2, $3, $4, $5)', self.bot._message_log)
+                columns = Message_Log._columns.values()
+                await Message_Log.insert_many(columns, *self.bot._message_log, connection=conn)
                 self.bot._message_log = list()
 
     @_logging_task.before_loop
     async def _before_logging_task(self):
         await self.bot.wait_until_ready()
 
-        async with ConnectionContext(pool=self.bot.pool) as conn:
-            records = await conn.fetch('SELECT * FROM logging.opt_in_status')
-
-        for record in records:
+        for record in await Opt_In_Status.fetchall():
             self._opted_in.add(record['user_id'])
 
 
