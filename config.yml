@@ -13,8 +13,8 @@
     LOGGING: !Config
         LOG_LEVEL: "INFO"
         LOG_LEVEL_ALL: "ERROR"
-
         LOG_TO_FILE: true
+        WEBHOOK: !ENV "LOGGING_WEBHOOK"
 
     EXTENSIONS:
         admin: ~
