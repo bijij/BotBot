@@ -1,3 +1,4 @@
+import datetime
 try:
     import zoneinfo
 except ImportError:
@@ -77,12 +78,9 @@ class WhenAndWhat(commands.Converter):
             'PREFER_DATES_FROM': 'future',
             'PREFER_DAY_OF_MONTH': 'first',
             'RETURN_AS_TIMEZONE_AWARE': False,
-            'PARSERS': ['relative-time', 'absolute-time', 'timestamp', 'base-formats']
+            'PARSERS': ['absolute-time', 'relative-time', 'timestamp', 'base-formats']
         }
-        record = await Timezones.fetchrow(user_id=ctx.author.id)
-        if record is not None:
-            settings['TIMEZONE'] = record['timezone']
-
+        now = datetime.datetime.utcnow()
         find_dates = partial(search_dates, argument, languages=['en'], settings=settings)
         dates = await ctx.bot.loop.run_in_executor(None, find_dates)
 
@@ -100,6 +98,21 @@ class WhenAndWhat(commands.Converter):
             what = before
         else:
             what = after
+
+        # Apply timezone offset if user has one set.
+        record = await Timezones.fetchrow(user_id=ctx.author.id)
+        if record is not None:
+            offset = zoneinfo.ZoneInfo(record['timezone']).utcoffset(now)
+            when -= offset
+
+            # Hacky fix for UTC- time zones
+            local = now + offset
+            if local.date() < now.date():
+                when -= datetime.timedelta(hours=24)
+
+        # If time is in the last 24 hours assume the result should be today.
+        if now - datetime.timedelta(hours=24) <= when <= now:
+            when += datetime.timedelta(hours=24)
 
         return when, what.strip()
 
