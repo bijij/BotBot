@@ -32,6 +32,7 @@ donphan = ">=1.0.2a"
 reference = "8b53817ea749a38c406e1e0c15850b4628af3e7d"
 type = "git"
 url = "https://github.com/bijij/Ampharos.git"
+
 [[package]]
 category = "main"
 description = "Timeout context manager for asyncio programs"
@@ -104,6 +105,7 @@ version = "2020.7.30"
 reference = "e81237047ab3189b46e8ba226ea3988b0ad59ea2"
 type = "git"
 url = "https://github.com/ext-creators/discord-ext-alternatives.git"
+
 [[package]]
 category = "main"
 description = "An extension module to make reaction based menus with discord.py"
@@ -119,6 +121,7 @@ version = "1.0.0a26+g84caae8"
 reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
 type = "git"
 url = "https://github.com/rapptz/discord-ext-menus.git"
+
 [[package]]
 category = "main"
 description = "A Python wrapper for the Discord API"
@@ -131,13 +134,9 @@ version = "1.5.0"
 aiohttp = ">=3.6.0,<3.7.0"
 
 [package.extras]
-docs = ["sphinx (1.8.5)", "sphinxcontrib_trio (1.1.1)", "sphinxcontrib-websupport"]
+docs = ["sphinx (1.8.5)", "sphinxcontrib-trio (1.1.1)", "sphinxcontrib-websupport"]
 voice = ["PyNaCl (1.3.0)"]
 
-[package.source]
-reference = "6d1bcf89da7b35b39e319544c2f4fd2a8e2e60c1"
-type = "git"
-url = "https://github.com/rapptz/discord.py.git"
 [[package]]
 category = "main"
 description = "Asyncronous Database ORM for Postgres"
@@ -167,6 +166,7 @@ tests = ["freezegun", "pytest", "pytest-cov"]
 reference = "eb9a9453ea35dce5529ed0306865f5842f5bcf3d"
 type = "git"
 url = "https://github.com/jmoiron/humanize.git"
+
 [[package]]
 category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -285,7 +285,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "57d36195599501d234e8b3a2a9fa81a5b24a5e9850825fbc2149a515120214f4"
+content-hash = "d8de50ba7a3fed7618f3ddfb3f1f3d90ea73235ead9316d4a474ef62cf10fd3c"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -350,7 +350,10 @@ dateparser = [
 ]
 discord-ext-alternatives = []
 discord-ext-menus = []
-"discord.py" = []
+"discord.py" = [
+    {file = "discord.py-1.5.0-py3-none-any.whl", hash = "sha256:3acb61fde0d862ed346a191d69c46021e6063673f63963bc984ae09a685ab211"},
+    {file = "discord.py-1.5.0.tar.gz", hash = "sha256:e71089886aa157341644bdecad63a72ff56b44406b1a6467b66db31c8e5a5a15"},
+]
 donphan = [
     {file = "donphan-2.4.1-py3-none-any.whl", hash = "sha256:a5c7355226a7a0ca6c6c9e0716a2a162641f9509a773ce8d3436d8c0b18bb7be"},
     {file = "donphan-2.4.1.tar.gz", hash = "sha256:d597b14122a5ceff63c62a8e882a664ffbf5b254ab62b5605b448e54fef8525f"},
