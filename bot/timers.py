@@ -97,7 +97,7 @@ expires_at={self.expires_at} event_type={self.event_type}>'
 
 
 async def _get_active_timer(bot: commands.Bot, *, connection: asyncpg.Connection = None, days: int = 7) -> Optional[Timer]:
-    record = await Timers.fetchrow_where('expires_at < (CURRENT_DATE + $1::interval)', datetime.timedelta(days=days))
+    record = await Timers.fetchrow_where('expires_at < (CURRENT_DATE + $1::interval) ORDER BY expires_at ASC', datetime.timedelta(days=days))
     return Timer(record) if record else None
 
 
@@ -162,7 +162,7 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
         bot._active_timer.set()
 
     # Check if the timer is earlier than the currently set timer
-    if bot._current_timer and expires_at < bot._current_timer.expires_at:
+    if bot._current_timer is not None and expires_at < bot._current_timer.expires_at:
         bot._timer_task.cancel()
         bot._timer_task = bot.loop.create_task(dispatch_timers(bot))
 

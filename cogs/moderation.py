@@ -10,8 +10,7 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @commands.command(name='cleanup')
-    @commands.has_guild_permissions(manage_messages=True)
-    @commands.bot_has_guild_permissions(manage_messages=True)
+    @commands.check_any(commands.has_guild_permissions(manage_messages=True), commands.is_owner())
     async def cleanup(self, ctx: Context, limit: int = 50):
         """Deletes messages related to bot commands from the channel.
 
@@ -25,10 +24,19 @@ class Moderation(commands.Cog):
         async for message in ctx.channel.history(limit=limit):
 
             context = await self.bot.get_context(message)
-            if message.author == self.bot.user or context.command is not None:
+            if message.author == self.bot.user:
                 to_delete.append(message)
 
-        await ctx.channel.delete_messages(to_delete)
+            if ctx.me.permissions_in(ctx.channel).manage_messages and context.command is not None:
+                to_delete.append(message)
+
+        await ctx.send(f'Deleted {len(to_delete)} messages', delete_after=5)
+
+        if ctx.me.permissions_in(ctx.channel).manage_messages:
+            await ctx.channel.delete_messages(to_delete)
+        else:
+            for message in to_delete:
+                await message.delete(silent=True)
 
 
 def setup(bot: BotBase):

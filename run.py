@@ -1,4 +1,4 @@
-from discord.ext.alternatives import converter_dict
+from discord.ext.alternatives import converter_dict, menus_remove_reaction, silent_delete
 
 from bot import BotBase, Config
 

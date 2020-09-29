@@ -30,5 +30,6 @@
 
         reminders: ~
         pokemon: ~
+        moderation: ~
 
     SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS
