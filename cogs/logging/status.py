@@ -1,4 +1,8 @@
 import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from collections import Counter, namedtuple
 from io import BytesIO
@@ -14,7 +18,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging.logging import Opt_In_Status
+from cogs.logging.logging import Opt_In_Status, Timezones
 
 
 IMAGE_SIZE = 2970
@@ -258,17 +262,18 @@ class StatusLogging(commands.Cog):
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.command(name='status_log', aliases=['sl', 'sc'])
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: float = 0):
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: Optional[float] = None):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
         `show_labels`: Sets whether date and time labels should be shown, defaults to False.
-        `timezone_offset`: The timezone offset to use in hours, defaults to UTC+0.
+        `timezone_offset`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
         """
         user = user or ctx.author
 
-        if not -14 < timezone_offset < 14:
-            raise commands.BadArgument("Invalid timezone offset passed.")
+        if timezone_offset is not None:
+            if not -14 < timezone_offset < 14:
+                raise commands.BadArgument("Invalid timezone offset passed.")
 
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
@@ -276,6 +281,13 @@ class StatusLogging(commands.Cog):
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+
+        if timezone_offset is None:
+            record = await Timezones.fetchrow(user_id=user.id)
+            if record is not None:
+                timezone_offset = zoneinfo.ZoneInfo(record['timezone']).utcoffset(datetime.datetime.utcnow()).total_seconds() / 3600
+            else:
+                timezone_offset = 0
 
         draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_labels=show_labels)
         image = await self.bot.loop.run_in_executor(None, draw_call)

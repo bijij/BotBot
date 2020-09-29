@@ -1,3 +1,8 @@
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+
 from functools import partial
 
 import discord
@@ -7,6 +12,7 @@ import ampharos
 from ampharos.types import Pokemon
 
 from bot import Context
+from cogs.logging.logging import Timezones
 from .objects import Code
 
 from dateparser.search import search_dates
@@ -58,7 +64,6 @@ class UserConverter(commands.IDConverter):
             return result
 
 
-
 class CodeConverter(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
         if argument.startswith('```') and argument.endswith('```'):
@@ -66,17 +71,19 @@ class CodeConverter(commands.Converter):
         return Code(argument)
 
 
-_DATEPARSER_SETTINGS = {
-    'PREFER_DATES_FROM': 'future',
-    'PREFER_DAY_OF_MONTH': 'first',
-    'RETURN_AS_TIMEZONE_AWARE': False,
-    'PARSERS': ['relative-time', 'absolute-time', 'timestamp', 'base-formats']
-}
-
-
 class WhenAndWhat(commands.Converter):
     async def convert(self, ctx: Context, argument: str):
-        find_dates = partial(search_dates, argument, languages=['en'], settings=_DATEPARSER_SETTINGS)
+        settings = {
+            'PREFER_DATES_FROM': 'future',
+            'PREFER_DAY_OF_MONTH': 'first',
+            'RETURN_AS_TIMEZONE_AWARE': False,
+            'PARSERS': ['relative-time', 'absolute-time', 'timestamp', 'base-formats']
+        }
+        record = await Timezones.fetchrow(user_id=ctx.author.id)
+        if record is not None:
+            settings['TIMEZONE'] = record['timezone']
+
+        find_dates = partial(search_dates, argument, languages=['en'], settings=settings)
         dates = await ctx.bot.loop.run_in_executor(None, find_dates)
 
         if not dates:
@@ -121,10 +128,21 @@ class PokemonConverter(_BasePokemonConverter):
         return ampharos.pokemon(x)
 
 
+class ZoneInfoConverter(commands.Converter):
+
+    @classmethod
+    async def convert(cls, ctx: commands.Context, argument: str) -> zoneinfo.ZoneInfo:
+        try:
+            return zoneinfo.ZoneInfo(argument)
+        except Exception:
+            raise commands.BadArgument(f'Could not find time zone "{argument}".')
+
+
 __converters__ = {
     discord.Guild: GuildConverter,
     discord.User: UserConverter,
     Code: CodeConverter,
     # Tuple[datetime.datetime, str]: WhenAndWhat
-    Pokemon: PokemonConverter
+    Pokemon: PokemonConverter,
+    zoneinfo.ZoneInfo: ZoneInfoConverter
 }

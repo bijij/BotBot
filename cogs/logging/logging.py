@@ -1,4 +1,8 @@
 import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from typing import Set
 
@@ -38,6 +42,11 @@ class Message_Log(Table, schema='logging'):  # type: ignore
         async with MaybeAcquire(connection=connection) as connection:
             data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') AS data FROM {cls._name} WHERE guild_id = $1', guild.id)
         return data
+
+
+class Timezones(Table, schema='logging'):  # type: ignore
+    user_id: SQLType.BigInt = Column(primary_key=True, index=True)
+    timezone: str = Column(nullable=False)
 
 
 class Opt_In_Status(Table, schema='logging'):  # type: ignore
@@ -111,6 +120,23 @@ class Logging(commands.Cog):
             await Opt_In_Status.is_opted_in(ctx, connection=conn)
             await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, public=public)
 
+        await ctx.tick()
+
+    @commands.group(name='timezone')
+    async def timezone(self, ctx):
+        """Timezone management commands."""
+        pass
+
+    @timezone.command(name='set')
+    async def timezone_set(self, ctx, timezone: zoneinfo.ZoneInfo):
+        """Set your timezone."""
+        await Timezones.insert(update_on_conflict=Timezones.timezone, user_id=ctx.author.id, timezone=timezone.key)
+        await ctx.tick()
+
+    @timezone.command(name='delete', aliases=['unset'])
+    async def timezone_delete(self, ctx):
+        """Removes your timezone from the database"""
+        await Timezones.delete(user_id=ctx.author.id)
         await ctx.tick()
 
     @commands.command(name='vaccum_status_log')

@@ -32,6 +32,7 @@ donphan = ">=1.0.2a"
 reference = "8b53817ea749a38c406e1e0c15850b4628af3e7d"
 type = "git"
 url = "https://github.com/bijij/Ampharos.git"
+
 [[package]]
 category = "main"
 description = "Timeout context manager for asyncio programs"
@@ -66,6 +67,17 @@ dev = ["coverage (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six",
 docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 tests_no_zope = ["coverage (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six"]
+
+[[package]]
+category = "main"
+description = "Backport of the standard library zoneinfo module"
+name = "backports.zoneinfo"
+optional = false
+python-versions = ">=3.6"
+version = "0.2.1"
+
+[package.extras]
+tzdata = ["tzdata"]
 
 [[package]]
 category = "main"
@@ -104,6 +116,7 @@ version = "2020.7.30"
 reference = "ae17a5367c15d492ae41ea877ae7fd96fb01c48e"
 type = "git"
 url = "https://github.com/ext-creators/discord-ext-alternatives.git"
+
 [[package]]
 category = "main"
 description = "An extension module to make reaction based menus with discord.py"
@@ -119,6 +132,7 @@ version = "1.0.0a26+g84caae8"
 reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
 type = "git"
 url = "https://github.com/rapptz/discord-ext-menus.git"
+
 [[package]]
 category = "main"
 description = "A Python wrapper for the Discord API"
@@ -140,10 +154,13 @@ description = "Asyncronous Database ORM for Postgres"
 name = "donphan"
 optional = false
 python-versions = ">=3.6.2"
-version = "2.4.1"
+version = "2.5.0"
 
 [package.dependencies]
 asyncpg = ">=0.18.3"
+
+[package.extras]
+docs = ["sphinx (3.2.1)", "sphinxcontrib-trio (1.1.2)", "sphinxcontrib-websupport"]
 
 [[package]]
 category = "main"
@@ -163,6 +180,7 @@ tests = ["freezegun", "pytest", "pytest-cov"]
 reference = "eb9a9453ea35dce5529ed0306865f5842f5bcf3d"
 type = "git"
 url = "https://github.com/jmoiron/humanize.git"
+
 [[package]]
 category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -281,7 +299,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "d8de50ba7a3fed7618f3ddfb3f1f3d90ea73235ead9316d4a474ef62cf10fd3c"
+content-hash = "ef9a52860c1a07aeea37af3ef6e115603943a62efde74780c2450d58b31292c6"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -336,6 +354,24 @@ attrs = [
     {file = "attrs-20.2.0-py2.py3-none-any.whl", hash = "sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc"},
     {file = "attrs-20.2.0.tar.gz", hash = "sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594"},
 ]
+"backports.zoneinfo" = [
+    {file = "backports.zoneinfo-0.2.1-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:da6013fd84a690242c310d77ddb8441a559e9cb3d3d59ebac9aca1a57b2e18bc"},
+    {file = "backports.zoneinfo-0.2.1-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:89a48c0d158a3cc3f654da4c2de1ceba85263fafb861b98b59040a5086259722"},
+    {file = "backports.zoneinfo-0.2.1-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:1c5742112073a563c81f786e77514969acb58649bcdf6cdf0b4ed31a348d4546"},
+    {file = "backports.zoneinfo-0.2.1-cp36-cp36m-win32.whl", hash = "sha256:e8236383a20872c0cdf5a62b554b27538db7fa1bbec52429d8d106effbaeca08"},
+    {file = "backports.zoneinfo-0.2.1-cp36-cp36m-win_amd64.whl", hash = "sha256:8439c030a11780786a2002261569bdf362264f605dfa4d65090b64b05c9f79a7"},
+    {file = "backports.zoneinfo-0.2.1-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:f04e857b59d9d1ccc39ce2da1021d196e47234873820cbeaad210724b1ee28ac"},
+    {file = "backports.zoneinfo-0.2.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:17746bd546106fa389c51dbea67c8b7c8f0d14b5526a579ca6ccf5ed72c526cf"},
+    {file = "backports.zoneinfo-0.2.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:5c144945a7752ca544b4b78c8c41544cdfaf9786f25fe5ffb10e838e19a27570"},
+    {file = "backports.zoneinfo-0.2.1-cp37-cp37m-win32.whl", hash = "sha256:e55b384612d93be96506932a786bbcde5a2db7a9e6a4bb4bffe8b733f5b9036b"},
+    {file = "backports.zoneinfo-0.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:a76b38c52400b762e48131494ba26be363491ac4f9a04c1b7e92483d169f6582"},
+    {file = "backports.zoneinfo-0.2.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:8961c0f32cd0336fb8e8ead11a1f8cd99ec07145ec2931122faaac1c8f7fd987"},
+    {file = "backports.zoneinfo-0.2.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:e81b76cace8eda1fca50e345242ba977f9be6ae3945af8d46326d776b4cf78d1"},
+    {file = "backports.zoneinfo-0.2.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:7b0a64cda4145548fed9efc10322770f929b944ce5cee6c0dfe0c87bf4c0c8c9"},
+    {file = "backports.zoneinfo-0.2.1-cp38-cp38-win32.whl", hash = "sha256:1b13e654a55cd45672cb54ed12148cd33628f672548f373963b0bff67b217328"},
+    {file = "backports.zoneinfo-0.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:4a0f800587060bf8880f954dbef70de6c11bbe59c673c3d818921f042f9954a6"},
+    {file = "backports.zoneinfo-0.2.1.tar.gz", hash = "sha256:fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2"},
+]
 chardet = [
     {file = "chardet-3.0.4-py2.py3-none-any.whl", hash = "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"},
     {file = "chardet-3.0.4.tar.gz", hash = "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"},
@@ -351,8 +387,8 @@ discord-ext-menus = []
     {file = "discord.py-1.5.0.tar.gz", hash = "sha256:e71089886aa157341644bdecad63a72ff56b44406b1a6467b66db31c8e5a5a15"},
 ]
 donphan = [
-    {file = "donphan-2.4.1-py3-none-any.whl", hash = "sha256:a5c7355226a7a0ca6c6c9e0716a2a162641f9509a773ce8d3436d8c0b18bb7be"},
-    {file = "donphan-2.4.1.tar.gz", hash = "sha256:d597b14122a5ceff63c62a8e882a664ffbf5b254ab62b5605b448e54fef8525f"},
+    {file = "donphan-2.5.0-py3-none-any.whl", hash = "sha256:2a011d282e514180b8ec6ee8a135d52dc4cbf5afd9f73dabff4b23595ae6cc45"},
+    {file = "donphan-2.5.0.tar.gz", hash = "sha256:7c60165a6cb10b62544a2cf61b49118eb8ea86f7a4d7b45a341ad408d64b80dd"},
 ]
 humanize = []
 idna = [
