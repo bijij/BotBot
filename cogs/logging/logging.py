@@ -4,6 +4,7 @@ try:
 except ImportError:
     from backports import zoneinfo
 
+from contextlib import suppress
 from typing import Set
 
 import asyncpg
@@ -54,7 +55,8 @@ class Timezones(Table, schema='logging'):  # type: ignore
 
 class Opt_In_Status(Table, schema='logging'):  # type: ignore
     user_id: SQLType.BigInt = Column(primary_key=True, index=True)
-    public: bool
+    public: bool = Column(default=False)
+    nsfw: bool = Column(default=False)
 
     @classmethod
     async def is_opted_in(cls, ctx: Context, *, connection: asyncpg.Connection = None):
@@ -84,6 +86,7 @@ class Logging(commands.Cog):
         self.bot = bot
 
         self._opted_in: Set[int] = set()
+        self._log_nsfw: Set[int] = set()
 
         self._logging_task.add_exception_type(asyncpg.PostgresConnectionError)
         self._logging_task.start()
@@ -101,7 +104,7 @@ class Logging(commands.Cog):
         """Opt into logging."""
         async with ctx.db as conn:
             await Opt_In_Status.is_not_opted_in(ctx, connection=conn)
-            await Opt_In_Status.insert(connection=conn, user_id=ctx.author.id, public=False)
+            await Opt_In_Status.insert(connection=conn, user_id=ctx.author.id)
             self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
@@ -122,6 +125,20 @@ class Logging(commands.Cog):
         async with ctx.db as conn:
             await Opt_In_Status.is_opted_in(ctx, connection=conn)
             await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, public=public)
+
+        await ctx.tick()
+
+    @logging.command(name='nsfw')
+    async def logging_nsfw(self, ctx: Context, nsfw: bool):
+        """Set your NSFW channel logging preferences."""
+        async with ctx.db as conn:
+            await Opt_In_Status.is_opted_in(ctx, connection=conn)
+            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, nsfw=nsfw)
+            if nsfw:
+                self._log_nsfw.add(ctx.author.id)
+            else:
+                with suppress(KeyError):
+                    self._log_nsfw.remove(ctx.author.id)
 
         await ctx.tick()
 
@@ -159,7 +176,7 @@ class Logging(commands.Cog):
         if message.guild is None:
             return
 
-        if message.channel.is_nsfw():
+        if message.channel.is_nsfw() and message.author.id not in self._log_nsfw:
             return
 
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw()))
@@ -199,6 +216,8 @@ class Logging(commands.Cog):
 
         for record in await Opt_In_Status.fetchall():
             self._opted_in.add(record['user_id'])
+            if record['nsfw']:
+                self._log_nsfw.add(record['user_id'])
 
 
 def setup(bot: BotBase):
