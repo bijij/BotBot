@@ -21,6 +21,8 @@ discord-ext-alternatives = {git = "https://github.com/ext-creators/discord-ext-a
 "backports.zoneinfo" = "^0.2.1"
 
 [tool.poetry.dev-dependencies]
+autopep8 = "^1.5.4"
+flake8 = "^3.8.4"
 
 [build-system]
 requires = ["poetry>=0.12"]

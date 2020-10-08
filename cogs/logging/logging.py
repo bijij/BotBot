@@ -30,17 +30,20 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     guild_id: SQLType.BigInt = Column(index=True)
     user_id: SQLType.BigInt = Column(index=True)
     content: str
+    nsfw: bool = Column(default=False)
 
     @classmethod
-    async def get_user_log(cls, user: discord.User, *, connection: asyncpg.Connection = None) -> str:
+    async def get_user_log(cls, user: discord.User, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> str:
         async with MaybeAcquire(connection=connection) as connection:
-            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name} WHERE user_id = $1', user.id)
+            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name}\
+            WHERE user_id = $1 AND nsfw <= $2', user.id, nsfw)
         return data
 
     @classmethod
-    async def get_guild_log(cls, guild: discord.Guild, *, connection: asyncpg.Connection = None) -> str:
+    async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> str:
         async with MaybeAcquire(connection=connection) as connection:
-            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') AS data FROM {cls._name} WHERE guild_id = $1', guild.id)
+            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') AS data FROM {cls._name} \
+            WHERE guild_id = $1 and nsfw <= $2', guild.id, nsfw)
         return data
 
 
@@ -159,7 +162,7 @@ class Logging(commands.Cog):
         if message.channel.is_nsfw():
             return
 
-        self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content))
+        self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw()))
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
