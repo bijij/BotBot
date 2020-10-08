@@ -45,7 +45,7 @@ class Markov(commands.Cog):
 
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await Message_Log.get_user_log(user, ctx.channel.is_nsfw(), connection=conn)
+            data = await Message_Log.get_user_log(user, ctx.channel.is_nsfw() if ctx.guild is not None else False, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
@@ -69,7 +69,7 @@ class Markov(commands.Cog):
 
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await Message_Log.get_user_log(user, ctx.channel.is_nsfw(), connection=conn)
+            data = await Message_Log.get_user_log(user, ctx.channel.is_nsfw() if ctx.guild is not None else False, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no message log data, please try again later.')
@@ -94,8 +94,9 @@ class Markov(commands.Cog):
         async with ctx.db as conn:
             await Opt_In_Status.is_opted_in(ctx, connection=conn)
             await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data_a = await Message_Log.get_user_log(ctx.author, ctx.channel.is_nsfw(), connection=conn)
-            data_b = await Message_Log.get_user_log(user, ctx.channel.is_nsfw(), connection=conn)
+            is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
+            data_a = await Message_Log.get_user_log(ctx.author, is_nsfw, connection=conn)
+            data_b = await Message_Log.get_user_log(user, is_nsfw, connection=conn)
             data = data_a + "\n" + data_b
 
             if not data:
@@ -115,7 +116,7 @@ class Markov(commands.Cog):
         """Generate a markov chain based off messages in the server.
         """
         async with ctx.db as conn:
-            data = await Message_Log.get_guild_log(ctx.guild, ctx.channel.is_nsfw(), connection=conn)
+            data = await Message_Log.get_guild_log(ctx.guild, ctx.channel.is_nsfw() if ctx.guild is not None else False, connection=conn)
 
             if not data:
                 raise commands.BadArgument(f'Server "{ctx.guild.name}" currently has no message log data, please try again later.')
@@ -135,7 +136,7 @@ class Markov(commands.Cog):
         `seed`: The string to attempt to seed the markov chain with.
         """
         async with ctx.db as conn:
-            data = await Message_Log.get_guild_log(ctx.guild, ctx.channel.is_nsfw(), connection=conn)
+            data = await Message_Log.get_guild_log(ctx.guild, ctx.channel.is_nsfw() if ctx.guild is not None else False, connection=conn)
 
             if not data:
                 raise commands.BadArgument('There was not enough message log data, please try again later.')
