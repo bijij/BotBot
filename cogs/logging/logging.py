@@ -206,8 +206,7 @@ class Logging(commands.Cog):
                 self.bot._status_log = list()
 
             if self.bot._message_log:
-                columns = Message_Log._columns.values()
-                await Message_Log.insert_many(columns, *self.bot._message_log, connection=conn)
+                await Message_Log.insert_many(Message_Log._columns, *self.bot._message_log, connection=conn)
                 self.bot._message_log = list()
 
     @_logging_task.before_loop
