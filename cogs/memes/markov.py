@@ -56,7 +56,7 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='seeded_user_markov', aliases=['sum'])
@@ -81,7 +81,7 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='dual_user_markov', aliases=['dum'])
@@ -110,7 +110,7 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='guild_markov', aliases=['gm'])
@@ -130,7 +130,7 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='seeded_guild_markov', aliases=['sgm'])
@@ -151,7 +151,7 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
 

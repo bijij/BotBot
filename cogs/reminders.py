@@ -116,7 +116,7 @@ class Reminders(commands.Cog):
             name='Jump URL:', value=f'[Jump!](<https://discord.com/channels/{guild_id}/{channel_id}/{message_id}>)'
         )
 
-        allowed_mentions = discord.AllowedMentions(user=True)
+        allowed_mentions = discord.AllowedMentions(users=True)
         await channel.send(user.mention, embed=embed, allowed_mentions=allowed_mentions)
 
 
