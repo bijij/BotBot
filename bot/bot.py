@@ -37,9 +37,10 @@ class BotBase(commands.Bot):
 
         self.prefix = CONFIG.BOT.PREFIX
 
+        allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
         intents = discord.Intents.all()
 
-        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(), intents=intents)
+        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(), allowed_mentions=allowed_mentions, intents=intents)
 
         self._active_timer = asyncio.Event()
         self._current_timer = None

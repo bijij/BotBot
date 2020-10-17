@@ -56,7 +56,8 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        await ctx.send(markov)
+        allowed_mentions = discord.AllowedMentions(user=True)
+        await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='seeded_user_markov', aliases=['sum'])
     async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
@@ -80,7 +81,8 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        await ctx.send(markov)
+        allowed_mentions = discord.AllowedMentions(user=True)
+        await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='dual_user_markov', aliases=['dum'])
     async def dual_user_markov(self, ctx: Context, *, user: discord.User):
@@ -108,7 +110,8 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        await ctx.send(markov)
+        allowed_mentions = discord.AllowedMentions(user=True)
+        await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='guild_markov', aliases=['gm'])
     @commands.guild_only()
@@ -127,7 +130,8 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        await ctx.send(markov)
+        allowed_mentions = discord.AllowedMentions(user=True)
+        await ctx.send(markov, allowed_mentions=allowed_mentions)
 
     @commands.command(name='seeded_guild_markov', aliases=['sgm'])
     async def seeded_guild_markov(self, ctx: Context, *, seed: str):
@@ -147,7 +151,8 @@ class Markov(commands.Cog):
             if not markov:
                 raise commands.BadArgument('Markov could not be generated')
 
-        await ctx.send(markov)
+        allowed_mentions = discord.AllowedMentions(user=True)
+        await ctx.send(markov, allowed_mentions=allowed_mentions)
 
 
 def setup(bot: BotBase):
