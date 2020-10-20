@@ -12,7 +12,6 @@ from discord.ext import commands
 import ampharos
 from ampharos.types import Pokemon
 
-from bot import Context
 from cogs.logging.logging import Timezones
 from .objects import Code
 
@@ -68,14 +67,14 @@ class UserConverter(commands.IDConverter):
 
 
 class CodeConverter(commands.Converter):
-    async def convert(self, ctx: Context, argument: str):
+    async def convert(self, ctx: commands.Context, argument: str):
         if argument.startswith('```') and argument.endswith('```'):
             return Code('\n'.join(argument.split('\n')[1:-1]))
         return Code(argument)
 
 
 class WhenAndWhat(commands.Converter):
-    async def convert(self, ctx: Context, argument: str):
+    async def convert(self, ctx: commands.Context, argument: str):
         settings = {
             'PREFER_DATES_FROM': 'future',
             'PREFER_DAY_OF_MONTH': 'first',
