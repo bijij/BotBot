@@ -15,12 +15,11 @@ from .handler import WebhookHandler
 from .help import EmbedHelpCommand
 from .timers import dispatch_timers
 
-from utils.converters import ALL_CONVERTERS
-
-
 class BotBase(commands.Bot):
     def __init__(self):
         self.start_time = datetime.datetime.utcnow()
+
+        from utils.converters import ALL_CONVERTERS
 
         for typing, converter in ALL_CONVERTERS.items():
             self.converters[typing] = converter
