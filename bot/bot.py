@@ -6,7 +6,7 @@ import traceback
 import discord
 from discord.ext import commands
 
-from donphan import create_pool, create_tables, create_views, MaybeAcquire
+from donphan import create_pool, create_types, create_tables, create_views, MaybeAcquire
 from ampharos import setup as setup_ampharos
 
 from .config import CONFIG
@@ -115,8 +115,9 @@ class BotBase(commands.Bot):
             'application_name': 'BotBot'}
         )
         self.pool = MaybeAcquire().pool
-        await create_tables(drop_if_exists=False)
-        await create_views(drop_if_exists=False)
+        await create_types()
+        await create_tables()
+        await create_views()
         await setup_ampharos()
 
         self._start_time = datetime.datetime.utcnow()

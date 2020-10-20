@@ -8,12 +8,12 @@ from contextlib import suppress
 from typing import Set
 
 import asyncpg
-from donphan import Column, MaybeAcquire, Table, SQLType
+from donphan import Column, enum, MaybeAcquire, Table, SQLType
 
 import discord
 from discord.ext import commands, tasks
 
-from bot import BotBase, Context, ConnectionContext
+from bot import BotBase, Context
 
 
 COLOURS = {
@@ -46,6 +46,15 @@ class Message_Log(Table, schema='logging'):  # type: ignore
             data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name} \
             WHERE guild_id = $1 and nsfw <= $2', guild.id, nsfw)
         return data
+
+
+Status = enum('Status', 'online offline idle dnd', schema='logging')
+
+
+class Status_Log(Table, schema='logging'):  # type: ignore
+    user_id: SQLType.BigInt = Column(primary_key=True, index=True)
+    timestamp: datetime.datetime = Column(primary_key=True)
+    status: Status  # type: ignore
 
 
 class Timezones(Table, schema='logging'):  # type: ignore
@@ -200,9 +209,9 @@ class Logging(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def _logging_task(self):
-        async with ConnectionContext(pool=self.bot.pool) as conn:
+        async with MaybeAcquire() as conn:
             if self.bot._status_log:
-                await conn.executemany('INSERT INTO logging.status_log VALUES ($1, $2, $3)', self.bot._status_log)
+                await Status_Log.insert_many(Status_Log._columns, *self.bot._status_log, connection=conn)
                 self.bot._status_log = list()
 
             if self.bot._message_log:

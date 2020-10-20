@@ -18,7 +18,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging.logging import Opt_In_Status, Timezones
+from cogs.logging.logging import Opt_In_Status, Status_Log, Timezones
 
 
 IMAGE_SIZE = 2970
@@ -46,8 +46,8 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 
 
 async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
-    return await conn.fetch(f'SELECT * FROM logging.status_log WHERE user_id = $1\
-        AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\' ORDER BY "timestamp" ASC', user.id)
+    return await Status_Log.fetch_where(f'WHERE user_id = $1 AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\'',
+                                        user.id, order_by='"timestamp" ASC')
 
 
 async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> Counter:
