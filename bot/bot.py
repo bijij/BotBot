@@ -119,6 +119,8 @@ class BotBase(commands.Bot):
         await create_views(drop_if_exists=False)
         await setup_ampharos()
 
+        self._start_time = datetime.datetime.utcnow()
+
         return await super().connect(*args, **kwargs)
 
     def run(self):

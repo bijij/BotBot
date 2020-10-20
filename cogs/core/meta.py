@@ -41,7 +41,7 @@ class Meta(commands.Cog):
 
         await ctx.send(
             embed=discord.Embed(
-                title=f'{self.bot.user.name} v{self.bot.__version__} Status',
+                title=f'{self.bot.user.name} Status',
                 colour=self.bot.user.colour
             ).set_thumbnail(
                 url=self.bot.user.avatar_url
