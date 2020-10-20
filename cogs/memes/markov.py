@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from bot import BotBase, Context
 from cogs.logging.logging import Message_Log, Opt_In_Status
-from utils import LRUDict
+from utils.collections import LRUDict
 
 
 def make_sentence(model: markovify.Text, *, seed: str = None) -> Optional[str]:

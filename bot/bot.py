@@ -15,7 +15,7 @@ from .handler import WebhookHandler
 from .help import EmbedHelpCommand
 from .timers import dispatch_timers
 
-from utils import ALL_CONVERTERS
+from utils.converters import ALL_CONVERTERS
 
 
 class BotBase(commands.Bot):
