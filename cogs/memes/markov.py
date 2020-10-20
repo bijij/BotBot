@@ -1,5 +1,4 @@
 from functools import partial
-from random import randint
 from typing import Awaitable, Optional, Tuple
 
 import markovify
@@ -30,7 +29,7 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache = LRUDict(max_size=32)  # idk about a good size
+        self.model_cache = LRUDict(max_size=8)  # idk about a good size
 
     async def get_model(self, query: Tuple[int, ...], *coros: Awaitable[str], state_size=int) -> markovify.Text:
         # Return cached model if one exists
@@ -44,12 +43,11 @@ class Markov(commands.Cog):
         if not data:
             raise commands.BadArgument('There was not enough message log data, please try again later.')
 
-        generate_model = partial(markovify.NewlineText, input_text=data, state_size=state_size, retain_original=False)
-        model = await self.bot.loop.run_in_executor(None, generate_model)
+        def generate_model():
+            model = markovify.NewlineText(input_text=data, state_size=state_size, retain_original=False)
+            return model.compile()
 
-        compile_model = partial(model.compile, inplace=True)
-        self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, compile_model)
-
+        self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, generate_model)
         return m
 
     async def send_markov(self, ctx: Context, model: markovify.Text, seed: str = None):
@@ -74,11 +72,10 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                state_size = randint(2, 3)
-                query = (is_nsfw, state_size, user.id)
+                query = (is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro, state_size=state_size)
+                model = await self.get_model(query, coro, state_size=2)
 
             await self.send_markov(ctx, model)
 
@@ -96,11 +93,10 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                state_size = randint(2, 3)
-                query = (is_nsfw, state_size, user.id)
+                query = (is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro, state_size=state_size)
+                model = await self.get_model(query, coro, state_size=2)
 
             await self.send_markov(ctx, model, seed=seed)
 
@@ -119,12 +115,11 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                state_size = randint(2, 3)
-                query = (is_nsfw, state_size, ctx.author.id, user.id)
+                query = (is_nsfw, 2, ctx.author.id, user.id)
 
                 coro_a = Message_Log.get_user_log(ctx.author, is_nsfw, connection=conn)
                 coro_b = Message_Log.get_user_log(user, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro_a, coro_b, state_size=state_size)
+                model = await self.get_model(query, coro_a, coro_b, state_size=2)
 
             await self.send_markov(ctx, model)
 
@@ -136,11 +131,10 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                state_size = randint(2, 4)
-                query = (is_nsfw, state_size, ctx.guild.id)
+                query = (is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro, state_size=state_size)
+                model = await self.get_model(query, coro, state_size=3)
 
             await self.send_markov(ctx, model)
 
@@ -153,11 +147,10 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                state_size = max(len(seed.split()), 2)
-                query = (is_nsfw, state_size, ctx.guild.id)
+                query = (is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro, state_size=state_size)
+                model = await self.get_model(query, coro, state_size=3)
 
             await self.send_markov(ctx, model, seed=seed)
 
