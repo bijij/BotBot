@@ -46,7 +46,7 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 
 
 async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
-    return await Status_Log.fetch_where(f'WHERE user_id = $1 AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\'',
+    return await Status_Log.fetch_where(f'user_id = $1 AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\'',
                                         user.id, order_by='"timestamp" ASC')
 
 
