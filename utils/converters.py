@@ -19,6 +19,8 @@ from .objects import Code
 from dateparser.search import search_dates
 from typing import Any
 
+__all__ = ('ALL_CONVERTERS',)
+
 
 class GuildConverter(commands.IDConverter):
 
@@ -151,7 +153,7 @@ class ZoneInfoConverter(commands.Converter):
             raise commands.BadArgument(f'Could not find time zone "{argument}".')
 
 
-__converters__ = {
+ALL_CONVERTERS = {
     discord.Guild: GuildConverter,
     discord.User: UserConverter,
     Code: CodeConverter,

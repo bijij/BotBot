@@ -15,15 +15,15 @@ from .handler import WebhookHandler
 from .help import EmbedHelpCommand
 from .timers import dispatch_timers
 
+from utils import ALL_CONVERTERS
+
 
 class BotBase(commands.Bot):
     def __init__(self):
         self.start_time = datetime.datetime.utcnow()
 
-        from utils.converters import __converters__
-
-        for o, c in __converters__.items():
-            self.converters[o] = c
+        for typing, converter in ALL_CONVERTERS.items():
+            self.converters[typing] = converter
 
         self.log = logging.getLogger(__name__)
         self.log.setLevel(CONFIG.LOGGING.LOG_LEVEL)

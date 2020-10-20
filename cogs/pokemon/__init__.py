@@ -12,6 +12,7 @@ async def _user_is_playing(ctx: commands.Context) -> bool:
         raise commands.CheckFailure('You are currently not playing a game.')
     return True
 
+
 def parse_generation(value):
     try:
         generation = int(value)
@@ -20,6 +21,7 @@ def parse_generation(value):
     except ValueError:
         raise commands.BadArgument('Invalid generation specified.')
     return generation
+
 
 class SpeedSight(commands.Cog):
     """Swellow Sight"""
@@ -51,7 +53,7 @@ class SpeedSight(commands.Cog):
 
             if len(generations) == 1:
                 min_gen = max_gen = parse_generation(generations[0])
-            
+
             else:
                 min_gen = parse_generation(generations[0])
                 max_gen = parse_generation(generations[1])
@@ -112,6 +114,7 @@ class SpeedSight(commands.Cog):
         """Stops the current game.
         """
         self.bot.dispatch('ss_next', ctx.author, None)
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(SpeedSight(bot))
