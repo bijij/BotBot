@@ -33,3 +33,5 @@
         moderation: ~
 
     SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS
+
+    REPOSITORY_URL: https://github.com/bijij/BotBot

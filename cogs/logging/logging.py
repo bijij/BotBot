@@ -43,7 +43,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     @classmethod
     async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> str:
         async with MaybeAcquire(connection=connection) as connection:
-            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') AS data FROM {cls._name} \
+            data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name} \
             WHERE guild_id = $1 and nsfw <= $2', guild.id, nsfw)
         return data
 

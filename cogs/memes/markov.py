@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Awaitable, Optional, Tuple
+from typing import Awaitable, Dict, Optional, Tuple
 
 import markovify
 from markovify.text import ParamError
@@ -29,7 +29,7 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache = LRUDict(max_size=8)  # idk about a good size
+        self.model_cache: Dict[Tuple[int, ...], markovify.Text] = LRUDict(max_size=8)  # idk about a good size
 
     async def get_model(self, query: Tuple[int, ...], *coros: Awaitable[str], state_size=int) -> markovify.Text:
         # Return cached model if one exists
