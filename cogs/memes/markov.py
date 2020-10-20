@@ -44,8 +44,8 @@ class Markov(commands.Cog):
             raise commands.BadArgument('There was not enough message log data, please try again later.')
 
         def generate_model():
-            model = markovify.NewlineText(input_text=data, state_size=state_size, retain_original=False)
-            return model.compile()
+            model = markovify.NewlineText(input_text=data, state_size=state_size)
+            return model.compile(inplace=True)
 
         self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, generate_model)
         return m
