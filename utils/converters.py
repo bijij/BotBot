@@ -66,6 +66,16 @@ class UserConverter(commands.IDConverter):
             return result
 
 
+class CommandConverter(commands.Converter):
+
+    async def convert(self, ctx: commands.Context, argument: str):
+        result = ctx.bot.get_command(argument)
+
+        if result is None:
+            raise commands.BadArgument(f'Command \'{argument}\' not found.')
+        return result
+
+
 class CodeConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         if argument.startswith('```') and argument.endswith('```'):
@@ -155,6 +165,7 @@ class ZoneInfoConverter(commands.Converter):
 ALL_CONVERTERS = {
     discord.Guild: GuildConverter,
     discord.User: UserConverter,
+    commands.Command: CommandConverter,
     Code: CodeConverter,
     # Tuple[datetime.datetime, str]: WhenAndWhat
     Pokemon: PokemonConverter,
