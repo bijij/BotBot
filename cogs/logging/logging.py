@@ -37,14 +37,14 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     async def get_user_log(cls, user: discord.User, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> str:
         async with MaybeAcquire(connection=connection) as connection:
             data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name}\
-            WHERE user_id = $1 AND nsfw <= $2', user.id, nsfw)
+            WHERE user_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', user.id, nsfw)
         return data
 
     @classmethod
     async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> str:
         async with MaybeAcquire(connection=connection) as connection:
             data, = await connection.fetchrow(f'SELECT string_agg(content, \'\n\') FROM {cls._name} \
-            WHERE guild_id = $1 and nsfw <= $2', guild.id, nsfw)
+            WHERE guild_id = $1 and nsfw <= $2 AND content LIKE \'% %\'', guild.id, nsfw)
         return data
 
 
