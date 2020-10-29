@@ -223,15 +223,15 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         y_offset = x_offset
         draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
 
+        # Add hour lines
+        for x_offset in range(0, IMAGE_SIZE, IMAGE_SIZE // 24):
+            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(64, 255, 255, 255), width=10)
+
         # Add time labels
         time = start_of_day(now)
         for x_offset in (IMAGE_SIZE // 4, IMAGE_SIZE // 2, int(IMAGE_SIZE // 1.33)):
             time += datetime.timedelta(hours=6)
             draw.text((x_offset, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
-
-        # Add hour lines
-        for x_offset in range(0, IMAGE_SIZE, IMAGE_SIZE // 24):
-            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(255, 255, 255, 128), width=10)
 
     return as_bytes(resample(image))
 
