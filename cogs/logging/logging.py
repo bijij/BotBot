@@ -151,7 +151,7 @@ class Logging(commands.Cog):
 
         await ctx.tick()
 
-    @commands.group(name='timezone')
+    @commands.group(name='timezone', aliases=['tz'])
     async def timezone(self, ctx):
         """Timezone management commands."""
         pass

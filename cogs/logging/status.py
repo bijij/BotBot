@@ -229,6 +229,10 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
             time += datetime.timedelta(hours=6)
             draw.text((x_offset, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
+        # Add hour lines
+        for x_offset in range(0, IMAGE_SIZE, IMAGE_SIZE // 24):
+            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(255, 255, 255, 0.5), width=10)
+
     return as_bytes(resample(image))
 
 
