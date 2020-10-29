@@ -225,7 +225,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
         # Add hour lines
         for x_offset in range(0, IMAGE_SIZE, IMAGE_SIZE // 24):
-            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(64, 255, 255, 255), width=10)
+            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(255, 255, 255, 225), width=10)
 
         # Add time labels
         time = start_of_day(now)
