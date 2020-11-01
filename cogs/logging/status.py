@@ -225,7 +225,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
 
         # Add hour lines
-        hour_lines = Image.new(image.size, 'RGBA', (0, 0, 0, 0))
+        hour_lines = Image.new('RGBA', image.size, (0, 0, 0, 0))
         hour_lines_draw = ImageDraw.Draw(hour_lines)
 
         for i in range(1, 24):
