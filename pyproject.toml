@@ -20,6 +20,7 @@ discord-ext-alternatives = {git = "https://github.com/ext-creators/discord-ext-a
 "discord.py" = "^1.5.0"
 "backports.zoneinfo" = "^0.2.1"
 psutil = "^5.7.2"
+ics = "^0.7"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"

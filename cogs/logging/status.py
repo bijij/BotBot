@@ -5,13 +5,14 @@ except ImportError:
     from backports import zoneinfo
 
 from collections import Counter, namedtuple
-from io import BytesIO
+from io import BytesIO, StringIO
 from functools import partial
 from typing import List, Optional, Tuple
 
 import asyncpg
 import numpy
 
+from ics import Calendar, Event
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 import discord
@@ -39,7 +40,7 @@ COLOURS = {
     discord.Status.dnd: (240, 71, 71, 255)
 }
 
-LogEntry = namedtuple('LogEntry', 'status duration')
+LogEntry = namedtuple('LogEntry', 'status start duration')
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -75,12 +76,12 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *, days: 
 
     # Add padding for missing data
     status_log = [
-        LogEntry(status=None, duration=(records[0]['timestamp'] - start_of_day(records[0]['timestamp'])).total_seconds())
+        LogEntry(status=None, start=records[0]['timestamp'], duration=(records[0]['timestamp'] - start_of_day(records[0]['timestamp'])).total_seconds())
     ]
 
     for i, record in enumerate(records[:-1]):
         status_log.append(
-            LogEntry(status=discord.Status(record['status']), duration=(records[i + 1]['timestamp'] - record['timestamp']).total_seconds())
+            LogEntry(status=discord.Status(record['status']), start=record['timestamp'], duration=(records[i + 1]['timestamp'] - record['timestamp']).total_seconds())
         )
 
     return status_log
@@ -189,7 +190,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         time_offset += 60 * 60 * 24
 
     # Draw status log entries
-    for status, duration in status_log:
+    for status, _, duration in status_log:
         total_duration += duration
         new_time_offset = time_offset + duration
 
@@ -245,6 +246,22 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     return as_bytes(resample(image))
 
 
+def generate_status_calendar(status_log: List[LogEntry]) -> StringIO:
+    calendar = Calendar()
+
+    for status, start, duration in status_log:
+        event = Event()
+        event.name = f"User went {status}"
+        event.begin = start.strftime("%Y-%m-%d %H:%M:%S")
+        event.end = (start + duration).strftime("%Y-%m-%d %H:%M:%S")
+        calendar.events.add(event)
+
+    out = StringIO()
+    out.write(calendar)
+    out.seek(0)
+    return out
+
+
 class StatusLogging(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -274,7 +291,7 @@ class StatusLogging(commands.Cog):
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
-    @commands.command(name='status_log', aliases=['sl', 'sc'])
+    @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
     async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: Optional[float] = None):
         """Display a status log.
 
@@ -306,6 +323,21 @@ class StatusLogging(commands.Cog):
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
+
+    @status_log.command(name='calendar', aliases='cal')
+    async def status_log_calendar(self, ctx: commands.Context, user: Optional[discord.User] = None):
+        """Output an `ical` format status log"""
+        user = user or ctx.author
+
+        async with ctx.db as conn:
+            await Opt_In_Status.is_public(ctx, user, connection=conn)
+            data = await get_status_log(user, conn, days=30)
+
+            if not data:
+                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+
+        calendar = generate_status_calendar(data)
+        await ctx.send(file=discord.File(calendar, f'{user.id}_status_{ctx.message.created_at}.ical'))
 
 
 def setup(bot: BotBase):

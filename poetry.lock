@@ -35,6 +35,17 @@ reference = "master"
 resolved_reference = "8b53817ea749a38c406e1e0c15850b4628af3e7d"
 
 [[package]]
+name = "arrow"
+version = "0.14.7"
+description = "Better dates & times for Python"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[package.dependencies]
+python-dateutil = "*"
+
+[[package]]
 name = "async-timeout"
 version = "3.0.1"
 description = "Timeout context manager for asyncio programs"
@@ -133,7 +144,7 @@ resolved_reference = "01b1ec7f4bf4eed821271ee7b062964670af44c6"
 
 [[package]]
 name = "discord-ext-menus"
-version = "1.0.0a26+g84caae8"
+version = "1.0.0a27+g6f2b873"
 description = "An extension module to make reaction based menus with discord.py"
 category = "main"
 optional = false
@@ -146,7 +157,7 @@ python-versions = ">=3.5.3"
 type = "git"
 url = "https://github.com/rapptz/discord-ext-menus.git"
 reference = "master"
-resolved_reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
+resolved_reference = "6f2b873bf0d28903eb752aa1166b3aac26dc9007"
 
 [[package]]
 name = "discord.py"
@@ -193,7 +204,7 @@ pyflakes = ">=2.2.0,<2.3.0"
 
 [[package]]
 name = "humanize"
-version = "3.1.0"
+version = "3.1.1.dev4"
 description = "Python humanize utilities"
 category = "main"
 optional = false
@@ -206,7 +217,21 @@ tests = ["freezegun", "pytest", "pytest-cov"]
 type = "git"
 url = "https://github.com/jmoiron/humanize.git"
 reference = "master"
-resolved_reference = "2d4143e0aecb719a376dc757b439fc7e41b0d773"
+resolved_reference = "184269e4b8f9415927e19d841891c9021235f6ce"
+
+[[package]]
+name = "ics"
+version = "0.7"
+description = "Python icalendar (rfc5545) parser"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+arrow = ">=0.11,<0.15"
+python-dateutil = "*"
+six = ">1.5"
+tatsu = ">4.2"
 
 [[package]]
 name = "idna"
@@ -346,6 +371,17 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
+name = "tatsu"
+version = "5.5.0"
+description = "TatSu takes a grammar in a variation of EBNF as input, and outputs a memoizing PEG/Packrat parser in Python."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+future-regex = ["regex"]
+
+[[package]]
 name = "toml"
 version = "0.10.1"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -411,7 +447,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "bb46bbb89e295aedad4941eaa6c9c446c6606f58b312a4d08deefb7a1d623280"
+content-hash = "5ad157ad846f72afa292dcfa4a332ff86140e71fa7e574e1f2fc27b5ce59376d"
 
 [metadata.files]
 aiohttp = [
@@ -430,6 +466,10 @@ aiohttp = [
     {file = "aiohttp-3.6.3.tar.gz", hash = "sha256:698cd7bc3c7d1b82bb728bae835724a486a8c376647aec336aa21a60113c3645"},
 ]
 ampharos = []
+arrow = [
+    {file = "arrow-0.14.7-py2.py3-none-any.whl", hash = "sha256:4bfacea734ead51495dc47df00421ecfd4ca1f2c0fbe58b9a26eaeddedc31caf"},
+    {file = "arrow-0.14.7.tar.gz", hash = "sha256:67f8be7c0cf420424bc62d8d7dc40b44e4bb2f7b515f9cc2954fb36e35797656"},
+]
 async-timeout = [
     {file = "async-timeout-3.0.1.tar.gz", hash = "sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f"},
     {file = "async_timeout-3.0.1-py3-none-any.whl", hash = "sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3"},
@@ -509,6 +549,10 @@ flake8 = [
     {file = "flake8-3.8.4.tar.gz", hash = "sha256:aadae8761ec651813c24be05c6f7b4680857ef6afaae4651a4eccaef97ce6c3b"},
 ]
 humanize = []
+ics = [
+    {file = "ics-0.7-py2.py3-none-any.whl", hash = "sha256:bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac"},
+    {file = "ics-0.7-py3.7.egg", hash = "sha256:3b606205b9582ad27dff77f9b227a30d02fdac532731927fe39df1f1ddf8673f"},
+]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
@@ -678,6 +722,10 @@ regex = [
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
+]
+tatsu = [
+    {file = "TatSu-5.5.0-py2.py3-none-any.whl", hash = "sha256:3a043490e577632a05374b5033646bbc26cbb17386df81735a569ecbd45d934b"},
+    {file = "TatSu-5.5.0.zip", hash = "sha256:0adbf7189a8c4f9a882b442f7b8ed6c6ab3baae37057db0e96b6888daacffad0"},
 ]
 toml = [
     {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},
