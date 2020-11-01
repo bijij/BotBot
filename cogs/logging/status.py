@@ -251,7 +251,7 @@ def generate_status_calendar(status_log: List[LogEntry]) -> StringIO:
 
     for status, start, duration in status_log:
         event = Event()
-        event.name = f"User went {status}"
+        event.name = f"User was {status}"
         event.begin = start.strftime("%Y-%m-%d %H:%M:%S")
         event.end = (start + duration).strftime("%Y-%m-%d %H:%M:%S")
         calendar.events.add(event)
