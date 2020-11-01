@@ -76,12 +76,12 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *, days: 
 
     # Add padding for missing data
     status_log = [
-        LogEntry(status=None, start=records[0]['timestamp'], duration=(records[0]['timestamp'] - start_of_day(records[0]['timestamp'])).total_seconds())
+        LogEntry(status=None, start=records[0]['timestamp'], duration=records[0]['timestamp'] - start_of_day(records[0]['timestamp']))
     ]
 
     for i, record in enumerate(records[:-1]):
         status_log.append(
-            LogEntry(status=discord.Status(record['status']), start=record['timestamp'], duration=(records[i + 1]['timestamp'] - record['timestamp']).total_seconds())
+            LogEntry(status=discord.Status(record['status']), start=record['timestamp'], duration=records[i + 1]['timestamp'] - record['timestamp'])
         )
 
     return status_log
@@ -191,6 +191,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
     # Draw status log entries
     for status, _, duration in status_log:
+        duration = duration.total_seconds()
         total_duration += duration
         new_time_offset = time_offset + duration
 
