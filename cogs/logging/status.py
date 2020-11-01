@@ -258,7 +258,7 @@ def generate_status_calendar(status_log: List[LogEntry]) -> StringIO:
         calendar.events.add(event)
 
     out = StringIO()
-    out.write(calendar)
+    out.writelines(calendar)
     out.seek(0)
     return out
 
