@@ -324,7 +324,7 @@ class StatusLogging(commands.Cog):
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
-    @status_log.command(name='calendar', aliases='cal')
+    @status_log.command(name='calendar', aliases=['cal'])
     async def status_log_calendar(self, ctx: commands.Context, user: Optional[discord.User] = None):
         """Output an `ical` format status log"""
         user = user or ctx.author
