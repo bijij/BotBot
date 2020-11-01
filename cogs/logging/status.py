@@ -230,7 +230,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
         for i in range(1, 24):
             x_offset = ONE_HOUR * i
-            colour = (255, 255, 255, 225 if not i % 6 else 128)
+            colour = (255, 255, 255, 255 if not i % 6 else 128)
             draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE)
 
         image = Image.alpha_composite(image, hour_lines)
@@ -240,7 +240,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         time = start_of_day(now)
         for x_offset in (ONE_HOUR * 6, ONE_HOUR * 12, ONE_HOUR * 18):
             time += datetime.timedelta(hours=6)
-            draw.text((x_offset + ONE_HOUR // 2, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
+            draw.text((x_offset - ONE_HOUR // 2, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
     return as_bytes(resample(image))
 
