@@ -27,6 +27,7 @@ FINAL_SIZE = 1024
 SUPERSAMPLE = IMAGE_SIZE / FINAL_SIZE
 
 ONE_DAY = 60 * 60 * 24
+ONE_HOUR = IMAGE_SIZE // 24
 
 WHITE = (255, 255, 255, 255)
 
@@ -224,12 +225,19 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
 
         # Add hour lines
-        for x_offset in range(0, IMAGE_SIZE, IMAGE_SIZE // 24):
-            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=(255, 255, 255, 225), width=10)
+        hour_lines = Image.new(image.size, 'RGBA', (0, 0, 0, 0))
+        hour_lines_draw = ImageDraw.Draw(hour_lines)
+
+        for i in range(1, 24):
+            x_offset = ONE_HOUR * i
+            colour = (255, 255, 255, 225 if not i % 6 else 128)
+            hour_lines_draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=colour, width=10)
+
+        image = Image.alpha_composite(image, hour_lines)
 
         # Add time labels
         time = start_of_day(now)
-        for x_offset in (IMAGE_SIZE // 4, IMAGE_SIZE // 2, int(IMAGE_SIZE // 1.33)):
+        for x_offset in (ONE_HOUR * 6, ONE_HOUR * 12, ONE_HOUR * 18):
             time += datetime.timedelta(hours=6)
             draw.text((x_offset, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
