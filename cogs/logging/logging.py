@@ -1,4 +1,6 @@
 import datetime
+
+from discord import user
 try:
     import zoneinfo
 except ImportError:
@@ -226,6 +228,19 @@ class Logging(commands.Cog):
             self._opted_in.add(record['user_id'])
             if record['nsfw']:
                 self._log_nsfw.add(record['user_id'])
+
+        # Fill with current status data
+        status_log = list()
+        now = datetime.datetime.utcnow()
+
+        for user_id in self._opted_in:
+            for guild in self.bot.guilds:
+                member = guild.get_member(user_id)
+                if member is not None:
+                    status_log.append((user_id, now, member.status.name))
+                    break
+
+        await Status_Log.insert_many(Status_Log._columns, *status_log)
 
 
 def setup(bot: BotBase):
