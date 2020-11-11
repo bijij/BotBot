@@ -1,6 +1,5 @@
 import datetime
 
-from discord import user
 try:
     import zoneinfo
 except ImportError:

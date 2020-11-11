@@ -55,7 +55,7 @@ class Markov(commands.Cog):
         markov = await self.bot.loop.run_in_executor(None, markov_call)
         if not markov:
             raise commands.BadArgument('Markov could not be generated')
-        if ctx.guild.id != 336642139381301249:
+        if ctx.guild == self.bot.get_guild(336642139381301249):
             allowed_mentions = discord.AllowedMentions(users=True)
         else:
             allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
