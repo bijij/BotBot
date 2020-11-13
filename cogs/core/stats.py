@@ -139,7 +139,7 @@ class Stats(commands.Cog):
     async def bulk_insert(self):
         async with self._batch_lock:
             if self._batch_data:
-                await Commands.insert_many(Commands._columns.values(), *self._batch_data)
+                await Commands.insert_many(Commands._columns, *self._batch_data)
                 self.bot.log.debug(f'Recorded {plural(len(self._batch_data)):command invoke} in the database.')
                 self._batch_data.clear()
 

@@ -10,7 +10,6 @@ python = "^3.8"
 numpy = "^1.19.2"
 pillow = "^7.2.0"
 websockets = "^8.1"
-markovify = "^0.8.3"
 donphan = "^2.4.1"
 dateparser = "^0.7.6"
 ampharos = {git = "https://github.com/bijij/Ampharos.git"}
@@ -21,6 +20,7 @@ discord-ext-alternatives = {git = "https://github.com/ext-creators/discord-ext-a
 "backports.zoneinfo" = "^0.2.1"
 psutil = "^5.7.2"
 ics = "^0.7"
+rusty_snake_markov = {git = "https://github.com/bijij/rusty_python_markov.git"}
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"
