@@ -32,6 +32,24 @@ def make_sentence(model: markov.Markov, order: int, *, seed: str = None, tries=M
     return None
 
 
+def make_code(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8) -> Optional[str]:
+    while tries >= 0:
+        try:
+            sentence = model.generate()
+
+            if "```" not in sentence:
+                raise Exception('Not a code block.')
+
+            if len(sentence.split()) < order * 8 and tries > 0:
+                raise Exception('Markov too small.')
+
+            return sentence
+
+        except Exception:
+            return make_code(model, order, tries=tries - 1)
+    return None
+
+
 class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -58,8 +76,8 @@ class Markov(commands.Cog):
         self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, generate_model)
         return m
 
-    async def send_markov(self, ctx: Context, model: markov.Markov, order: int, *, seed: str = None):
-        markov_call = partial(make_sentence, model, order, seed=seed)
+    async def send_markov(self, ctx: Context, model: markov.Markov, order: int, *, seed: str = None, callable=make_sentence):
+        markov_call = partial(callable, model, order, seed=seed)
         markov = await self.bot.loop.run_in_executor(None, markov_call)
 
         if not markov:
@@ -166,6 +184,21 @@ class Markov(commands.Cog):
 
             await self.send_markov(ctx, model, 3)
 
+    @commands.command(name='code_guild_markov', aliases=['cgm'])
+    @commands.guild_only()
+    async def code_guild_markov(self, ctx: Context):
+        """Generate a markov chain code block.
+        """
+        async with ctx.typing():
+            async with ctx.db as conn:
+                is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
+                query = (is_nsfw, 2, ctx.guild.id)
+
+                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
+                model = await self.get_model(query, coro, order=2)
+
+            await self.send_markov(ctx, model, 2, callable=make_code)
+
     @commands.command(name='seeded_guild_markov', aliases=['sgm'])
     async def seeded_guild_markov(self, ctx: Context, *, seed: str):
         """Generate a markov chain based off messages in the server which starts with a given seed.
@@ -177,7 +210,7 @@ class Markov(commands.Cog):
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = (is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
+                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, False, connection=conn)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3, seed=seed.lower())

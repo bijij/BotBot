@@ -35,14 +35,14 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     nsfw: bool = Column(default=False)
 
     @classmethod
-    async def get_user_log(cls, user: discord.User, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
+    async def get_user_log(cls, user: discord.User, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
         data = await cls.fetch_where('user_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', user.id, nsfw, connection=connection)
-        return [record['content'].lower() for record in data]
+        return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
     @classmethod
-    async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
+    async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
         data = await cls.fetch_where('guild_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', guild.id, nsfw, connection=connection)
-        return [record['content'].lower() for record in data]
+        return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
 
 Status = enum('Status', 'online offline idle dnd', schema='logging')
