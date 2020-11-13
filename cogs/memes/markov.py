@@ -11,6 +11,7 @@ from cogs.logging.logging import Message_Log, Opt_In_Status
 from utils.collections import LRUDict
 
 
+DISCORD_PY_ID = 336642139381301249
 MAX_TRIES = 32
 
 
@@ -37,7 +38,7 @@ class Markov(commands.Cog):
         self.bot = bot
         self.model_cache: Dict[Tuple[int, ...], markov.Markov] = LRUDict(max_size=12)  # idk about a good size
 
-    async def get_model(self, query: Tuple[int, ...], *coros: Awaitable[str], order: int = 2) -> markov.Markov:
+    async def get_model(self, query: Tuple[int, ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
         if query in self.model_cache:
             return self.model_cache[query]
@@ -63,10 +64,10 @@ class Markov(commands.Cog):
 
         if not markov:
             raise commands.BadArgument('Markov could not be generated')
-        if ctx.guild == self.bot.get_guild(336642139381301249):
-            allowed_mentions = discord.AllowedMentions(users=True)
-        else:
+        if getattr(ctx.guild, 'id', None) == DISCORD_PY_ID:
             allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
+        else:
+            allowed_mentions = discord.AllowedMentions(users=True)
 
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
@@ -83,7 +84,7 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = (is_nsfw, 4, user.id)
+                query = (is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
@@ -109,7 +110,35 @@ class Markov(commands.Cog):
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
 
-            await self.send_markov(ctx, model, 3, seed=seed)
+            await self.send_markov(ctx, model, 2, seed=seed.lower())
+
+    @commands.command(name='multi_user_markov', aliases=['mum'])
+    async def multi_user_markov(self, ctx: Context, *users: discord.User):
+        """Generate a markov chain based off a list of users messages.
+
+        `users`: The list of users who's messages should be used to generate the markov chain.
+        """
+        users = set(users)  # type: ignore
+        if len(users) < 2:
+            raise commands.BadArgument('You need to specify at least two users.')
+
+        is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
+        coros = list()
+
+        async with ctx.typing():
+            async with ctx.db as conn:
+                for user in users:
+                    if user == ctx.author:
+                        await Opt_In_Status.is_opted_in(ctx, connection=conn)
+                    else:
+                        await Opt_In_Status.is_public(ctx, user, connection=conn)
+
+                    coros.append(Message_Log.get_user_log(user, is_nsfw, connection=conn))
+
+                query = (is_nsfw, 3) + tuple(user.id for user in users)
+                model = await self.get_model(query, *coros, order=3)
+
+            await self.send_markov(ctx, model, 3)
 
     @commands.command(name='dual_user_markov', aliases=['dum'])
     async def dual_user_markov(self, ctx: Context, *, user: discord.User):
@@ -120,19 +149,7 @@ class Markov(commands.Cog):
         if user == ctx.author:
             raise commands.BadArgument('You can\'t generate a dual user markov with yourself.')
 
-        async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_opted_in(ctx, connection=conn)
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
-
-                is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = (is_nsfw, 4, ctx.author.id, user.id)
-
-                coro_a = Message_Log.get_user_log(ctx.author, is_nsfw, connection=conn)
-                coro_b = Message_Log.get_user_log(user, is_nsfw, connection=conn)
-                model = await self.get_model(query, coro_a, coro_b, order=3)
-
-            await self.send_markov(ctx, model, 3)
+        await ctx.invoke(self.multi_user_markov, ctx.author, user)
 
     @commands.command(name='guild_markov', aliases=['gm'])
     @commands.guild_only()
@@ -142,7 +159,7 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = (is_nsfw, 5, ctx.guild.id)
+                query = (is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=3)
@@ -158,12 +175,12 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = (is_nsfw, 5, ctx.guild.id)
+                query = (is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=3)
 
-            await self.send_markov(ctx, model, 3, seed=seed)
+            await self.send_markov(ctx, model, 3, seed=seed.lower())
 
 
 def setup(bot: BotBase):
