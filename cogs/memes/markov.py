@@ -198,6 +198,24 @@ class Markov(commands.Cog):
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
+            
+    @commands.command(name='code_user_markov', aliases=['cum'])
+    async def code_user_markov(self, ctx: Context, user: Optional[discord.User] = None):
+        """Generate a markov chain code block.
+        """
+        user = user or ctx.author
+
+        async with ctx.typing():
+            async with ctx.db as conn:
+                await Opt_In_Status.is_public(ctx, user, connection=conn)
+
+                is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
+                query = (is_nsfw, 2, user.id)
+
+                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                model = await self.get_model(query, coro, order=2)
+
+            await self.send_markov(ctx, model, 2, callable=make_code)
 
     @commands.command(name='seeded_guild_markov', aliases=['sgm'])
     async def seeded_guild_markov(self, ctx: Context, *, seed: str):
