@@ -5,6 +5,8 @@ import json
 import discord
 from discord.ext import commands, tasks
 
+from cogs.logging.logging import Status_Log
+
 STATUSES = {
     0: discord.Status.online,
     1: discord.Status.offline,
@@ -41,7 +43,9 @@ class StatusMeme(commands.Cog):
 
     async def set_status(self):
         now = datetime.datetime.utcnow()
-        await self.bot.change_presence(status=get_status(now))
+        status = get_status(now)
+        await self.bot.change_presence(status=status)
+        await Status_Log.insert(user_id=self.bot.user.id, timestamp=now, status=status.name)
 
     @tasks.loop(seconds=SEGMENT_DURATION)
     async def status_task(self):
