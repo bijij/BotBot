@@ -27,6 +27,7 @@
         
         memes.markov: ~
         memes.timecard: ~
+        memes.status: ~
 
         reminders: ~
         pokemon: ~
