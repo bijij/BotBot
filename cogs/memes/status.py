@@ -27,7 +27,7 @@ def get_status(time: datetime.datetime):
     if not 0 <= delta.days < len(STATUS_MAP):
         return discord.Status.online
 
-    return STATUSES[STATUS_MAP[delta.seconds // 3600]]
+    return STATUSES[STATUS_MAP[delta.days][delta.seconds // 3600]]
 
 
 class StatusMeme(commands.Cog):
