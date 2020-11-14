@@ -18,7 +18,7 @@ from .timers import dispatch_timers
 try:
     from cogs.memes.status import get_status
 except ImportError:
-    get_status = lambda _: discord.Status.online
+    get_status = lambda _: discord.Status.online  # noqa: E731
 
 
 class BotBase(commands.Bot):
@@ -44,8 +44,10 @@ class BotBase(commands.Bot):
 
         allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
         intents = discord.Intents.all()
+        status = get_status(self.start_time)
 
-        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(), allowed_mentions=allowed_mentions, intents=intents, status=get_status(self.start_time))
+        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(),
+                         allowed_mentions=allowed_mentions, intents=intents, status=status)
 
         self._active_timer = asyncio.Event()
         self._current_timer = None
