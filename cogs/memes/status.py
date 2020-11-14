@@ -19,6 +19,9 @@ with open(TEST_FILE, 'r') as f:
     START_TIME = datetime.datetime.fromisoformat(data['start'])
     STATUS_MAP = data['data']
 
+    SECONDS_PER_DAY = 60 * 60 * 24
+    SEGMENT_DURATION = SECONDS_PER_DAY // len(STATUS_MAP[0])
+
 
 def get_status(time: datetime.datetime):
     delta = time - START_TIME
@@ -27,7 +30,7 @@ def get_status(time: datetime.datetime):
     if not 0 <= delta.days < len(STATUS_MAP):
         return discord.Status.online
 
-    return STATUSES[STATUS_MAP[delta.days][delta.seconds // 3600]]
+    return STATUSES[STATUS_MAP[delta.days][delta.seconds // SEGMENT_DURATION]]
 
 
 class StatusMeme(commands.Cog):
@@ -40,7 +43,7 @@ class StatusMeme(commands.Cog):
         now = datetime.datetime.utcnow()
         await self.bot.change_presence(status=get_status(now))
 
-    @tasks.loop(hours=1)
+    @tasks.loop(seconds=SEGMENT_DURATION)
     async def status_task(self):
         try:
             await self.set_status()
@@ -50,16 +53,18 @@ class StatusMeme(commands.Cog):
     @status_task.before_loop
     async def before_status_task(self):
 
+        # Wait for ready
         await self.bot.wait_until_ready()
         await asyncio.sleep(5)  # bad 1006 protection
 
+        # Set status
         await self.set_status()
 
+        # SLEEP until next segment
         now = datetime.datetime.utcnow()
-        next_hour = now.replace(minute=0, second=0, microsecond=0)
-        next_hour += datetime.timedelta(hours=1)
-
-        await discord.utils.sleep_until(next_hour)
+        timestamp = now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
+        next_segment = datetime.datetime.fromtimestamp(timestamp)
+        await discord.utils.sleep_until(next_segment)
 
     def cog_unload(self):
         self.status_task.cancel()
