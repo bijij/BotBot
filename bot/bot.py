@@ -15,6 +15,11 @@ from .handler import WebhookHandler
 from .help import EmbedHelpCommand
 from .timers import dispatch_timers
 
+try:
+    from cogs.memes.status import get_status
+except ImportError:
+    get_status = lambda _: discord.Status.online
+
 
 class BotBase(commands.Bot):
     def __init__(self):
@@ -40,7 +45,7 @@ class BotBase(commands.Bot):
         allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
         intents = discord.Intents.all()
 
-        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(), allowed_mentions=allowed_mentions, intents=intents)
+        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(), allowed_mentions=allowed_mentions, intents=intents, status=get_status(self.start_time))
 
         self._active_timer = asyncio.Event()
         self._current_timer = None
