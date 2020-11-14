@@ -198,7 +198,7 @@ class Markov(commands.Cog):
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
-            
+
     @commands.command(name='code_user_markov', aliases=['cum'])
     async def code_user_markov(self, ctx: Context, user: Optional[discord.User] = None):
         """Generate a markov chain code block.
