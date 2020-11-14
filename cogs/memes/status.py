@@ -17,7 +17,7 @@ with open(TEST_FILE, 'r') as f:
     data = json.load(f)
 
     START_TIME = datetime.datetime.fromisoformat(data['start'])
-    STATUS_MAP = data['map']
+    STATUS_MAP = data['data']
 
 
 def get_status(time: datetime.datetime):
@@ -59,6 +59,9 @@ class StatusMeme(commands.Cog):
         next_hour += datetime.timedelta(hours=1)
 
         await discord.utils.sleep_until(next_hour)
+
+    def cog_unload(self):
+        self.status_task.cancel()
 
 
 def setup(bot):
