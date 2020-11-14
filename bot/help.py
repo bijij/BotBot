@@ -26,7 +26,7 @@ class EmbedHelpCommand(commands.DefaultHelpCommand):
         )
 
         try:
-            menu = menus.MenuPages(self.paginator, clear_reactions_after=True, check_embeds=True)
+            menu = menus.MenuPages(self.paginator, clear_reactions_after=True, check_embeds=True, delete_message_after=True)
             await menu.start(self.context, channel=destination)
 
         except menus.MenuError:

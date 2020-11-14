@@ -80,7 +80,10 @@ class Opt_In_Status(Table, schema='logging'):  # type: ignore
     async def is_public(cls, ctx: Context, user: discord.User, *, connection: asyncpg.Connection = None):
         opt_in_status = await cls.fetchrow(connection=connection, user_id=user.id)
         if opt_in_status is None:
-            raise commands.BadArgument(f'User "{user}" has not opted in to logging.')
+            if user == ctx.author:
+                raise commands.BadArgument(f'You have not opted in to logging. You can do so with `{ctx.bot.prefix}logging start`')
+            else:
+                raise commands.BadArgument(f'User "{user}" has not opted in to logging.')
 
         if user != ctx.author and not opt_in_status['public']:
             raise commands.BadArgument(f'User "{user}" has not made their logs public.')
