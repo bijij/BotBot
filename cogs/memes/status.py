@@ -34,6 +34,7 @@ class StatusMeme(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.status_task.start()
 
     async def set_status(self):
         now = datetime.datetime.utcnow()
