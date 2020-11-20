@@ -74,8 +74,8 @@ class TimeCard(commands.Cog):
             # Draw text
             for line in (lines := text.split('\n')):
 
-                text_size = draw.textsize(line, font=font)
-                x_pos = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - text_size[0]) // 2
+                line_width, _ = draw.textsize(line, font=font)
+                x_pos = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - line_width) // 2
 
                 if timecard.shadow_colour is not None:
                     shadow_offset = font_size // 2 + 1
