@@ -78,7 +78,7 @@ class TimeCard(commands.Cog):
                 x_pos = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - line_width) // 2
 
                 if timecard.shadow_colour is not None:
-                    shadow_offset = font_size // 2 + 1
+                    shadow_offset = int(font_size ** 0.5 / 2) + 1
                     draw.text((x_pos - shadow_offset, y_pos - shadow_offset), line, timecard.shadow_colour, font=font)
 
                 draw.text((x_pos, y_pos), line, timecard.colour, font=font)
