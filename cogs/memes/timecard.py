@@ -1,7 +1,6 @@
-import math
 import random
-import re
 
+from collections import namedtuple
 from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
@@ -10,9 +9,11 @@ import discord
 from discord.ext import commands
 
 
+Timecard = namedtuple("Timecard", "filename colour shadow_colour")
+
+
 IMAGES = 'res/timecard/images'
 FONT = 'res/timecard/kp.ttf'
-
 
 TIMECARD_X_OFFSET = 32
 TIMECARD_Y_OFFSET = 24
@@ -21,21 +22,21 @@ TIMECARD_X_BOUND = 576
 TIMECARD_Y_BOUND = 432
 
 TIMECARD_SET = [
-    ['timecard_0', (226, 255, 159), None],
-    ['timecard_1', (235, 4, 210), (60, 255, 23)],
-    ['timecard_2', (99, 250, 208), (1, 4, 0)],
-    ['timecard_3', (248, 103, 1), (32, 127, 34)],
-    ['timecard_4', (8, 2, 3), None],
-    ['timecard_5', (30, 234, 239), None],
-    ['timecard_6', (1, 180, 235), None],
-    ['timecard_7', (91, 94, 2), None],
-    ['timecard_8', (250, 240, 212), (37, 53, 60)],
-    ['timecard_9', (9, 160, 212), (0, 11, 23)],
-    ['timecard_10', (250, 236, 255), (28, 188, 234)],
-    ['timecard_11', (254, 254, 254), None],
-    ['timecard_12', (252, 231, 40), None],
-    ['timecard_13', (254, 254, 254), None],
-    ['timecard_15', (216, 34, 148), (122, 70, 13)],
+    Timecard('0', (226, 255, 159), None),
+    Timecard('1', (235, 4, 210), (60, 255, 23)),
+    Timecard('2', (99, 250, 208), (1, 4, 0)),
+    Timecard('3', (248, 103, 1), (32, 127, 34)),
+    Timecard('4', (8, 2, 3), None),
+    Timecard('5', (30, 234, 239), None),
+    Timecard('6', (1, 180, 235), None),
+    Timecard('7', (91, 94, 2), None),
+    Timecard('8', (250, 240, 212), (37, 53, 60)),
+    Timecard('9', (9, 160, 212), (0, 11, 23)),
+    Timecard('10', (250, 236, 255), (28, 188, 234)),
+    Timecard('11', (254, 254, 254), None),
+    Timecard('12', (252, 231, 40), None),
+    Timecard('13', (254, 254, 254), None),
+    Timecard('15', (216, 34, 148), (122, 70, 13)),
 ]
 
 
@@ -46,45 +47,46 @@ class TimeCard(commands.Cog):
         self.bot = bot
 
     @commands.command(name='timecard', aliases=['tc'])
-    async def timecard(self, ctx, *, text: commands.clean_content):
+    async def timecard(self, ctx, *, text: commands.clean_content(fix_channel_mentions=True)):  # type: ignore
         """Generate's a Spongebob Squarepants timecard image.
 
         `text`: The text to show on the timecard.
         """
-        text = re.sub(r'\n+', '\n', text)
-
         async with ctx.typing():
+            timecard: Timecard = random.choice(TIMECARD_SET)
 
-            # Setup the image
-            timecard = random.choice(TIMECARD_SET)
-            img = Image.open(f'{IMAGES}/{timecard[0]}.png')
-            draw = ImageDraw.Draw(img)
+            # Load image
+            image = Image.open(f'{IMAGES}/timecard_{timecard.filename}.png')
+            draw = ImageDraw.Draw(image)
 
-            # Setup the font
+            # Setup font
             font_size = 100
             font = ImageFont.truetype(FONT, font_size)
 
-            # Resize until font fits
-            while draw.textsize(text, font=font) > (TIMECARD_X_BOUND, TIMECARD_Y_BOUND):
+            # Calculate font-size
+            while (text_size := draw.textsize(text, font=font)) > (TIMECARD_X_BOUND, TIMECARD_Y_BOUND):
                 font_size -= 1
                 font = ImageFont.truetype(FONT, font_size)
 
-            # Determine the text location
-            text_size = draw.textsize(text, font=font)
-            text_x = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - text_size[0]) / 2
-            text_y = TIMECARD_Y_OFFSET + (TIMECARD_Y_BOUND - text_size[1]) / 2
+            # Calculate Starting Y position
+            y_pos = TIMECARD_Y_OFFSET + (TIMECARD_Y_BOUND - text_size[1]) // 2
 
-            # If text has drop shadow
-            if timecard[2] is not None:
-                drop_shadow = math.floor((font_size ** 0.5) / 2) + 1
+            # Draw text
+            for line in (lines := text.split('\n')):
 
-                draw.text((text_x - drop_shadow, text_y - drop_shadow),
-                          text, timecard[2], font=font)
+                text_size = draw.textsize(line, font=font)
+                x_pos = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - text_size[0]) // 2
 
-            draw.text((text_x, text_y), text, timecard[1], font=font)
+                if draw.shadow_colour:
+                    shadow_offset = font_size // 2 + 1
+                    draw.text((x_pos - shadow_offset, y_pos - shadow_offset), line, timecard.shadow_colour, font=font)
+
+                draw.text((x_pos, y_pos), line, timecard.colour, font=font)
+
+                y_pos += text_size[1] // len(lines)
 
             out_fp = BytesIO()
-            img.save(out_fp, 'PNG')
+            image.save(out_fp, 'PNG')
             out_fp.seek(0)
 
             await ctx.send(file=discord.File(out_fp, 'timecard.png'))
