@@ -93,3 +93,7 @@ class VoiceLogging(commands.Cog):
             text='Server log update',
             icon_url=member.avatar_url
         ))
+
+
+def setup(bot: commands.Bot):
+    bot.add_cog(VoiceLogging(bot))
