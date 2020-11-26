@@ -1,5 +1,4 @@
 import datetime
-from copy import copy
 
 import discord
 from discord.ext import commands
@@ -44,26 +43,20 @@ class VoiceLogging(commands.Cog):
             return await self.on_voice_state_leave(channel, member, before)
 
         # On Move
-        if record['display_hidden_channels']:
-            return await self.on_voice_state_move(channel, member, before, after)
+        if not record['display_hidden_channels']:
+            # Handle hidden channel case
+            base_member = discord.Object(0)
+            base_member._roles = {member.guild.id}
 
-        # Handle hidden channel case
-        base_member = discord.Object(0)
-        base_member._roles = {member.guild.id}
+            if not before.channel.permissions_for(base_member).view_channel:
+                if not after.channel.permissions_for(base_member).view_channel:
+                    return
+                return await self.on_voice_state_join(channel, member, after)
 
-        if not before.channel.permissions_for(base_member).view_channel:
-            before_copy = copy(before)
-            before_copy.channel = None
-        else:
-            before_copy = before
+            if not after.channel.permissions_for(base_member).view_channel:
+                return await self.on_voice_state_leave(channel, member, before)
 
-        if not after.channel.permissions_for(base_member).view_channel:
-            after_copy = copy(after)
-            after_copy.channel = None
-        else:
-            after_copy = after
-
-        await self.on_voice_state_update(member, before_copy, after_copy, record=record)
+        return await self.on_voice_state_move(channel, member, before, after)
 
     @commands.Cog.listener()
     async def on_voice_state_join(self, channel: discord.TextChannel, member: discord.Member, after: discord.VoiceState):
