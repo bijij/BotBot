@@ -52,14 +52,18 @@ class VoiceLogging(commands.Cog):
         base_member._roles = {member.guild.id}
 
         if not before.channel.permissions_for(base_member).view_channel:
-            before = copy(before)
-            before.channel = None
+            before_copy = copy(before)
+            before_copy.channel = None
+        else:
+            before_copy = before
 
         if not after.channel.permissions_for(base_member).view_channel:
-            after = copy(after)
-            after.channel = None
+            after_copy = copy(after)
+            after_copy.channel = None
+        else:
+            after_copy = after
 
-        await self.on_voice_state_update(member, before, after, record=record)
+        await self.on_voice_state_update(member, before_copy, after_copy, record=record)
 
     @commands.Cog.listener()
     async def on_voice_state_join(self, channel: discord.TextChannel, member: discord.Member, after: discord.VoiceState):
