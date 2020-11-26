@@ -23,7 +23,8 @@
         core.info: ~
 
         logging.logging: ~
-        logging.status: ~        
+        logging.status: ~
+        logging.voice: ~    
         
         memes.markov: ~
         memes.timecard: ~

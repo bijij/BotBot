@@ -36,6 +36,7 @@ TIMECARD_SET = [
     Timecard('11', (254, 254, 254), None),
     Timecard('12', (252, 231, 40), None),
     Timecard('13', (254, 254, 254), None),
+    Timecard('14', (70, 109, 40), None),
     Timecard('15', (216, 34, 148), (122, 70, 13)),
 ]
 
