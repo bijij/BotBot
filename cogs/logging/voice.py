@@ -34,6 +34,19 @@ class VoiceLogging(commands.Cog):
         if before.channel == after.channel:
             return
 
+        if not record['display_hidden_channels']:
+            # Handle hidden channel case
+            base_member = discord.Object(0)
+            base_member._roles = {member.guild.id}
+
+            if before.channel is None or not before.channel.permissions_for(base_member).view_channel:
+                if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
+                    return
+                return await self.on_voice_state_join(channel, member, after)
+
+            if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
+                return await self.on_voice_state_leave(channel, member, before)
+
         # On Join
         if before.channel is None:
             return await self.on_voice_state_join(channel, member, after)
@@ -43,19 +56,6 @@ class VoiceLogging(commands.Cog):
             return await self.on_voice_state_leave(channel, member, before)
 
         # On Move
-        if not record['display_hidden_channels']:
-            # Handle hidden channel case
-            base_member = discord.Object(0)
-            base_member._roles = {member.guild.id}
-
-            if not before.channel.permissions_for(base_member).view_channel:
-                if not after.channel.permissions_for(base_member).view_channel:
-                    return
-                return await self.on_voice_state_join(channel, member, after)
-
-            if not after.channel.permissions_for(base_member).view_channel:
-                return await self.on_voice_state_leave(channel, member, before)
-
         return await self.on_voice_state_move(channel, member, before, after)
 
     @commands.Cog.listener()
