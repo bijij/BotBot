@@ -30,8 +30,10 @@
         memes.timecard: ~
         memes.status: ~
 
+        games.tangrams: ~
+        games.pokemon: ~
+
         reminders: ~
-        pokemon: ~
         moderation: ~
 
     SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS
