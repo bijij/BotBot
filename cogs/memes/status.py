@@ -8,10 +8,10 @@ from discord.ext import commands, tasks
 from cogs.logging.logging import Status_Log
 
 STATUSES = {
-    0: discord.Status.online,
-    1: discord.Status.offline,
-    2: discord.Status.idle,
-    3: discord.Status.dnd
+    '0': discord.Status.online,
+    '1': discord.Status.offline,
+    '2': discord.Status.idle,
+    '3': discord.Status.dnd
 }
 
 TEST_FILE = 'res/status_maps/christmas.json'
