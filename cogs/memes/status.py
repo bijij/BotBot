@@ -14,7 +14,7 @@ STATUSES = {
     3: discord.Status.dnd
 }
 
-TEST_FILE = 'res/status_maps/test.json'
+TEST_FILE = 'res/status_maps/christmas.json'
 with open(TEST_FILE, 'r') as f:
     data = json.load(f)
 
