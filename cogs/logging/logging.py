@@ -210,11 +210,11 @@ class Logging(commands.Cog):
         if status not in COLOURS:
             return
 
-        if after.status == self.bot._last_status.get(after.id):
+        if status == self.bot._last_status.get(after.id):
             return
 
         self.bot._status_log.append((after.id, datetime.datetime.utcnow(), status))
-        self.bot._last_status[after.id] = after.status
+        self.bot._last_status[after.id] = status
 
     @tasks.loop(seconds=60)
     async def _logging_task(self):
@@ -255,6 +255,7 @@ class Logging(commands.Cog):
                         return
 
                     status_log.append((user_id, now, status))
+                    self.bot._last_status[member.id] = status
                     break
 
         await Status_Log.insert_many(Status_Log._columns, *status_log)
