@@ -52,11 +52,13 @@ class StatusMeme(commands.Cog):
         if status is None:
             await self.bot.change_presence(
                 status=discord.Status.online,
-                activity=discord.Streaming(name='...', url='https://twitch.tv/nightbot')
+                activity=discord.Streaming(name='...', url='https://twitch.tv/monstercat')
             )
+            status = 'streaming'
         else:
             await self.bot.change_presence(status=status)
-        await Status_Log.insert(user_id=self.bot.user.id, timestamp=now, status=status.name)
+            status = status.name
+        await Status_Log.insert(user_id=self.bot.user.id, timestamp=now, status=status)
 
     @tasks.loop(seconds=SEGMENT_DURATION)
     async def status_task(self):
