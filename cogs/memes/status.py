@@ -7,6 +7,9 @@ from discord.ext import commands, tasks
 
 from cogs.logging.logging import Status_Log
 
+
+DEFAULT_STATUS = discord.Status.online
+
 STATUSES = {
     '0': discord.Status.online,
     '1': discord.Status.offline,
@@ -30,7 +33,7 @@ def get_status(time: datetime.datetime):
 
     # If outside map
     if not 0 <= delta.days < len(STATUS_MAP):
-        return discord.Status.online
+        return DEFAULT_STATUS
 
     return STATUSES[STATUS_MAP[delta.days][delta.seconds // SEGMENT_DURATION]]
 
