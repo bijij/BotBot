@@ -4,10 +4,10 @@ try:
 except ImportError:
     from backports import zoneinfo
 
-from collections import Counter, namedtuple
+from collections import Counter
 from io import BytesIO, StringIO
 from functools import partial
-from typing import List, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 
 import asyncpg
 import numpy
@@ -19,7 +19,7 @@ import discord
 from discord.ext import commands
 
 from bot import BotBase, Context
-from cogs.logging.logging import Opt_In_Status, Status_Log, Timezones
+from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
 
 
 IMAGE_SIZE = 4096
@@ -32,15 +32,11 @@ ONE_HOUR = IMAGE_SIZE // 24
 
 WHITE = (255, 255, 255, 255)
 
-COLOURS = {
-    None: (0, 0, 0, 0),
-    discord.Status.online: (67, 181, 129, 255),
-    discord.Status.offline: (116, 127, 141, 255),
-    discord.Status.idle: (250, 166, 26, 255),
-    discord.Status.dnd: (240, 71, 71, 255)
-}
 
-LogEntry = namedtuple('LogEntry', 'status start duration')
+class LogEntry(NamedTuple):
+    status: Optional[str]
+    start: datetime.datetime
+    duration: datetime.timedelta
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -63,7 +59,7 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
     total_duration = (records[-1]['timestamp'] - records[0]['timestamp']).total_seconds()
 
     for i, record in enumerate(records[:-1]):
-        status_totals[discord.Status(record['status'])] += (records[i + 1]['timestamp'] - record['timestamp']).total_seconds() / total_duration
+        status_totals[record['status']] += (records[i + 1]['timestamp'] - record['timestamp']).total_seconds() / total_duration
 
     return status_totals
 
@@ -81,7 +77,7 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *, days: 
 
     for i, record in enumerate(records[:-1]):
         status_log.append(
-            LogEntry(status=discord.Status(record['status']), start=record['timestamp'], duration=records[i + 1]['timestamp'] - record['timestamp'])
+            LogEntry(status=record['status'], start=record['timestamp'], duration=records[i + 1]['timestamp'] - record['timestamp'])
         )
 
     return status_log
@@ -183,15 +179,15 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     day_width = IMAGE_SIZE / (60 * 60 * 24)
 
     now = datetime.datetime.now(timezone)
-    time_offset = int(now.utcoffset().total_seconds())  # type: ignore
-    total_duration = 0
+    time_offset = now.utcoffset().total_seconds()  # type: ignore
+    total_duration = 0.0
 
     if show_labels:
         time_offset += 60 * 60 * 24
 
     # Draw status log entries
-    for status, _, duration in status_log:
-        duration = duration.total_seconds()
+    for status, _, timespan in status_log:
+        duration: float = timespan.total_seconds()
         total_duration += duration
         new_time_offset = time_offset + duration
 

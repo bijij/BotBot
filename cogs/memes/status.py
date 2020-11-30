@@ -14,7 +14,8 @@ STATUSES = {
     '0': discord.Status.online,
     '1': discord.Status.offline,
     '2': discord.Status.idle,
-    '3': discord.Status.dnd
+    '3': discord.Status.dnd,
+    '4': None
 }
 
 TEST_FILE = 'res/status_maps/christmas.json'
@@ -47,7 +48,14 @@ class StatusMeme(commands.Cog):
     async def set_status(self):
         now = datetime.datetime.utcnow()
         status = get_status(now)
-        await self.bot.change_presence(status=status)
+
+        if status is None:
+            await self.bot.change_presence(
+                status=discord.Status.online,
+                activity=discord.Streaming(name='...', url='https://twitch.tv/nightbot')
+            )
+        else:
+            await self.bot.change_presence(status=status)
         await Status_Log.insert(user_id=self.bot.user.id, timestamp=now, status=status.name)
 
     @tasks.loop(seconds=SEGMENT_DURATION)

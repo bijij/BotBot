@@ -19,10 +19,11 @@ from bot import BotBase, Context
 
 COLOURS = {
     None: (0, 0, 0, 0),
-    discord.Status.online: (67, 181, 129, 255),
-    discord.Status.offline: (116, 127, 141, 255),
-    discord.Status.idle: (250, 166, 26, 255),
-    discord.Status.dnd: (240, 71, 71, 255)
+    'online': (67, 181, 129, 255),
+    'offline': (116, 127, 141, 255),
+    'idle': (250, 166, 26, 255),
+    'dnd': (240, 71, 71, 255),
+    'streaming': (84, 51, 141, 255),
 }
 
 
@@ -45,7 +46,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
 
-Status = enum('Status', 'online offline idle dnd', schema='logging')
+Status = enum('Status', 'online offline idle dnd streaming', schema='logging')
 
 
 class Status_Log(Table, schema='logging'):  # type: ignore
@@ -168,9 +169,9 @@ class Logging(commands.Cog):
         await Timezones.delete(user_id=ctx.author.id)
         await ctx.tick()
 
-    @commands.command(name='vaccum_status_log')
+    @commands.command(name='vacuum_status_log')
     @commands.is_owner()
-    async def vaccum_status_log(self, ctx: Context, days: int = 35):
+    async def vacuum_status_log(self, ctx: Context, days: int = 35):
         """Remove entries from the status log older than n days."""
         raise commands.BadArgument('This Command is not yet implemented.')
 
@@ -193,18 +194,26 @@ class Logging(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status == after.status:
-            return
+            changed = {a.type for a in before.activities} ^ {a.type for a in after.activities}
+            if discord.ActivityType.streaming not in changed:
+                return
 
         if before.id not in self._opted_in:
             return
 
-        if after.status not in COLOURS:
+        # Handle streaming edge case
+        if discord.ActivityType.streaming in {a.type for a in after.activities}:
+            status = 'streaming'
+        else:
+            status = after.status.name
+
+        if status not in COLOURS:
             return
 
         if after.status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, datetime.datetime.utcnow(), after.status.name))
+        self.bot._status_log.append((after.id, datetime.datetime.utcnow(), status))
         self.bot._last_status[after.id] = after.status
 
     @tasks.loop(seconds=60)
@@ -235,7 +244,17 @@ class Logging(commands.Cog):
             for guild in self.bot.guilds:
                 member = guild.get_member(user_id)
                 if member is not None:
-                    status_log.append((user_id, now, member.status.name))
+
+                    # Handle streaming edge case
+                    if discord.ActivityType.streaming in {a.type for a in member.activities}:
+                        status = 'streaming'
+                    else:
+                        status = member.status.name
+
+                    if status not in COLOURS:
+                        return
+
+                    status_log.append((user_id, now, status))
                     break
 
         await Status_Log.insert_many(Status_Log._columns, *status_log)
