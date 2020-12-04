@@ -79,7 +79,7 @@ class SpamCheckerConfig:
         current = message.created_at.replace(tzinfo=datetime.timezone.utc).timestamp()
 
         for bucket in buckets:
-            if bucket.update_rate_limit(current):
+            if bucket.get_bucket(message).update_rate_limit(current):
                 return True
 
         return False
