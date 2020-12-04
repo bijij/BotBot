@@ -11,20 +11,14 @@ class EmbedPage(NamedTuple):
 
 class PaginatorSource(commands.Paginator, menus.PageSource):
 
-    def __len__(self):
-        return len(self._pages)
-
     def is_paginating(self):
-        return len(self._pages) > 1
+        return self.get_max_pages() > 1
 
     def get_max_pages(self):
-        return len(self._pages)
-
-    def _get_page(self, page_number: int):
-        return self.pages[page_number]
+        return len(self._pages) + (self._count != 0)
 
     async def get_page(self, page_number: int):
-        return self._get_page(page_number)
+        return self.pages[page_number]
 
 
 class EmbedPaginator(discord.Embed, PaginatorSource):
