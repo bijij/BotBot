@@ -34,7 +34,10 @@
         games.pokemon: ~
 
         reminders: ~
-        moderation: ~
+        
+        # moderation.logs: ~
+        moderation.spam: ~
+        moderation.tools: ~
 
     SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS
 
