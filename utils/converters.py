@@ -12,8 +12,9 @@ from discord.ext import commands
 import ampharos
 from ampharos.types import Pokemon
 
+from jishaku.codeblocks import codeblock_converter, Codeblock
+
 from cogs.logging.logging import Timezones
-from .objects import Code
 
 from dateparser.search import search_dates
 from typing import Any
@@ -74,13 +75,6 @@ class CommandConverter(commands.Converter):
         if result is None:
             raise commands.BadArgument(f'Command \'{argument}\' not found.')
         return result
-
-
-class CodeConverter(commands.Converter):
-    async def convert(self, ctx: commands.Context, argument: str):
-        if argument.startswith('```') and argument.endswith('```'):
-            return Code('\n'.join(argument.split('\n')[1:-1]))
-        return Code(argument)
 
 
 class WhenAndWhat(commands.Converter):
@@ -166,7 +160,7 @@ ALL_CONVERTERS = {
     discord.Guild: GuildConverter,
     discord.User: UserConverter,
     commands.Command: CommandConverter,
-    Code: CodeConverter,
+    Codeblock: codeblock_converter,
     # Tuple[datetime.datetime, str]: WhenAndWhat
     Pokemon: PokemonConverter,
     zoneinfo.ZoneInfo: ZoneInfoConverter

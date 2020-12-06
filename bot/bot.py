@@ -18,7 +18,7 @@ from .timers import dispatch_timers
 try:
     from cogs.memes.status import get_status
 except ImportError:
-    def get_status(_): return discord.Status.online  # noqa: E731
+    def get_status(_): return discord.Status.online  # noqa: E704
 
 
 class BotBase(commands.Bot):

@@ -3,6 +3,8 @@ from typing import Union
 import discord
 from discord.ext import commands
 
+from jishaku.codeblocks import Codeblock
+
 from bot import BotBase, Context
 
 
@@ -46,7 +48,7 @@ class Admin(commands.Cog):
         await ctx.tick()
 
     @commands.command()
-    async def eval(self, ctx: Context, *, code: str):
+    async def eval(self, ctx: Context, *, code: Codeblock):
         """Evaluates python code.
 
         `code`: Python code to run.
@@ -76,7 +78,7 @@ class Admin(commands.Cog):
         await ctx.invoke(self.bot.get_command('jsk shutdown'))
 
     @commands.command(aliases=['sh'])
-    async def shell(self, ctx: Context, *, code: str):
+    async def shell(self, ctx: Context, *, code: Codeblock):
         """Executes a command in the shell.
 
         `code`: The command to run in the shell.
@@ -84,7 +86,7 @@ class Admin(commands.Cog):
         await ctx.invoke(self.bot.get_command('jsk sh'), argument=code)
 
     @commands.command()
-    async def git(self, ctx: Context, *, code: str):
+    async def git(self, ctx: Context, *, code: Codeblock):
         """Executes a git commmand.
 
         `code`: The git command to run.
