@@ -17,6 +17,8 @@
         WEBHOOK: !ENV "LOGGING_WEBHOOK"
 
     EXTENSIONS:
+        jishaku: ~
+
         core.admin: ~
         core.meta: ~
         core.stats: ~
