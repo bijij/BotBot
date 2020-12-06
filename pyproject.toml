@@ -22,6 +22,7 @@ psutil = "^5.7.2"
 ics = "^0.7"
 rusty_snake_markov = {git = "https://github.com/bijij/rusty_python_markov.git"}
 jishaku = "^1.20.0"
+PyYAML = "^5.3.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"
