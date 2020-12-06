@@ -18,7 +18,7 @@ from .timers import dispatch_timers
 try:
     from cogs.memes.status import get_status
 except ImportError:
-    get_status = lambda _: discord.Status.online  # noqa: E731
+    def get_status(_): return discord.Status.online  # noqa: E731
 
 
 class BotBase(commands.Bot):
@@ -53,14 +53,14 @@ class BotBase(commands.Bot):
         self._current_timer = None
         self._timer_task = self.loop.create_task(dispatch_timers(self))
 
-        def load_extension(extension, prefix='cogs'):
+        def load_extension(extension):
             try:
-                self.load_extension(f'{prefix}.{extension}')
+                self.load_extension(f'{extension}')
             except commands.ExtensionFailed as e:
                 self.log.error(f'Failed to load extension {extension}\n{type(e).__name__}: {e}')
 
         for extension in CONFIG.SECRET_EXTENSIONS.split(';'):
-            load_extension(extension, prefix='cogs.secret')
+            load_extension(f"cogs.secret.{extension}")
 
         for extension in CONFIG.EXTENSIONS.keys():
             load_extension(extension)

@@ -19,27 +19,27 @@
     EXTENSIONS:
         jishaku: ~
 
-        core.admin: ~
-        core.meta: ~
-        core.stats: ~
-        core.info: ~
+        cogs.core.admin: ~
+        cogs.core.meta: ~
+        cogs.core.stats: ~
+        cogs.core.info: ~
 
-        logging.logging: ~
-        logging.status: ~
-        logging.voice: ~    
+        cogs.logging.logging: ~
+        cogs.logging.status: ~
+        cogs.logging.voice: ~    
         
-        memes.markov: ~
-        memes.timecard: ~
-        memes.status: ~
+        cogs.memes.markov: ~
+        cogs.memes.timecard: ~
+        cogs.memes.status: ~
 
-        games.tangrams: ~
-        games.pokemon: ~
+        # cogs.games.tangrams: ~
+        # cogs.games.pokemon: ~
 
-        reminders: ~
+        cogs.reminders: ~
         
         # moderation.logs: ~
-        moderation.spam: ~
-        moderation.tools: ~
+        cogs.moderation.spam: ~
+        cogs.moderation.tools: ~
 
     SECRET_EXTENSIONS: !ENV SECRET_EXTENSIONS
 
