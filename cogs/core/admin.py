@@ -23,7 +23,7 @@ class Admin(commands.Cog):
 
         `extension`: The name of the extension.
         """
-        await ctx.invoke(self.bot.get_command('jsk load'), extension)
+        await ctx.invoke(self.bot.get_command('jsk load'), (extension,))
 
     @commands.command()
     async def unload(self, ctx: Context, *, extension: str):
@@ -31,7 +31,7 @@ class Admin(commands.Cog):
 
         `extension`: The name of the extension.
         """
-        await ctx.invoke(self.bot.get_command('jsk unload'), extension)
+        await ctx.invoke(self.bot.get_command('jsk unload'), (extension,))
 
     @commands.group(invoke_without_command=None)
     async def reload(self, ctx: Context, *, extension: str):
@@ -39,7 +39,7 @@ class Admin(commands.Cog):
 
         `extension`: The name of the extension.
         """
-        await ctx.invoke(self.bot.get_command('jsk reload'), extension)
+        await ctx.invoke(self.bot.get_command('jsk reload'), (extension,))
 
     @reload.command()
     async def config(self, ctx: Context):
