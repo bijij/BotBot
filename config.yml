@@ -27,7 +27,8 @@
         cogs.logging.logging: ~
         cogs.logging.status: ~
         cogs.logging.voice: ~    
-        
+
+        cogs.memes.bottom: ~        
         cogs.memes.markov: ~
         cogs.memes.timecard: ~
         cogs.memes.status: ~
