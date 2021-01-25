@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Awaitable, Dict, List, Optional, Tuple
+from typing import Awaitable, Dict, List, Optional, Tuple, Union
 
 import rusty_snake_markov as markov
 
@@ -54,9 +54,9 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: Dict[Tuple[str, int, ...], markov.Markov] = LRUDict(max_size=16)  # idk about a good size
+        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = LRUDict(max_size=16)  # idk about a good size
 
-    async def get_model(self, query: Tuple[str, int, ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
+    async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
         if query in self.model_cache:
             return self.model_cache[query]
