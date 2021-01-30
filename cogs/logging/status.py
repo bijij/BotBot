@@ -21,6 +21,7 @@ from discord.ext import commands
 from bot import BotBase, Context
 from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
 
+MIN_DAYS = 7
 
 IMAGE_SIZE = 4096
 PIE_SIZE = 2048
@@ -207,7 +208,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     draw = ImageDraw.Draw(image)
 
     if show_labels:
-        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
+        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // int(1.66 * num_days))
 
         # Add date labels
         x_offset = IMAGE_SIZE // 100
@@ -218,6 +219,8 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
             draw.text((x_offset, y_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
             y_offset += IMAGE_SIZE // row_count
             date += datetime.timedelta(days=1)
+
+        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
 
         # Add timezone label
         y_offset = x_offset
@@ -305,6 +308,9 @@ class StatusLogging(commands.Cog):
             if not -14 < timezone_offset < 14:
                 raise commands.BadArgument("Invalid timezone offset passed.")
 
+        if days < MIN_DAYS:
+            raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
+
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
             data = await get_status_log(user, conn, days=days)
@@ -319,7 +325,8 @@ class StatusLogging(commands.Cog):
             else:
                 timezone_offset = 0
 
-        # TODO: Fix days to be based on data returned
+        delta = (ctx.message.created_at - data[0].start).days
+        days = max(min(days, delta), MIN_DAYS)
 
         draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)),
                             show_labels=show_labels, num_days=days)
