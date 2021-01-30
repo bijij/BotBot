@@ -170,7 +170,8 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
     return as_bytes(resample(image))
 
 
-def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_labels: bool = False, num_days: int = 30) -> BytesIO:
+def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
+                    datetime.timezone.utc, show_labels: bool = False, num_days: int = 30) -> BytesIO:
 
     row_count = num_days + show_labels
     image, draw = base_image(IMAGE_SIZE * row_count, 1)
@@ -320,7 +321,8 @@ class StatusLogging(commands.Cog):
 
         # TODO: Fix days to be based on data returned
 
-        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_labels=show_labels, days=days)
+        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)),
+                            show_labels=show_labels, num_days=days)
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
