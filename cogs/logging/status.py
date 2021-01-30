@@ -170,9 +170,9 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
     return as_bytes(resample(image))
 
 
-def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_labels: bool = False) -> BytesIO:
+def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone = datetime.timezone.utc, show_labels: bool = False, num_days: int = 30) -> BytesIO:
 
-    row_count = 30 + show_labels
+    row_count = num_days + show_labels
     image, draw = base_image(IMAGE_SIZE * row_count, 1)
 
     # Set consts
@@ -289,12 +289,13 @@ class StatusLogging(commands.Cog):
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: Optional[float] = None):
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, show_labels: Optional[bool] = False, timezone_offset: Optional[float] = None, days: int = 30):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
         `show_labels`: Sets whether date and time labels should be shown, defaults to False.
         `timezone_offset`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
+        `days`: The number of days to fetch status log data for. Defaults to 30.
         """
         user = user or ctx.author
 
@@ -304,7 +305,7 @@ class StatusLogging(commands.Cog):
 
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await get_status_log(user, conn, days=30)
+            data = await get_status_log(user, conn, days=days)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
@@ -316,7 +317,9 @@ class StatusLogging(commands.Cog):
             else:
                 timezone_offset = 0
 
-        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_labels=show_labels)
+        # TODO: Fix days to be based on data returned
+
+        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)), show_labels=show_labels, days=days)
         image = await self.bot.loop.run_in_executor(None, draw_call)
 
         await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
