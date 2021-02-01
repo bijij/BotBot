@@ -21,6 +21,9 @@ except ImportError:
     def get_status(_): return discord.Status.online  # noqa: E704
 
 
+DPY_VOICE_GENERAL = 741656304359178271
+
+
 class BotBase(commands.Bot):
     def __init__(self):
         self.start_time = datetime.datetime.utcnow()
@@ -52,6 +55,8 @@ class BotBase(commands.Bot):
         self._active_timer = asyncio.Event()
         self._current_timer = None
         self._timer_task = self.loop.create_task(dispatch_timers(self))
+
+        self.whitelisted_users = set()
 
         def load_extension(extension):
             try:
@@ -110,6 +115,10 @@ class BotBase(commands.Bot):
     async def process_commands(self, message):
         if message.author.bot:
             return
+
+        if message.channel.id == DPY_VOICE_GENERAL:
+            if message.author.id not in self.whitelisted_users:
+                return
 
         ctx = await self.get_context(message, cls=Context)
         await self.invoke(ctx)
