@@ -1,11 +1,12 @@
 import asyncio
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 
 from donphan import Column, SQLType, Table
 
 from bot import BotBase, Context
+from utils.paginator import EmbedPaginator
 
 class Voice_Woes_Whitelist(Table):
     user_id: SQLType.BigInt = Column(primary_key=True)
@@ -46,10 +47,21 @@ class Whitelist(commands.Cog):
         asyncio.create_task(self.add_users())
 
     @commands.group(aliases=['vww'])
-    @commands.check_any(commands.is_owner, is_dpy_mod)
-    async def voice_woes_whitelist(self, ctx):
+    @commands.check_any(commands.is_owner(), is_dpy_mod())
+    async def voice_woes_whitelist(self, ctx: Context):
         """Voice woes whitelist management commands."""
-        ...
+        if ctx.invoked_subcommand is not None:
+            return
+
+        paginator = EmbedPaginator(colour=discord.Colour.orange(), title='Voice Woes Whitelist', max_description=512)
+        paginator.set_footer(text='user (bb)vww add, and (bb)vww remove to manage the whitelist.')
+
+        for user_id in self.bot.whitelisted_users:
+            paginator.add_line(f'<@{user_id}>')
+
+        menu = menus.MenuPages(paginator)
+        await menu.start(ctx)
+
 
     @voice_woes_whitelist.command(name='add')
     async def voice_woes_whiitelist_add(self, ctx: Context, member: discord.User):
@@ -68,3 +80,6 @@ class Whitelist(commands.Cog):
     async def add_users(self):
         for record in await Voice_Woes_Whitelist.fetchall():
             self.bot.whitelisted_users.add(record['user_id'])
+
+def setup(bot: BotBase):
+    bot.add_cog(Whitelist(bot))

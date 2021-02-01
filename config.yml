@@ -23,6 +23,7 @@
         cogs.core.meta: ~
         cogs.core.stats: ~
         cogs.core.info: ~
+        cogs.core.whitelist: ~
 
         cogs.logging.logging: ~
         cogs.logging.status: ~
