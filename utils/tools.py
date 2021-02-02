@@ -1,12 +1,12 @@
 import datetime
 
 import discord
+from discord.ext import commands
 
 from asyncio import ensure_future
 from numbers import Number
 from typing import Optional, Union, Iterable
 
-from bot import BotBase
 
 __all__ = (
     'add_reactions',
@@ -62,7 +62,7 @@ async def add_reactions(message: discord.Message, reactions: Iterable[discord.Em
     ensure_future(react())
 
 
-async def confirm(bot: BotBase, message: Union[str, discord.Message], user: discord.User, *, channel: Optional[discord.TextChannel] = None, timeout=60, delete_after=True):
+async def confirm(bot: commands.Bot, message: Union[str, discord.Message], user: discord.User, *, channel: Optional[discord.TextChannel] = None, timeout=60, delete_after=True):
     if isinstance(message, str):
         message = await channel.send(message)
 
