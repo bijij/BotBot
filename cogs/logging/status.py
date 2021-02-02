@@ -1,4 +1,7 @@
 import datetime
+from numpy.core.arrayprint import DatetimeFormat
+
+from numpy.lib.arraysetops import isin
 try:
     import zoneinfo
 except ImportError:
@@ -7,7 +10,7 @@ except ImportError:
 from collections import Counter
 from io import BytesIO, StringIO
 from functools import partial
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple, overload
 
 import asyncpg
 import numpy
@@ -32,6 +35,8 @@ ONE_DAY = 60 * 60 * 24
 ONE_HOUR = IMAGE_SIZE // 24
 
 WHITE = (255, 255, 255, 255)
+OPAQUE = (255, 255, 255, 128)
+TRANSLUCENT = (255, 255, 255, 32)
 
 
 class LogEntry(NamedTuple):
@@ -65,21 +70,23 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
     return status_totals
 
 
-async def get_status_log(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[LogEntry]:
-    records = await get_status_records(user, conn, days=days)
+async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
+                         timezone: datetime.timezone = datetime.timezone.utc, days: int = 30) -> List[LogEntry]:
+    status_log = list()
 
+    # Fetch records from DB
+    records = await get_status_records(user, conn, days=days)
     if not records:
-        return list()
+        return status_log
 
     # Add padding for missing data
-    status_log = [
-        LogEntry(status=None, start=records[0]['timestamp'], duration=records[0]['timestamp'] - start_of_day(records[0]['timestamp']))
-    ]
+    records.insert(0, (None, start_of_day(records[0]['timestamp']), None))
+    records.append((None, datetime.datetime.utcnow(), None))
 
-    for i, record in enumerate(records[:-1]):
-        status_log.append(
-            LogEntry(status=record['status'], start=record['timestamp'], duration=records[i + 1]['timestamp'] - record['timestamp'])
-        )
+    # Add in bulk of data
+    for i, (_, start, status) in enumerate(records[:-1]):
+        _, end, _ = records[i + 1]
+        status_log.append(LogEntry(status, start, end - start))
 
     return status_log
 
@@ -174,11 +181,12 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
 def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
                     datetime.timezone.utc, show_labels: bool = False, num_days: int = 30) -> BytesIO:
 
-    row_count = num_days + show_labels
+    row_count = 1 + num_days + show_labels
     image, draw = base_image(IMAGE_SIZE * row_count, 1)
 
     # Set consts
     day_width = IMAGE_SIZE / (60 * 60 * 24)
+    day_height = IMAGE_SIZE // row_count
 
     now = datetime.datetime.now(timezone)
     time_offset = now.utcoffset().total_seconds()  # type: ignore
@@ -203,21 +211,29 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     pixels = numpy.array(image)
     # pixels = pixels[:, IMAGE_SIZE:]
     pixels = pixels.reshape(row_count, IMAGE_SIZE, 4)
-    pixels = pixels.repeat(IMAGE_SIZE // row_count, 0)
+    pixels = pixels.repeat(day_height, 0)
     image = Image.fromarray(pixels, 'RGBA')
-    draw = ImageDraw.Draw(image)
 
     if show_labels:
+        overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+
         font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // int(1.66 * num_days))
 
         # Add date labels
         x_offset = IMAGE_SIZE // 100
-        y_offset = IMAGE_SIZE // 200 + IMAGE_SIZE // row_count
+        y_offset = day_height
 
         date = now - datetime.timedelta(seconds=total_duration)
-        for day in range(int(total_duration // ONE_DAY) + 1):
-            draw.text((x_offset, y_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
-            y_offset += IMAGE_SIZE // row_count
+        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
+
+            # if weekend draw signifier
+            if date.weekday() == 5:
+                draw.rectangle((0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)), fill=TRANSLUCENT)
+
+            # Add date
+            draw.text((x_offset, y_offset + IMAGE_SIZE // 200), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
+            y_offset += day_height
             date += datetime.timedelta(days=1)
 
         font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
@@ -227,15 +243,12 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
 
         # Add hour lines
-        hour_lines = Image.new('RGBA', image.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(hour_lines)
-
         for i in range(1, 24):
             x_offset = ONE_HOUR * i
-            colour = (255, 255, 255, 255 if not i % 6 else 128)
-            draw.line((x_offset, IMAGE_SIZE // row_count, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE)
+            colour = WHITE if not i % 6 else OPAQUE
+            draw.line((x_offset, day_height, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE)
 
-        image = Image.alpha_composite(image, hour_lines)
+        image = Image.alpha_composite(image, overlay)
         draw = ImageDraw.Draw(image)
 
         # Add time labels
@@ -277,20 +290,21 @@ class StatusLogging(commands.Cog):
         """
         user = user or ctx.author
 
-        async with ctx.db as conn:
-            await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await get_status_totals(user, conn, days=30)
+        async with ctx.typing():
+            async with ctx.db as conn:
+                await Opt_In_Status.is_public(ctx, user, connection=conn)
+                data = await get_status_totals(user, conn, days=30)
 
-            if not data:
-                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+                if not data:
+                    raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
-        avatar_fp = BytesIO()
-        await user.avatar_url_as(format='png', size=PIE_SIZE // 2).save(avatar_fp)
+            avatar_fp = BytesIO()
+            await user.avatar_url_as(format='png', size=PIE_SIZE // 2).save(avatar_fp)
 
-        draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=show_totals)
-        image = await self.bot.loop.run_in_executor(None, draw_call)
+            draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=show_totals)
+            image = await self.bot.loop.run_in_executor(None, draw_call)
 
-        await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
+            await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
     async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None,
@@ -308,16 +322,6 @@ class StatusLogging(commands.Cog):
             if not -14 < timezone_offset < 14:
                 raise commands.BadArgument("Invalid timezone offset passed.")
 
-        if days < MIN_DAYS:
-            raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
-
-        async with ctx.db as conn:
-            await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await get_status_log(user, conn, days=days)
-
-            if not data:
-                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
-
         if timezone_offset is None:
             record = await Timezones.fetchrow(user_id=user.id)
             if record is not None:
@@ -325,14 +329,26 @@ class StatusLogging(commands.Cog):
             else:
                 timezone_offset = 0
 
-        delta = (ctx.message.created_at - data[0].start).days
-        days = max(min(days, delta), MIN_DAYS)
+        timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
 
-        draw_call = partial(draw_status_log, data, timezone=datetime.timezone(datetime.timedelta(hours=timezone_offset)),
-                            show_labels=show_labels, num_days=days)
-        image = await self.bot.loop.run_in_executor(None, draw_call)
+        if days < MIN_DAYS:
+            raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
-        await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
+        async with ctx.typing():
+            async with ctx.db as conn:
+                await Opt_In_Status.is_public(ctx, user, connection=conn)
+                data = await get_status_log(user, conn, timezone=timezone, days=days)
+
+                if not data:
+                    raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+
+            delta = (ctx.message.created_at - data[0].start).days
+            days = max(min(days, delta), MIN_DAYS)
+
+            draw_call = partial(draw_status_log, data, timezone=timezone, show_labels=show_labels, num_days=days)
+            image = await self.bot.loop.run_in_executor(None, draw_call)
+
+            await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @status_log.command(name='calendar', aliases=['cal'])
     async def status_log_calendar(self, ctx: commands.Context, user: Optional[discord.User] = None):
