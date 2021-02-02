@@ -219,6 +219,8 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         draw = ImageDraw.Draw(overlay)
 
         font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // int(1.66 * num_days))
+        _, text_height = draw.textsize('\N{FULL BLOCK}', font=font)
+        height_offset = (day_height - text_height) // 2
 
         # Add date labels
         x_offset = IMAGE_SIZE // 100
@@ -232,15 +234,13 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
                 draw.rectangle((0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)), fill=TRANSLUCENT)
 
             # Add date
-            draw.text((x_offset, y_offset + IMAGE_SIZE // 200), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
+            _, text_height = draw.textsize(date.strftime('%b. %d'), font=font)
+            draw.text((x_offset, y_offset + height_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
             y_offset += day_height
             date += datetime.timedelta(days=1)
 
-        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 50)
-
         # Add timezone label
-        y_offset = x_offset
-        draw.text((x_offset, y_offset), str(timezone), font=font, align='left', fill='WHITE')
+        draw.text((x_offset, height_offset), str(timezone), font=font, align='left', fill='WHITE')
 
         # Add hour lines
         for i in range(1, 24):
@@ -254,8 +254,10 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         # Add time labels
         time = start_of_day(now)
         for x_offset in (ONE_HOUR * 6, ONE_HOUR * 12, ONE_HOUR * 18):
+            a, _ = draw.textsize()
+
             time += datetime.timedelta(hours=6)
-            draw.text((x_offset - ONE_HOUR // 2, y_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
+            draw.text((x_offset - ONE_HOUR // 2, height_offset), time.strftime('%H:00'), font=font, align='center', fill=WHITE)
 
     return as_bytes(resample(image))
 
