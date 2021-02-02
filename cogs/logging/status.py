@@ -26,7 +26,7 @@ from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
 
 MIN_DAYS = 7
 
-IMAGE_SIZE = 4096
+IMAGE_SIZE = 8192
 PIE_SIZE = 2048
 DOWNSAMPLE = 4
 FINAL_SIZE = IMAGE_SIZE / DOWNSAMPLE
@@ -218,14 +218,15 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
+        # Set offsets based on font size
         font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // int(1.66 * num_days))
-        _, text_height = draw.textsize('\N{FULL BLOCK}', font=font)
+        text_width, text_height = draw.textsize('\N{FULL BLOCK}' * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
-        # Add date labels
-        x_offset = IMAGE_SIZE // 100
+        x_offset = text_width
         y_offset = day_height
 
+        # Add date labels
         date = now - datetime.timedelta(seconds=total_duration)
         for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
 
