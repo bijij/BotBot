@@ -194,7 +194,7 @@ class ConnectFour(commands.Cog):
         if opponent == ctx.author:
             raise commands.BadArgument('You cannot play against yourself.')
 
-        if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Conntect 4! do you accept?", opponent, channel=ctx.channel):
+        if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?", opponent, channel=ctx.channel):
             await Game().start(ctx, opponent, wait=True)
 
 
