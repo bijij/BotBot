@@ -18,7 +18,7 @@ STATUSES = {
     '4': None
 }
 
-TEST_FILE = 'res/status_maps/christmas.json'
+TEST_FILE = 'res/status_maps/year.json'
 with open(TEST_FILE, 'r') as f:
     data = json.load(f)
 
