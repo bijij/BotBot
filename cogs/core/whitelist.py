@@ -77,6 +77,8 @@ class Whitelist(commands.Cog):
         await ctx.tick()
 
     async def add_users(self):
+        await self.bot.wait_until_ready()
+
         for record in await Voice_Woes_Whitelist.fetchall():
             self.bot.whitelisted_users.add(record['user_id'])
 

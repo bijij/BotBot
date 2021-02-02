@@ -36,6 +36,7 @@
 
         # cogs.games.tangrams: ~
         # cogs.games.pokemon: ~
+        cogs.games.connect_four: ~
 
         cogs.reminders: ~
         

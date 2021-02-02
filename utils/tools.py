@@ -4,7 +4,9 @@ import discord
 
 from asyncio import ensure_future
 from numbers import Number
-from typing import Union, Iterable
+from typing import Optional, Union, Iterable
+
+from bot import BotBase
 
 __all__ = (
     'add_reactions',
@@ -58,6 +60,32 @@ async def add_reactions(message: discord.Message, reactions: Iterable[discord.Em
             await message.add_reaction(reaction)
 
     ensure_future(react())
+
+
+async def confirm(bot: BotBase, message: Union[str, discord.Message], user: discord.User, *, channel: Optional[discord.TextChannel] = None, timeout=60, delete_after=True):
+    if isinstance(message, str):
+        message = await channel.send(message)
+
+    confirm = False
+    reactions = ['\N{thumbs up sign}', '\N{thumbs down sign}']
+
+    def check(payload):
+        if payload.message_id == message.id and payload.user_id == user.id:
+            if str(payload.emoji) in reactions:
+                return True
+        return False
+
+    await add_reactions(message, reactions)
+
+    try:
+        payload = await bot.wait_for('raw_reaction_add', check=check, timeout=timeout)
+        if str(payload.emoji) == '\N{thumbs up sign}':
+            confirm = True
+    finally:
+        if delete_after:
+            await message.delete()
+
+        return confirm
 
 
 class RawMessage(discord.Message):
