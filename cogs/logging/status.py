@@ -28,7 +28,7 @@ MIN_DAYS = 7
 
 IMAGE_SIZE = 8192
 PIE_SIZE = 2048
-DOWNSAMPLE = 4
+DOWNSAMPLE = 2
 FINAL_SIZE = IMAGE_SIZE / DOWNSAMPLE
 
 ONE_DAY = 60 * 60 * 24
@@ -247,7 +247,7 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         for i in range(1, 24):
             x_offset = ONE_HOUR * i
             colour = WHITE if not i % 6 else OPAQUE
-            draw.line((x_offset, day_height, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE)
+            draw.line((x_offset, day_height, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE * 4)
 
         image = Image.alpha_composite(image, overlay)
         draw = ImageDraw.Draw(image)
