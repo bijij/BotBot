@@ -18,48 +18,49 @@ class VoiceLogging(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState, *, record=None):
-
-        # Fetch DB entry
-        record = record or await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
-        if record is None:
-            return
-
-        channel = self.bot.get_channel(record['log_channel_id'])
-        if channel is None:
-            return
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
 
         # TODO: Perms in
 
         if before.channel == after.channel:
             return
 
-        if not record['display_hidden_channels']:
-            # Handle hidden channel case
-            base_member = discord.Object(0)
-            base_member._roles = {member.guild.id}
+        # if not record['display_hidden_channels']:
+        #     # Handle hidden channel case
+        #     base_member = discord.Object(0)
+        #     base_member._roles = {member.guild.id}
 
-            if before.channel is None or not before.channel.permissions_for(base_member).view_channel:
-                if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
-                    return
-                return await self.on_voice_state_join(channel, member, after)
+        #     if before.channel is None or not before.channel.permissions_for(base_member).view_channel:
+        #         if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
+        #             return
+        #         return await self.on_voice_state_join(channel, member, after)
 
-            if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
-                return await self.on_voice_state_leave(channel, member, before)
+        #     if after.channel is None or not after.channel.permissions_for(base_member).view_channel:
+        #         return await self.on_voice_state_leave(channel, member, before)
 
         # On Join
         if before.channel is None:
-            return await self.on_voice_state_join(channel, member, after)
+            return self.bot.dispatch('voice_state_join', member, after)
 
         # On Leave
         if after.channel is None:
-            return await self.on_voice_state_leave(channel, member, before)
+            return self.bot.dispatch('voice_state_leave', member, before)
 
         # On Move
-        return await self.on_voice_state_move(channel, member, before, after)
+        return self.bot.dispatch('voice_state_move', member, before, after)
 
     @commands.Cog.listener()
-    async def on_voice_state_join(self, channel: discord.TextChannel, member: discord.Member, after: discord.VoiceState):
+    async def on_voice_state_join(self, member: discord.Member, after: discord.VoiceState):
+        
+        # Fetch DB entry
+        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
+        if record is None:
+            return
+
+        channel = self.bot.get_channel(record['log_channel_id'])
+        if channel is None:
+            return
+        
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.green(),
             description=f'{member.mention} joined **{after.channel.name}**.',
@@ -70,7 +71,16 @@ class VoiceLogging(commands.Cog):
         ))
 
     @commands.Cog.listener()
-    async def on_voice_state_move(self, channel: discord.TextChannel, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_move(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        # Fetch DB entry
+        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
+        if record is None:
+            return
+
+        channel = self.bot.get_channel(record['log_channel_id'])
+        if channel is None:
+            return
+        
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.blue(),
             description=f'{member.mention} moved from **{before.channel.name}** to **{after.channel.name}**.',
@@ -81,7 +91,16 @@ class VoiceLogging(commands.Cog):
         ))
 
     @commands.Cog.listener()
-    async def on_voice_state_leave(self, channel: discord.TextChannel, member: discord.Member, before: discord.VoiceState):
+    async def on_voice_state_leave(self, member: discord.Member, before: discord.VoiceState):
+        # Fetch DB entry
+        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
+        if record is None:
+            return
+
+        channel = self.bot.get_channel(record['log_channel_id'])
+        if channel is None:
+            return
+        
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.red(),
             description=f'{member.mention} left **{before.channel.name}**.',

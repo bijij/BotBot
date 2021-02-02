@@ -8,6 +8,7 @@ from donphan import Column, SQLType, Table
 from bot import BotBase, Context
 from utils.paginator import EmbedPaginator
 
+
 class Voice_Woes_Whitelist(Table):
     user_id: SQLType.BigInt = Column(primary_key=True)
 
@@ -39,7 +40,6 @@ def is_dpy_mod():
     return commands.check(predicate)
 
 
-
 class Whitelist(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -62,7 +62,6 @@ class Whitelist(commands.Cog):
         menu = menus.MenuPages(paginator)
         await menu.start(ctx)
 
-
     @voice_woes_whitelist.command(name='add')
     async def voice_woes_whiitelist_add(self, ctx: Context, member: discord.User):
         """Add a user to the voice woes whitelist."""
@@ -80,6 +79,7 @@ class Whitelist(commands.Cog):
     async def add_users(self):
         for record in await Voice_Woes_Whitelist.fetchall():
             self.bot.whitelisted_users.add(record['user_id'])
+
 
 def setup(bot: BotBase):
     bot.add_cog(Whitelist(bot))
