@@ -109,7 +109,7 @@ class Board:
 class Game(menus.Menu):
     async def send_initial_message(self, ctx, channel):
         current_player = self.board.current_player
-        return await channel.send(content=f'{self.players[current_player]}\'s ({DISCS[current_player]}) turn!', embed=self.state)
+        return await channel.send(content=f'{self.players[current_player].mention}\'s ({DISCS[current_player]}) turn!', embed=self.state)
 
     def reaction_check(self, payload):
         if payload.message_id != self.message.id:
@@ -177,6 +177,7 @@ class Game(menus.Menu):
         await self.message.edit(content=f'{self.players[current_player].mention}\'s ({DISCS[current_player]}) turn!', embed=self.state)
 
     async def cancel(self, payload):
+        current_player = self.board.current_player
         await self.message.edit(content=f'Game cancelled by {self.players[current_player].mention} ({DISCS[current_player]})!', embed=self.state)
         self.stop()
 
