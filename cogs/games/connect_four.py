@@ -21,7 +21,7 @@ REGIONAL_INDICATOR_EMOJI = (
 ROWS = 6
 COLUMNS = 7
 
-BACKGROUND = '\N{BLACK CIRCLE FOR RECORD}'
+BACKGROUND = '\N{BLACK CIRCLE FOR RECORD}\N{VARIATION SELECTOR-16}'
 DISCS = ('\N{LARGE RED CIRCLE}', '\N{LARGE YELLOW CIRCLE}')
 
 DIRECTIONS = ((1, 0), (0, 1), (1, -1), (1, 1))
@@ -149,13 +149,13 @@ class Game(menus.Menu):
         # Setup buttons
         for emoji in REGIONAL_INDICATOR_EMOJI:
             self.add_button(menus.Button(emoji, self.place))
-        self.add_button(menus.Button('\N{BLACK SQUARE FOR STOP}', self.cancel))
+        self.add_button(menus.Button('\N{BLACK SQUARE FOR STOP}\N{VARIATION SELECTOR-16}', self.cancel))
 
         await super().start(ctx, channel=channel, wait=wait)
 
     async def _end_game(self):
         if self.board.winner is not None:
-            content = f"{self.players[self.board.winner].mention} Wins!"
+            content = f"{self.players[self.board.winner].mention} ({DISCS[self.board.winner]})  Wins!"
         else:
             content = "Draw!"
 
@@ -174,10 +174,10 @@ class Game(menus.Menu):
             return await self._end_game()
 
         current_player = self.board.current_player
-        await self.message.edit(content=f'{self.players[current_player]}\'s ({DISCS[current_player]}) turn!', embed=self.state)
+        await self.message.edit(content=f'{self.players[current_player].mention}\'s ({DISCS[current_player]}) turn!', embed=self.state)
 
     async def cancel(self, payload):
-        await self.message.edit(content='Game cancelled!', embed=self.state)
+        await self.message.edit(content=f'Game cancelled by {self.players[current_player].mention} ({DISCS[current_player]})!', embed=self.state)
         self.stop()
 
 
