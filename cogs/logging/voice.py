@@ -51,7 +51,7 @@ class VoiceLogging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_join(self, member: discord.Member, after: discord.VoiceState):
-        
+
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
         if record is None:
@@ -60,7 +60,7 @@ class VoiceLogging(commands.Cog):
         channel = self.bot.get_channel(record['log_channel_id'])
         if channel is None:
             return
-        
+
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.green(),
             description=f'{member.mention} joined **{after.channel.name}**.',
@@ -80,7 +80,7 @@ class VoiceLogging(commands.Cog):
         channel = self.bot.get_channel(record['log_channel_id'])
         if channel is None:
             return
-        
+
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.blue(),
             description=f'{member.mention} moved from **{before.channel.name}** to **{after.channel.name}**.',
@@ -100,7 +100,7 @@ class VoiceLogging(commands.Cog):
         channel = self.bot.get_channel(record['log_channel_id'])
         if channel is None:
             return
-        
+
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.red(),
             description=f'{member.mention} left **{before.channel.name}**.',

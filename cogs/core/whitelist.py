@@ -21,7 +21,7 @@ def is_dpy_mod():
         dpy = ctx.bot.get_guild(336642139381301249)
         if dpy is None:
             raise commands.CheckFailure('Could not find dpy')
-        
+
         member = dpy.get_member(ctx.author.id)
         if member is None:
             raise commands.CheckFailure('You are not in the discord.py server.')

@@ -58,8 +58,8 @@ class Markov(commands.Cog):
 
     async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
-        if query in self.model_cache:
-            return self.model_cache[query]
+        # if query in self.model_cache:
+        #     return self.model_cache[query]
 
         # Generate the model
         data: List[str] = list()
