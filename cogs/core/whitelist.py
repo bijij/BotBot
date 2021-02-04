@@ -1,5 +1,3 @@
-import asyncio
-
 import discord
 from discord.ext import commands, menus
 
@@ -44,7 +42,7 @@ class Whitelist(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        asyncio.create_task(self.add_users())
+        bot.loop.create_task(self.add_users())
 
     @commands.group(aliases=['vww'])
     @commands.check_any(commands.is_owner(), is_dpy_mod())
