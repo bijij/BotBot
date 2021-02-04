@@ -24,7 +24,6 @@ from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
 MIN_DAYS = 7
 
 IMAGE_SIZE = 8192
-PIE_SIZE = 2048
 DOWNSAMPLE = 2
 FINAL_SIZE = IMAGE_SIZE / DOWNSAMPLE
 
@@ -120,7 +119,7 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
         pie_size = IMAGE_SIZE
         pie_offset = (0,) * 2
     else:
-        pie_size = PIE_SIZE
+        pie_size = int(IMAGE_SIZE * 0.66)
         pie_offset = (0, (IMAGE_SIZE - pie_size) // 2)
 
     # Draw status pie

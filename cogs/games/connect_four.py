@@ -188,7 +188,7 @@ class ConnectFour(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.max_concurrency(1, per=commands.BucketType.channel)
+    # @commands.max_concurrency(1, per=commands.BucketType.channel)
     async def c4(self, ctx: Context, *, opponent: discord.Member):
         if opponent.bot:
             raise commands.BadArgument('You cannot play against a bot yet')
