@@ -297,7 +297,7 @@ class StatusLogging(commands.Cog):
                     raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
             avatar_fp = BytesIO()
-            await user.avatar_url_as(format='png', size=PIE_SIZE // 2).save(avatar_fp)
+            await user.avatar_url_as(format='png', size=IMAGE_SIZE // 2).save(avatar_fp)
 
             draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=show_totals)
             image = await self.bot.loop.run_in_executor(None, draw_call)
