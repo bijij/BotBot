@@ -46,17 +46,18 @@ REGIONAL_INDICATOR_EMOJI = (
 LETTERS_EMOJI = {letter: emoji for letter, emoji in zip(ascii_uppercase, REGIONAL_INDICATOR_EMOJI)}
 
 DIE = [
-    ["RIFOBX", "IFEHEY", "DENOWS", "UTOKND"],
-    ["HMSRAO", "LUPETS", "ACITOA", "YLGKUE"],
-    ["QBMJOA", "EHISPN", "VETIGN", "BALIYT"],
-    ["EZAVND", "RALESC", "UWILRG", "PACEMD"]
+    "RIFOBX", "IFEHEY", "DENOWS", "UTOKND",
+    "HMSRAO", "LUPETS", "ACITOA", "YLGKUE",
+    "QBMJOA", "EHISPN", "VETIGN", "BALIYT",
+    "EZAVND", "RALESC", "UWILRG", "PACEMD"
 ]
 
 
 class Board:
 
     def __init__(self):
-        self.columns = [[LETTERS_EMOJI[random.choice(die)] for die in row] for row in DIE]
+        random.shuffle(DIE)
+        self.columns = [[LETTERS_EMOJI[random.choice(DIE[row * COLUMNS + column])] for column in range(COLUMNS)] for row in range(ROWS)]
 
 
 class Game(menus.Menu):
