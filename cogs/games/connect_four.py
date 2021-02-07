@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import discord
 from discord.ext import commands, menus
-from discord.ext.commands.errors import BadArgument
 
 from donphan import Column, MaybeAcquire, SQLType, Table
 
@@ -52,86 +51,122 @@ class Board:
 
     def __init__(self, *, state: List[List[str]] = None, move: Tuple[Tuple[int, int], str] = None):
         self.columns = state or [[BACKGROUND for _ in range(ROWS)] for _ in range(COLUMNS)]
-        if move is not None:
-            self.last_move, disc = move
-            column, row = self.last_move
-            self.columns[column][row] = disc
-        else:
-            self.last_move = None
-            disc = DISCS[1]
 
-        self.current_player = not DISCS.index(disc)
+        if move is not None:
+            (column, row), disc = move
+            self.columns[column][row] = disc
+
         self.winner = None
         self.game_over = self.check_game_over()
+
+    @property
+    def state(self):
+        state = ' '.join(REGIONAL_INDICATOR_EMOJI)
+
+        for row in range(ROWS):
+            emoji = []
+            for column in range(COLUMNS):
+                emoji.append(self.columns[column][row])
+
+            state = ' '.join(emoji) + '\n' + state
+
+        return state
 
     @property
     def legal_moves(self) -> List[int]:
         return [i for i, column in enumerate(self.columns) if column.count(BACKGROUND)]
 
-    def copy(self, *, move=None):
-        return Board(state=[[state for state in column] for column in self.columns], move=move)
+    @classmethod
+    def copy(cls, board, *, move=None):
+        return cls(state=[[state for state in column] for column in board.columns], move=move)
 
     def check_game_over(self) -> bool:
-        if self.last_move is None:
-            return False
+        for column in range(COLUMNS):
+            for row in range(ROWS):
 
-        column, row = self.last_move
-        disc = self.columns[column][row]
-        # Check if last move was winning move
-        counts = [0 for _ in range(4)]
-        for i in range(-3, 4):
+                disc = self.columns[column][row]
 
-            # Shortcut for last played disc
-            if i == 0:
-                for n in range(4):
-                    counts[n] += 1
-            else:
-                # horizontal
-                if 0 <= column + i < COLUMNS:
-                    if self.columns[column + i][row] == disc:
-                        counts[0] += 1
+                # Don't validate empty cells
+                if disc == BACKGROUND:
+                    continue
+
+                # Check if last move was winning move
+                counts = [0 for _ in range(4)]
+                for i in range(-3, 4):
+
+                    # Shortcut for last played disc
+                    if i == 0:
+                        for n in range(4):
+                            counts[n] += 1
                     else:
-                        counts[0] = 0
+                        # horizontal
+                        if 0 <= column + i < COLUMNS:
+                            if self.columns[column + i][row] == disc:
+                                counts[0] += 1
+                            else:
+                                counts[0] = 0
 
-                if 0 <= row + i < ROWS:
-                    # vertical
-                    if self.columns[column][row + i] == disc:
-                        counts[1] += 1
-                    else:
-                        counts[1] = 0
+                        if 0 <= row + i < ROWS:
+                            # vertical
+                            if self.columns[column][row + i] == disc:
+                                counts[1] += 1
+                            else:
+                                counts[1] = 0
 
-                    # descending
-                    if 0 <= column + i < COLUMNS:
-                        if self.columns[column + i][row + i] == disc:
-                            counts[2] += 1
-                        else:
-                            counts[2] = 0
+                            # descending
+                            if 0 <= column + i < COLUMNS:
+                                if self.columns[column + i][row + i] == disc:
+                                    counts[2] += 1
+                                else:
+                                    counts[2] = 0
 
-                    # ascending
-                    if 0 <= column - i < COLUMNS:
-                        if self.columns[column - i][row + i] == disc:
-                            counts[3] += 1
-                        else:
-                            counts[3] = 0
+                            # ascending
+                            if 0 <= column - i < COLUMNS:
+                                if self.columns[column - i][row + i] == disc:
+                                    counts[3] += 1
+                                else:
+                                    counts[3] = 0
 
-            for count in counts:
-                if count >= 4:
-                    self.winner = DISCS.index(disc)
-                    return True
+                    for count in counts:
+                        if count >= 4:
+                            self.winner = DISCS.index(disc)
+                            return True
 
         # No moves left draw
         return len(self.legal_moves) == 0
 
     def move(self, column: int, disc: str):
         row = self.columns[column].index(BACKGROUND)
-        return self.copy(move=((column, row), disc))
+        return Board.copy(self, move=((column, row), disc))
+
+
+class AntiGravity(Board):
+
+    @classmethod
+    def flip(cls, board: Board) -> Board:
+
+        state = []
+        for column in board.columns:
+            try:
+                if isinstance(board, AntiGravity):
+                    index = ROWS - column[::-1].index(BACKGROUND)
+                else:
+                    index = column.index(BACKGROUND)
+            except ValueError:
+                index = 0
+            state.append(column[index:] + column[:index])
+
+        return (Board if isinstance(board, AntiGravity) else AntiGravity)(state=state)
+
+    def move(self, column: int, disc: str):
+        row = ROWS - self.columns[column][::-1].index(BACKGROUND) - 1
+        return AntiGravity.copy(self, move=((column, row), disc))
 
 
 class Game(menus.Menu):
+    ranked = True
 
     async def start(self, ctx, opponent, *, channel=None, wait=False):
-        self.draw = False
-
         if random.random() < 0.5:
             self.players = (ctx.author, opponent)
         else:
@@ -142,8 +177,7 @@ class Game(menus.Menu):
                 await Ranking.insert(connection=connection, ignore_on_conflict=True, user_id=player.id)
 
         self.board = Board()
-
-        self.is_bot = True
+        self.current_player = 0
 
         # Setup buttons
         for emoji in REGIONAL_INDICATOR_EMOJI:
@@ -152,14 +186,14 @@ class Game(menus.Menu):
         await super().start(ctx, channel=channel, wait=wait)
 
     async def send_initial_message(self, ctx, channel):
-        current_player = self.board.current_player
+        current_player = self.current_player
         return await channel.send(content=f'{self.players[current_player].mention}\'s ({DISCS[current_player]}) turn!', embed=self.state)
 
     def reaction_check(self, payload):
         if payload.message_id != self.message.id:
             return False
 
-        current_player = self.board.current_player
+        current_player = self.current_player
         if payload.user_id != self.players[current_player].id:
             return False
 
@@ -167,16 +201,7 @@ class Game(menus.Menu):
 
     @property
     def state(self):
-        state = ' '.join(REGIONAL_INDICATOR_EMOJI)
-
-        for row in range(ROWS):
-            emoji = []
-            for column in range(COLUMNS):
-                emoji.append(self.board.columns[column][row])
-
-            state = ' '.join(emoji) + '\n' + state
-
-        return discord.Embed(description=state)
+        return discord.Embed(description=self.board.state)
 
     async def _end_game(self, resignation: int = None):
         if resignation is not None:
@@ -191,6 +216,9 @@ class Game(menus.Menu):
 
         await self.message.edit(content=f'Game Over! {content}', embed=self.state)
         self.stop()
+
+        if not self.ranked:
+            return
 
         # Calulate new ELO
         async with MaybeAcquire() as connection:
@@ -234,19 +262,37 @@ class Game(menus.Menu):
     async def place(self, payload):
         column = REGIONAL_INDICATOR_EMOJI.index(str(payload.emoji))
         if column not in self.board.legal_moves:
-            return
+            return ...
 
-        self.board = self.board.move(column, DISCS[self.board.current_player])
+        self.board = self.board.move(column, DISCS[self.current_player])
 
         if self.board.game_over:
             return await self._end_game()
 
-        current_player = self.board.current_player
-        await self.message.edit(content=f'{self.players[current_player].mention}\'s ({DISCS[current_player]}) turn!', embed=self.state)
+        self.current_player = not self.current_player
+        await self.message.edit(content=f'{self.players[self.current_player].mention}\'s ({DISCS[self.current_player]}) turn!', embed=self.state)
 
     @menus.button('\N{BLACK SQUARE FOR STOP}\ufe0f', position=menus.Last(0))
     async def cancel(self, payload):
-        await self._end_game(resignation=self.players[self.board.current_player])
+        await self._end_game(resignation=self.current_player)
+
+
+class AntiGravityGame(Game):
+    ranked = False
+    
+    async def place(self, payload):
+        result = await super().place(payload)
+
+        # Don't flip if not needed
+        if result is Ellipsis or self.board.game_over:
+            return
+
+        if self.current_player == 0:  # and random.random() > 0.8:
+            self.board = AntiGravity.flip(self.board)
+            await self.message.edit(content=f'**Gravity Flip!**\n\n{self.players[self.current_player].mention}\'s ({DISCS[self.current_player]}) turn!', embed=self.state)
+
+            if self.board.game_over:
+                return await self._end_game()
 
 
 class ConnectFour(commands.Cog):
@@ -266,6 +312,18 @@ class ConnectFour(commands.Cog):
         if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?", opponent, channel=ctx.channel):
             await Game().start(ctx, opponent, wait=True)
 
+    @c4.command(invoke_without_command=True, name='flip', aliases=['antigravity'])
+    # @commands.max_concurrency(1, per=commands.BucketType.channel)
+    async def c4_flip(self, ctx: Context, *, opponent: discord.Member):
+        """"""
+        if opponent.bot:
+            raise commands.BadArgument('You cannot play against a bot yet')
+        if opponent == ctx.author:
+            raise commands.BadArgument('You cannot play against yourself.')
+
+        if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Connect 4 Flip! do you accept?", opponent, channel=ctx.channel):
+            await AntiGravityGame().start(ctx, opponent, wait=True)
+
     @c4.command(name='ranking', aliases=['elo'])
     async def c4_ranking(self, ctx: Context, *, player: discord.Member = None):
         """Get a player's ranking."""
@@ -275,7 +333,7 @@ class ConnectFour(commands.Cog):
             record = await Ranking.fetchrow(user_id=player.id)
 
             if record is None:
-                raise BadArgument(f'{player.mention} does not have a ranking.')
+                raise commands.BadArgument(f'{player.mention} does not have a ranking.')
 
             user_id, ranking, games, wins, losses = record
 
@@ -304,7 +362,6 @@ class ConnectFour(commands.Cog):
 
         await menus.MenuPages(embed).start(ctx)
         
-
 
 def setup(bot: BotBase):
     bot.add_cog(ConnectFour(bot))
