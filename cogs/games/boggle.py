@@ -106,6 +106,9 @@ class Board:
                     new_col = pos.col + x
                     new_row = pos.row + y
 
+                    if Position(new_col, new_row) in passed:
+                        continue
+
                     if 0 <= new_col < COLUMNS and 0 <= new_row < ROWS:
                         if self.board_contains(word[1 if word[0] != 'Q' else 2:], Position(new_col, new_row), [*passed, pos]):
                             return True
