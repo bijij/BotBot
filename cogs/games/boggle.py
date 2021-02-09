@@ -1,11 +1,15 @@
-from collections import defaultdict
+import asyncio
+from enum import unique
 import random
-import re
+
+from collections import defaultdict
 from string import ascii_uppercase
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Set
 
 import discord
 from discord.ext import commands, menus
+from discord.message import Message
+from discord.utils import cached_property
 
 from bot import BotBase, Context
 from utils.tools import ordinal
@@ -109,6 +113,10 @@ class Board:
         # Otherwise cannot find word
         return False
 
+    @cached_property
+    def legal_words(self) -> Set[str]:
+        return {word for word in DICTIONARY if self.is_legal(word)}
+
     def is_legal(self, word: str) -> bool:
         if len(word) < 3:
             return False
@@ -125,29 +133,11 @@ class Board:
 
 
 class Game(menus.Menu):
+
     def __init__(self, **kwargs):
         self.board = Board()
-
-        self.all_words = set()
-        self.words = defaultdict(set)
-
+        self.setup()
         super().__init__(**kwargs)
-
-    def check_word(self, word: str, user: discord.User) -> bool:
-        if not self.board.is_legal(word):
-            return False
-
-        if word in self.all_words:
-            return False
-        
-        # Add to user words
-        self.all_words.add(word)
-        self.words[user].add(word)
-
-        return True
-
-    async def send_initial_message(self, ctx, channel):
-        return await channel.send(content="Boggle game started, you have 3 minutes!", embed=self.state)
 
     @property
     def state(self):
@@ -162,8 +152,29 @@ class Game(menus.Menu):
 
         return discord.Embed(description=state)
 
+    def setup(self):
+        raise NotImplementedError
+
+    async def send_initial_message(self, ctx, channel):
+        return await channel.send(content="Boggle game started, you have 3 minutes!", embed=self.state)
+
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
+        await self.bot.loop.run_in_executor(None, lambda: self.board.legal_words)
+
+    async def check_message(self, message: discord.Message):
+        raise NotImplementedError
+
+    @menus.button('\N{BLACK SQUARE FOR STOP}\ufe0f', position=menus.Last(0))
+    async def cancel(self, payload):
+        await self.message.edit(content='Game Cancelled.')
+        self.stop()
+
+
+class DiscordGame(Game):
+
     @property
-    def leaderboard(self):
+    def scores(self):
         embed = discord.Embed()
 
         i = 0
@@ -180,16 +191,115 @@ class Game(menus.Menu):
 
         return embed
 
+    def setup(self):
+        self.all_words = set()
+        self.words = defaultdict(set)
+
+    async def check_message(self, message: discord.Message):
+        word = message.content
+        if word is None:
+            return
+
+        if not word.isalpha():
+            return
+        word = word.upper()
+
+        if word not in self.board.legal_words:
+            return
+
+        if word in self.all_words:
+            return
+        
+        # Add to user words
+        self.all_words.add(word)
+        self.words[message.author].add(word)
+
+        await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+
     async def finalize(self, timed_out: bool):
         if not timed_out:
             return
         await self.message.edit(content='Game Over!')
-        await self.message.reply(embed=self.leaderboard)
+        await self.message.reply(embed=self.scores)
 
-    @menus.button('\N{BLACK SQUARE FOR STOP}\ufe0f', position=menus.Last(0))
-    async def cancel(self, payload):
-        await self.message.edit(content='Game Cancelled.')
-        self.stop()
+
+class ClassicGame(Game):
+
+    @property
+    def scores(self):
+        embed = discord.Embed()
+
+        i = 0
+        old = None
+
+        for user, unique in sorted(self.unique_words.items(), key=lambda v: self.board.total_points(v[1]), reverse=True):
+            words = self.words[user]
+            points = self.board.total_points(unique)
+
+            if points != old:
+                old = points
+                i += 1
+
+            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(words)}** words, **{len(unique)}** unique, **{points}** points.', inline=False)
+
+        return embed
+
+    def filter_lists(self):
+        for user, word_list in self.word_lists.items():
+            
+            for word in word_list.split():
+                word = word.strip().upper()
+
+                if not word.isalpha():
+                    continue
+                
+                if word not in self.board.legal_words:
+                    continue
+
+                self.words[user].add(word)
+
+                # Remove from all sets if not unique
+                if word in self.used_words:
+                    for list in self.unique_words.values():
+                        if word in list:
+                            list.remove(word)
+                    continue
+
+                self.used_words.add(word)
+                self.unique_words[user].add(word)
+
+    async def check_message(self, message: discord.Message):
+        if message.author == self.bot.user:
+            return
+
+        if not self.over:
+            return
+
+        if message.content is None:
+            return
+
+        if message.author in self.word_lists:
+            return
+
+        self.word_lists[message.author] = message.content
+        await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+
+    def setup(self):
+        self.over = False
+        self.used_words = set()
+        self.word_lists = dict()
+        self.words = defaultdict(set)
+        self.unique_words = defaultdict(set)
+
+    async def finalize(self, timed_out: bool):
+        if not timed_out:
+            return
+        await self.message.edit(content='Game Over!')
+        await self.message.reply('Game Over! you have 10 seconds to send in your words.')
+        self.over = True
+        await asyncio.sleep(10)
+        self.filter_lists()
+        await self.message.reply(embed=self.scores)
 
 
 class Boggle(commands.Cog):
@@ -200,9 +310,13 @@ class Boggle(commands.Cog):
 
     @commands.command()
     @commands.max_concurrency(1, per=commands.BucketType.channel)
-    async def boggle(self, ctx: Context):
+    async def boggle(self, ctx: Context, type: str = 'discord'):
         """Start a game of boggle."""
-        self.games[ctx.channel] = game = Game()
+        if type.lower() == 'classic':
+            self.games[ctx.channel] = game = ClassicGame()
+        else:
+            self.games[ctx.channel] = game = DiscordGame()
+        
         await game.start(ctx, wait=True)
         del self.games[ctx.channel]
 
@@ -212,16 +326,9 @@ class Boggle(commands.Cog):
         game = self.games[message.channel]
         if game is None:
             return
-        
-        # Check message is single word
-        if not message.content.isalpha():
-            return
 
-        if game.check_word(message.content, message.author):
-            try:
-                await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
-            except discord.HTTPException:
-                ...
+        await game.check_message(message)
+
 
 def setup(bot: BotBase):
     bot.add_cog(Boggle(bot))
