@@ -11,6 +11,7 @@ from typing import Optional, Union, Iterable
 __all__ = (
     'add_reactions',
     'format_dt',
+    'ordinal',
     'regional_indicator',
     'keycap_digit',
     'plural',
@@ -25,6 +26,10 @@ def format_dt(dt: datetime.datetime) -> str:
         dt: (datetime.datetime): The datetime object to format.
     """
     return dt.strftime('%F @ %T UTC')
+
+def ordinal(n):
+    """Determines The ordinal for a given integer."""
+    return f'{n}{"tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4]}'
 
 
 class plural:
