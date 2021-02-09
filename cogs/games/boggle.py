@@ -1,3 +1,4 @@
+import asyncio
 import random
 from string import ascii_uppercase
 
@@ -62,7 +63,7 @@ class Board:
 
 class Game(menus.Menu):
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(embed=self.state)
+        return await channel.send(content="Boggle game started, you have 3 minutes!", embed=self.state)
 
     @property
     def state(self):
@@ -80,6 +81,15 @@ class Game(menus.Menu):
     async def start(self, ctx: Context, *, channel=None, wait=False):
         self.board = Board()
         await super().start(ctx, channel=channel, wait=wait)
+
+    async def finalize(self, timed_out: bool):
+        if not timed_out:
+            return
+        await self.message.edit(content='Game Over!')
+
+    @menus.button('\N{BLACK SQUARE FOR STOP}\ufe0f', position=menus.Last(0))
+    async def cancel(self, payload):
+        await self.message.edit(content='Game Cancelled.')
         self.stop()
 
 
