@@ -494,7 +494,7 @@ class Boggle(commands.Cog):
 
     @boggle.command(name='flip')
     async def boggle_flip(self, ctx: Context):
-        """Start's a cassic game of boggle.
+        """Start's a flip game of boggle.
 
         Rows will randomly shuffle every 30s.
         The first person to finda word gets the points.
@@ -503,7 +503,7 @@ class Boggle(commands.Cog):
 
     @boggle.command(name='boggle')
     async def boggle_boggle(self, ctx: Context):
-        """Start's a cassic game of boggle.
+        """Start's a boggling game of boggle.
 
         All letters will randomly shuffle flip every 30s.
         The first person to finda word gets the points.
