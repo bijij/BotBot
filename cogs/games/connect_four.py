@@ -1,3 +1,4 @@
+import asyncio
 import random
 from typing import List, Tuple
 
@@ -302,15 +303,45 @@ class ConnectFour(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     # @commands.max_concurrency(1, per=commands.BucketType.channel)
-    async def c4(self, ctx: Context, *, opponent: discord.Member):
-        """"""
-        if opponent.bot:
-            raise commands.BadArgument('You cannot play against a bot yet')
-        if opponent == ctx.author:
-            raise commands.BadArgument('You cannot play against yourself.')
+    async def c4(self, ctx: Context, *, opponent: discord.Member = None):
+        """Start a Connect Four game!
 
-        if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?", opponent, channel=ctx.channel):
-            await Game().start(ctx, opponent, wait=True)
+        `opponent`: Another member of the server to play against. If not is set an open challenge is started.
+        """
+        if ctx.guild is None:
+            raise commands.BadArgument('You must use this command in a guild.')
+
+        if opponent is None:
+
+            message = await ctx.channel.send(
+                embed=discord.Embed(text=f'{ctx.author.mention} wants to play Connect Four.').set_footer(
+                    text='react with \N{WHITE HEAVY CHECK MARK} to accept the challenge.'
+                ))
+            await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+
+            def check(reaction, user):
+                if reaction.emoji != '\N{WHITE HEAVY CHECK MARK}':
+                    return False
+                if user.bot:
+                    return False
+                if user == ctx.author:
+                    return False
+                return True
+
+            try:
+                _, opponent = self.bot.wait_for('reaction_add', check=check)
+                await Game().start(ctx, opponent, wait=True)
+            except asyncio.TimeoutError:
+                pass
+            finally:
+                await message.delete()
+        else:
+            if opponent.bot:
+                raise commands.BadArgument('You cannot play against a bot yet')
+            if opponent == ctx.author:
+                raise commands.BadArgument('You cannot play against yourself.')
+            if await confirm(self.bot, f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?", opponent, channel=ctx.channel):
+                await Game().start(ctx, opponent, wait=True)
 
     @c4.command(invoke_without_command=True, name='flip', aliases=['antigravity'])
     # @commands.max_concurrency(1, per=commands.BucketType.channel)
