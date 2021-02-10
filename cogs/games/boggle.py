@@ -16,10 +16,15 @@ from utils.tools import ordinal
 
 ORIGINAL = 4
 BIG = 5
-BIGGER = 6
-BIGGEST = 7
+SUPER_BIG = 6
 
+# Diagram Emoji
+AN_EMOJI = '<:_:808942978658861116>'
+ER_EMOJI = '<:_:808944481382563870>'
+HE_EMOJI = '<:_:808944480525746176>'
+IN_EMOJI = '<:_:808942977464270849>'
 QU_EMOJI = '<:_:806844322346565662>'
+TH_EMOJI = '<:_:808944481264730112>'
 
 REGIONAL_INDICATOR_EMOJI = (
     '\N{REGIONAL INDICATOR SYMBOL LETTER A}',
@@ -38,7 +43,7 @@ REGIONAL_INDICATOR_EMOJI = (
     '\N{REGIONAL INDICATOR SYMBOL LETTER N}',
     '\N{REGIONAL INDICATOR SYMBOL LETTER O}',
     '\N{REGIONAL INDICATOR SYMBOL LETTER P}',
-    QU_EMOJI,
+    '\N{REGIONAL INDICATOR SYMBOL LETTER Q}',
     '\N{REGIONAL INDICATOR SYMBOL LETTER R}',
     '\N{REGIONAL INDICATOR SYMBOL LETTER S}',
     '\N{REGIONAL INDICATOR SYMBOL LETTER T}',
@@ -50,33 +55,51 @@ REGIONAL_INDICATOR_EMOJI = (
     '\N{REGIONAL INDICATOR SYMBOL LETTER Z}',
 )
 
-with open('res/boggle.txt') as f:
-    DICTIONARY = set(f.read().splitlines())
+DIAGRAMS = {
+    '1': 'AN',
+    '2': 'ER',
+    '3': 'HE',
+    '4': 'IN',
+    '5': 'QU',
+    '6': 'TH'
+}
 
-
-LETTERS_EMOJI = {letter: emoji for letter, emoji in zip(ascii_uppercase, REGIONAL_INDICATOR_EMOJI)}
+LETTERS_EMOJI = {
+    '#': '\N{BLACK SQUARE FOR STOP}\ufe0f',
+    '1': AN_EMOJI,
+    '2': ER_EMOJI,
+    '3': HE_EMOJI,
+    '4': IN_EMOJI,
+    '5': QU_EMOJI,
+    '6': TH_EMOJI,
+} | {letter: emoji for letter, emoji in zip(ascii_uppercase, REGIONAL_INDICATOR_EMOJI)}
 
 DIE = {
     ORIGINAL: [
-        "RIFOBX", "IFEHEY", "DENOWS", "UTOKND",
-        "HMSRAO", "LUPETS", "ACITOA", "YLGKUE",
-        "QBMJOA", "EHISPN", "VETIGN", "BALIYT",
-        "EZAVND", "RALESC", "UWILRG", "PACEMD"
+        'RIFOBX', 'IFEHEY', 'DENOWS', 'UTOKND',
+        'HMSRAO', 'LUPETS', 'ACITOA', 'YLGKUE',
+        '5BMJOA', 'EHISPN', 'VETIGN', 'BALIYT',
+        'EZAVND', 'RALESC', 'UWILRG', 'PACEMD'
     ],
     BIG: [
-        "QBZJXK", "TOUOTO", "OVWGR", "AAAFSR", "AUMEEG",
-        "HHLRDO", "MJDTHO", "LHNROD", "AFAISR", "YIFASR",
-        "TELPCI", "SSNSEU", "RIYPRH", "DORDLN", "CCWNST",
-        "TTOTEM", "SCTIEP", "EANDNN", "MNNEAG", "UOTOWN",
-        "AEAEEE", "YIFPSR", "EEEEMA", "ITITIE", "ETILIC",
+        '5BZJXK', 'TOUOTO', 'OVWGR', 'AAAFSR', 'AUMEEG',
+        'HHLRDO', 'MJDTHO', 'LHNROD', 'AFAISR', 'YIFASR',
+        'TELPCI', 'SSNSEU', 'RIYPRH', 'DORDLN', 'CCWNST',
+        'TTOTEM', 'SCTIEP', 'EANDNN', 'MNNEAG', 'UOTOWN',
+        'AEAEEE', 'YIFPSR', 'EEEEMA', 'ITITIE', 'ETILIC'
     ],
-    BIGGER: [
-
-    ],
-    BIGGEST: [
-
+    SUPER_BIG: [
+        'AAAFRS', 'AAEEEE', 'AAEEOO', 'AAFIRS', 'ABDEIO', 'ADENNN',
+        'AEEEEM', 'AEEGMU', 'AEGMNN', 'AEILMN', 'AEINOU', 'AFIRSY',
+        '123456', 'BBJKXZ', 'CCENST', 'CDDLNN', 'CEIITT', 'CEIPST',
+        'CFGNUY', 'DDHNOT', 'DHHLOR', 'DHHNOW', 'DHLNOR', 'EHILRS',
+        'EIILST', 'EILPST', 'EIO###', 'EMTTTO', 'ENSSSU', 'GORRVW',
+        'HIRSTV', 'HOPRST', 'IPRSYY', 'JK5WXZ', 'NOOTUW', 'OOOTTU',
     ]
 }
+
+with open('res/boggle.txt') as f:
+    DICTIONARY = set(f.read().splitlines())
 
 POINTS = {
     3: 1,
@@ -109,28 +132,37 @@ class Board:
 
         # When starting out
         if pos is None:
+
+            # Check all positions
             for col in range(self.size):
                 for row in range(self.size):
                     if self.board_contains(word, Position(col, row)):
                         return True
 
-        # Check adjacent for next letter
-        elif word[0] == self.columns[pos.col][pos.row]:
-            for x in range(-1, 2):
-                for y in range(-1, 2):
+        # Checking new squares
+        elif pos not in passed:
+            # Check if letter matches current start of word
+            letter = self.columns[pos.col][pos.row]
+            if letter.isdigit():
+                letter = DIAGRAMS[letter]
 
-                    # don't check yourself
-                    if x == 0 and y == 0:
-                        continue
+            if word[:len(letter)] == letter:
 
-                    new_col = pos.col + x
-                    new_row = pos.row + y
+                # Check adjacent for next letter
+                for x in range(-1, 2):
+                    for y in range(-1, 2):
 
-                    if Position(new_col, new_row) in passed:
-                        continue
+                        # don't check yourself
+                        if x == 0 and y == 0:
+                            continue
 
-                    if 0 <= new_col < self.size and 0 <= new_row < self.size:
-                        if self.board_contains(word[1 if word[0] != 'Q' else 2:], Position(new_col, new_row), [*passed, pos]):
+                        new_pos = Position(pos.col + x, pos.row + y)
+
+                        # don't check out of bounds
+                        if new_pos.col < 0 or new_pos.col >= self.size or new_pos.row < 0 or new_pos.row >= self.size:
+                            continue
+
+                        if self.board_contains(word[len(letter):], new_pos, [*passed, pos]):
                             return True
 
         # Otherwise cannot find word
@@ -181,7 +213,7 @@ class Game(menus.Menu):
         raise NotImplementedError
 
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(content="Boggle game started, you have 3 minutes!", embed=self.state)
+        return await channel.send(content='Boggle game started, you have 3 minutes!', embed=self.state)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
@@ -349,7 +381,9 @@ class Boggle(commands.Cog):
         raise BadArgument('Unknown boggle game type')
 
     def _check_size(self, ctx: Context) -> int:
-        if ctx.prefix.upper().endswith('BIG '):
+        if ctx.prefix.upper().endswith('SUPER BIG '):
+            return SUPER_BIG
+        elif ctx.prefix.upper().endswith('BIG '):
             return BIG
         return ORIGINAL
 
