@@ -27,6 +27,7 @@ def format_dt(dt: datetime.datetime) -> str:
     """
     return dt.strftime('%F @ %T UTC')
 
+
 def ordinal(n):
     """Determines The ordinal for a given integer."""
     return f'{n}{"tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4]}'

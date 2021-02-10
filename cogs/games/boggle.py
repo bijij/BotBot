@@ -1,24 +1,25 @@
 import asyncio
-from enum import unique
 import random
 
 from collections import defaultdict
+from functools import cached_property
 from string import ascii_uppercase
-from typing import List, NamedTuple, Set
+from typing import List, NamedTuple, Set, Type
 
 import discord
 from discord.ext import commands, menus
-from discord.message import Message
-from discord.utils import cached_property
+from discord.ext.commands.errors import BadArgument
 
 from bot import BotBase, Context
 from utils.tools import ordinal
 
 
-QU_EMOJI = '<:_:806844322346565662>'
+ORIGINAL = 4
+BIG = 5
+BIGGER = 6
+BIGGEST = 7
 
-COLUMNS = 4
-ROWS = 4
+QU_EMOJI = '<:_:806844322346565662>'
 
 REGIONAL_INDICATOR_EMOJI = (
     '\N{REGIONAL INDICATOR SYMBOL LETTER A}',
@@ -55,12 +56,27 @@ with open('res/boggle.txt') as f:
 
 LETTERS_EMOJI = {letter: emoji for letter, emoji in zip(ascii_uppercase, REGIONAL_INDICATOR_EMOJI)}
 
-DIE = [
-    "RIFOBX", "IFEHEY", "DENOWS", "UTOKND",
-    "HMSRAO", "LUPETS", "ACITOA", "YLGKUE",
-    "QBMJOA", "EHISPN", "VETIGN", "BALIYT",
-    "EZAVND", "RALESC", "UWILRG", "PACEMD"
-]
+DIE = {
+    ORIGINAL: [
+        "RIFOBX", "IFEHEY", "DENOWS", "UTOKND",
+        "HMSRAO", "LUPETS", "ACITOA", "YLGKUE",
+        "QBMJOA", "EHISPN", "VETIGN", "BALIYT",
+        "EZAVND", "RALESC", "UWILRG", "PACEMD"
+    ],
+    BIG: [
+        "QBZJXK", "TOUOTO", "OVWGR", "AAAFSR", "AUMEEG",
+        "HHLRDO", "MJDTHO", "LHNROD", "AFAISR", "YIFASR",
+        "TELPCI", "SSNSEU", "RIYPRH", "DORDLN", "CCWNST",
+        "TTOTEM", "SCTIEP", "EANDNN", "MNNEAG", "UOTOWN",
+        "AEAEEE", "YIFPSR", "EEEEMA", "ITITIE", "ETILIC",
+    ],
+    BIGGER: [
+
+    ],
+    BIGGEST: [
+
+    ]
+}
 
 POINTS = {
     3: 1,
@@ -78,9 +94,13 @@ class Position(NamedTuple):
 
 class Board:
 
-    def __init__(self):
-        random.shuffle(DIE)
-        self.columns = [[random.choice(DIE[row * COLUMNS + column]) for column in range(COLUMNS)] for row in range(ROWS)]
+    def __init__(self, *, size=ORIGINAL):
+        self.size = size
+
+        board = DIE[self.size].copy()
+        random.shuffle(board)
+
+        self.columns = [[random.choice(board[row * self.size + column]) for column in range(self.size)] for row in range(self.size)]
 
     def board_contains(self, word: str, pos: Position = None, passed: List[Position] = []) -> bool:
         # Empty words
@@ -89,15 +109,15 @@ class Board:
 
         # When starting out
         if pos is None:
-            for col in range(COLUMNS):
-                for row in range(ROWS):
+            for col in range(self.size):
+                for row in range(self.size):
                     if self.board_contains(word, Position(col, row)):
                         return True
 
         # Check adjacent for next letter
         elif word[0] == self.columns[pos.col][pos.row]:
-            for x in range(-1,2):
-                for y in range(-1,2):
+            for x in range(-1, 2):
+                for y in range(-1, 2):
 
                     # don't check yourself
                     if x == 0 and y == 0:
@@ -109,16 +129,16 @@ class Board:
                     if Position(new_col, new_row) in passed:
                         continue
 
-                    if 0 <= new_col < COLUMNS and 0 <= new_row < ROWS:
+                    if 0 <= new_col < self.size and 0 <= new_row < self.size:
                         if self.board_contains(word[1 if word[0] != 'Q' else 2:], Position(new_col, new_row), [*passed, pos]):
                             return True
 
         # Otherwise cannot find word
         return False
 
-    @cached_property
-    def legal_words(self) -> Set[str]:
-        return {word for word in DICTIONARY if self.is_legal(word)}
+    # @cached_property
+    # def legal_words(self) -> Set[str]:
+    #     return {word for word in DICTIONARY if self.is_legal(word)}
 
     def is_legal(self, word: str) -> bool:
         if len(word) < 3:
@@ -136,9 +156,11 @@ class Board:
 
 
 class Game(menus.Menu):
+    name = 'Boggle'
+    footer = None
 
-    def __init__(self, **kwargs):
-        self.board = Board()
+    def __init__(self, *, size=ORIGINAL, **kwargs):
+        self.board = Board(size=size)
         self.setup()
         super().__init__(**kwargs)
 
@@ -146,14 +168,14 @@ class Game(menus.Menu):
     def state(self):
         state = ''
 
-        for row in range(ROWS):
+        for row in range(self.board.size):
             emoji = []
-            for column in range(COLUMNS):
+            for column in range(self.board.size):
                 emoji.append(LETTERS_EMOJI[self.board.columns[column][row]])
 
             state = ' '.join(emoji) + '\n' + state
 
-        return discord.Embed(description=state)
+        return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
     def setup(self):
         raise NotImplementedError
@@ -163,7 +185,10 @@ class Game(menus.Menu):
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
-        await self.bot.loop.run_in_executor(None, lambda: self.board.legal_words)
+        # await self.bot.loop.run_in_executor(None, lambda: self.board.legal_words)
+
+    async def finalize(self, timed_out):
+        self.bot.dispatch('boggle_game_complete', self.message.channel)
 
     async def check_message(self, message: discord.Message):
         raise NotImplementedError
@@ -175,6 +200,8 @@ class Game(menus.Menu):
 
 
 class DiscordGame(Game):
+    name = 'Discord Boggle'
+    footer = 'First to find a word wins points!'
 
     @property
     def scores(self):
@@ -207,12 +234,12 @@ class DiscordGame(Game):
             return
         word = word.upper()
 
-        if word not in self.board.legal_words:
+        if not self.board.is_legal(word):
             return
 
         if word in self.all_words:
             return
-        
+
         # Add to user words
         self.all_words.add(word)
         self.words[message.author].add(word)
@@ -220,13 +247,15 @@ class DiscordGame(Game):
         await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
     async def finalize(self, timed_out: bool):
-        if not timed_out:
-            return
-        await self.message.edit(content='Game Over!')
-        await self.message.reply(embed=self.scores)
+        await super().finalize(timed_out)
+        if timed_out:
+            await self.message.edit(content='Game Over!')
+            await self.message.reply(embed=self.scores)
 
 
 class ClassicGame(Game):
+    name = 'Classic Boggle'
+    footer = 'Keep a list of words til the end!'
 
     @property
     def scores(self):
@@ -249,14 +278,14 @@ class ClassicGame(Game):
 
     def filter_lists(self):
         for user, word_list in self.word_lists.items():
-            
+
             for word in word_list.split():
                 word = word.strip().upper()
 
                 if not word.isalpha():
                     continue
-                
-                if word not in self.board.legal_words:
+
+                if not self.board.is_legal(word):
                     continue
 
                 self.words[user].add(word)
@@ -295,14 +324,15 @@ class ClassicGame(Game):
         self.unique_words = defaultdict(set)
 
     async def finalize(self, timed_out: bool):
-        if not timed_out:
-            return
-        await self.message.edit(content='Game Over!')
-        await self.message.reply('Game Over! you have 10 seconds to send in your words.')
-        self.over = True
-        await asyncio.sleep(10)
-        self.filter_lists()
-        await self.message.reply(embed=self.scores)
+        await super().finalize(timed_out)
+
+        if timed_out:
+            await self.message.edit(content='Game Over!')
+            await self.message.reply('Game Over! you have 10 seconds to send in your words.')
+            self.over = True
+            await asyncio.sleep(10)
+            self.filter_lists()
+            await self.message.reply(embed=self.scores)
 
 
 class Boggle(commands.Cog):
@@ -311,17 +341,47 @@ class Boggle(commands.Cog):
         self.bot = bot
         self.games = defaultdict(lambda: None)
 
-    @commands.command()
+    def _get_game_type(self, ctx: Context) -> Type[Game]:
+        if ctx.invoked_subcommand is None:
+            return DiscordGame
+        if ctx.invoked_subcommand is self.boggle_classic:
+            return ClassicGame
+        raise BadArgument('Unknown boggle game type')
+
+    def _check_size(self, ctx: Context) -> int:
+        if ctx.prefix.upper().endswith('BIG '):
+            return BIG
+        return ORIGINAL
+
+    @commands.group()
     @commands.max_concurrency(1, per=commands.BucketType.channel)
-    async def boggle(self, ctx: Context, type: str = 'discord'):
-        """Start a game of boggle."""
-        if type.lower() == 'classic':
-            self.games[ctx.channel] = game = ClassicGame()
-        else:
-            self.games[ctx.channel] = game = DiscordGame()
-        
-        await game.start(ctx, wait=True)
-        del self.games[ctx.channel]
+    async def boggle(self, ctx: Context):
+        """Start's a game of Boggle.
+
+        The board size can be set by command prefix.
+        e.g. `(bb)big boggle` will result in a 5x5 board.
+
+        Players have 3 minutes to find as many words as they can, thhe first person to send
+        a word gets the points.
+        """
+        game_type = self._get_game_type(ctx)
+        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx))
+        await game.start(ctx, wait=False)
+
+        def check(channel):
+            return channel.id == ctx.channel.id
+
+        channel = await self.bot.wait_for('boggle_game_complete', check=check, timeout=200)
+        del self.games[channel]
+
+    @boggle.command(name='classic')
+    async def boggle_classic(self, ctx: Context):
+        """Start's a cassic game of boggle.
+
+        Players will write down as many words as they can and send after 3 minutes has passed.
+        Points are awarded to players with unique words.
+        """
+        ...
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

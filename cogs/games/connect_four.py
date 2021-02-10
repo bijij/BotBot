@@ -222,7 +222,7 @@ class Game(menus.Menu):
 
         # Calulate new ELO
         async with MaybeAcquire() as connection:
-        
+
             await Games.insert(
                 connection=connection,
                 players=[p.id for p in self.players],
@@ -233,11 +233,11 @@ class Game(menus.Menu):
             record_1 = await Ranking.fetchrow(connection=connection, user_id=self.players[0].id)
             record_2 = await Ranking.fetchrow(connection=connection, user_id=self.players[1].id)
 
-            R1 = 10 ** (record_1['ranking']/400)
-            R2 = 10 ** (record_2['ranking']/400)
+            R1 = 10 ** (record_1['ranking'] / 400)
+            R2 = 10 ** (record_2['ranking'] / 400)
 
-            E1 = R1 / (R1+R2)
-            E2 = R2 / (R1+R2)
+            E1 = R1 / (R1 + R2)
+            E2 = R2 / (R1 + R2)
 
             S1 = self.board.winner == 0 if self.board.winner is not None else 0.5
             S2 = self.board.winner == 1 if self.board.winner is not None else 0.5
@@ -246,18 +246,18 @@ class Game(menus.Menu):
             r2 = record_2['ranking'] + K * (S2 - E2)
 
             await Ranking.update_record(record_1, connection=connection,
-                ranking=round(r1),
-                games=record_1['games'] + 1,
-                wins=record_1['wins'] + self.board.winner == 0,
-                losses=record_1['losses'] + self.board.winner != 0,
-            )
+                                        ranking=round(r1),
+                                        games=record_1['games'] + 1,
+                                        wins=record_1['wins'] + self.board.winner == 0,
+                                        losses=record_1['losses'] + self.board.winner != 0,
+                                        )
 
             await Ranking.update_record(record_2, connection=connection,
-                ranking=round(r2),
-                games=record_2['games'] + 1,
-                wins=record_2['wins'] + self.board.winner == 1,
-                losses=record_2['losses'] + self.board.winner != 1,
-            )
+                                        ranking=round(r2),
+                                        games=record_2['games'] + 1,
+                                        wins=record_2['wins'] + self.board.winner == 1,
+                                        losses=record_2['losses'] + self.board.winner != 1,
+                                        )
 
     async def place(self, payload):
         column = REGIONAL_INDICATOR_EMOJI.index(str(payload.emoji))
@@ -279,7 +279,7 @@ class Game(menus.Menu):
 
 class AntiGravityGame(Game):
     ranked = False
-    
+
     async def place(self, payload):
         result = await super().place(payload)
 
@@ -361,7 +361,7 @@ class ConnectFour(commands.Cog):
             embed.add_field(name=f'{user} | {ranking}', value=f'Games: **{games}** | Wins: **{wins}** | Losses: **{losses}**')
 
         await menus.MenuPages(embed).start(ctx)
-        
+
 
 def setup(bot: BotBase):
     bot.add_cog(ConnectFour(bot))

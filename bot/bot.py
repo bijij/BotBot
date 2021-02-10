@@ -43,13 +43,14 @@ class BotBase(commands.Bot):
         log.addHandler(handler)
         log.addHandler(logging.StreamHandler())
 
-        self.prefix = CONFIG.BOT.PREFIX
+        self.prefix = str(CONFIG.BOT.PREFIX)
 
         allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
         intents = discord.Intents.all()
         status = get_status(self.start_time)
 
-        super().__init__(command_prefix=commands.when_mentioned_or(self.prefix), help_command=EmbedHelpCommand(),
+        prefixes = [ self.prefix + 'big ', self.prefix]  # for Boggle
+        super().__init__(command_prefix=commands.when_mentioned_or(*prefixes), help_command=EmbedHelpCommand(),
                          allowed_mentions=allowed_mentions, intents=intents, status=status)
 
         self._active_timer = asyncio.Event()
