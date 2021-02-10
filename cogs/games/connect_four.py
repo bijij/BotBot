@@ -314,7 +314,7 @@ class ConnectFour(commands.Cog):
         if opponent is None:
 
             message = await ctx.channel.send(
-                embed=discord.Embed(text=f'{ctx.author.mention} wants to play Connect Four.').set_footer(
+                embed=discord.Embed(description=f'{ctx.author.mention} wants to play Connect Four.').set_footer(
                     text='react with \N{WHITE HEAVY CHECK MARK} to accept the challenge.'
                 ))
             await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
