@@ -7,6 +7,7 @@ from string import ascii_uppercase
 from typing import List, NamedTuple, Set, Type
 
 import discord
+from discord.enums import NotificationLevel
 from discord.ext import commands, menus
 from discord.ext.commands.errors import BadArgument
 
@@ -117,13 +118,15 @@ class Position(NamedTuple):
 
 class Board:
 
-    def __init__(self, *, size=ORIGINAL):
+    def __init__(self, *, size=ORIGINAL, board=None):
         self.size = size
 
-        board = DIE[self.size].copy()
-        random.shuffle(board)
+        if board is None:
+            board = DIE[self.size].copy()
+            random.shuffle(board)
+            board = [[random.choice(board[row * self.size + column]) for column in range(self.size)] for row in range(self.size)]
 
-        self.columns = [[random.choice(board[row * self.size + column]) for column in range(self.size)] for row in range(self.size)]
+        self.columns = board
 
     def board_contains(self, word: str, pos: Position = None, passed: List[Position] = []) -> bool:
         # Empty words
@@ -222,6 +225,12 @@ class Game(menus.Menu):
     async def finalize(self, timed_out):
         self.bot.dispatch('boggle_game_complete', self.message.channel)
 
+    def get_points(self, words: List[str]) -> int:
+        return self.board.total_points(words)
+
+    def check_word(self, word: str) -> bool:
+        return self.board.is_legal(word)
+
     async def check_message(self, message: discord.Message):
         raise NotImplementedError
 
@@ -229,6 +238,48 @@ class Game(menus.Menu):
     async def cancel(self, payload):
         await self.message.edit(content='Game Cancelled.')
         self.stop()
+
+
+class ShuffflingGame(Game):
+
+    def __init__(self, *, size=ORIGINAL, **kwargs):
+        super().__init__(size=size, **kwargs)
+        self.boards = [self.board]
+
+    def shuffle(self):
+        raise NotImplementedError
+
+    async def shuffle_task(self):
+        for i in range(5):
+            await asyncio.sleep(30)
+            if not self._running:
+                return
+
+            # Shuffle board
+            self.shuffle()
+            self.boards.append(self.board)
+
+            # Note Board Updated
+            await self.message.channel.send('Board Updated!')
+
+            # Update Board Message
+            time = ["2 minutes, 30 seconds", '2 minutes', '1 minute, 30 seconds', '1 minute', '30 seconds'][i]
+            await self.message.edit(content=f'Board Updated! You have {time} left!', embed=self.state)
+
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
+        self.bot.loop.create_task(self.shuffle_task())
+
+    def get_points(self, words: List[str]) -> int:
+        points = 0
+        for word in words:
+            for board in self.boards:
+                pts = board.points(word)
+                if pts:
+                    points += pts
+                    break
+
+        return points
 
 
 class DiscordGame(Game):
@@ -242,8 +293,8 @@ class DiscordGame(Game):
         i = 0
         old = None
 
-        for user, words in sorted(self.words.items(), key=lambda v: self.board.total_points(v[1]), reverse=True):
-            points = self.board.total_points(words)
+        for user, words in sorted(self.words.items(), key=lambda v: self.get_points(v[1]), reverse=True):
+            points = self.get_points(words)
 
             if points != old:
                 old = points
@@ -266,7 +317,7 @@ class DiscordGame(Game):
             return
         word = word.upper()
 
-        if not self.board.is_legal(word):
+        if not self.check_word(word):
             return
 
         if word in self.all_words:
@@ -317,7 +368,7 @@ class ClassicGame(Game):
                 if not word.isalpha():
                     continue
 
-                if not self.board.is_legal(word):
+                if not self.check_word(word):
                     continue
 
                 self.words[user].add(word)
@@ -367,6 +418,26 @@ class ClassicGame(Game):
             await self.message.reply(embed=self.scores)
 
 
+class FlipGame(ShuffflingGame, DiscordGame):
+    name = 'Flip Boggle'
+    footer = 'Find words as fast as you can, rows will flip positions every 30 seconds.'
+
+    def shuffle(self):
+        rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
+        random.shuffle(rows)
+        self.board = Board(size=self.board.size, board=[[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)])
+
+
+class BoggleGame(ShuffflingGame, DiscordGame):
+    name = 'Boggle Boggle'
+    footer = 'Find words as fast as you can, letters will shuffle positions every 30 seconds.'
+
+    def shuffle(self):
+        letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
+        random.shuffle(letters)
+        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)])
+
+
 class Boggle(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -376,8 +447,12 @@ class Boggle(commands.Cog):
     def _get_game_type(self, ctx: Context) -> Type[Game]:
         if ctx.invoked_subcommand is None:
             return DiscordGame
-        if ctx.invoked_subcommand is self.boggle_classic:
+        elif ctx.invoked_subcommand is self.boggle_classic:
             return ClassicGame
+        elif ctx.invoked_subcommand is self.boggle_flip:
+            return FlipGame
+        elif ctx.invoked_subcommand is self.boggle_boggle:
+            return BoggleGame
         raise BadArgument('Unknown boggle game type')
 
     def _check_size(self, ctx: Context) -> int:
@@ -395,7 +470,7 @@ class Boggle(commands.Cog):
         The board size can be set by command prefix.
         e.g. `(bb)big boggle` will result in a 5x5 board.
 
-        Players have 3 minutes to find as many words as they can, thhe first person to send
+        Players have 3 minutes to find as many words as they can, the first person to find
         a word gets the points.
         """
         game_type = self._get_game_type(ctx)
@@ -414,6 +489,24 @@ class Boggle(commands.Cog):
 
         Players will write down as many words as they can and send after 3 minutes has passed.
         Points are awarded to players with unique words.
+        """
+        ...
+
+    @boggle.command(name='flip')
+    async def boggle_flip(self, ctx: Context):
+        """Start's a cassic game of boggle.
+
+        Rows will randomly shuffle every 30s.
+        The first person to finda word gets the points.
+        """
+        ...
+
+    @boggle.command(name='boggle')
+    async def boggle_boggle(self, ctx: Context):
+        """Start's a cassic game of boggle.
+
+        All letters will randomly shuffle flip every 30s.
+        The first person to finda word gets the points.
         """
         ...
 
