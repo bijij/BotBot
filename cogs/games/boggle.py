@@ -2,12 +2,10 @@ import asyncio
 import random
 
 from collections import defaultdict
-from functools import cached_property
 from string import ascii_uppercase
-from typing import List, NamedTuple, Set, Type
+from typing import List, NamedTuple, Type
 
 import discord
-from discord.enums import NotificationLevel
 from discord.ext import commands, menus
 from discord.ext.commands.errors import BadArgument
 
@@ -468,15 +466,24 @@ class Boggle(commands.Cog):
         """Start's a game of Boggle.
 
         The board size can be set by command prefix.
-        e.g. `(bb)big boggle` will result in a 5x5 board.
+        `(bb)big boggle` will result in a 5x5 board.
+        `(bb)super big boggle` will result in a 6x6 board.
 
         Players have 3 minutes to find as many words as they can, the first person to find
         a word gets the points.
         """
+        # Ignore if rules invoke
+        if ctx.invoked_subcommand is self.boggle_rules:
+            return
+
+        # Determine the game type
         game_type = self._get_game_type(ctx)
+
+        # Start the game
         self.games[ctx.channel] = game = game_type(size=self._check_size(ctx))
         await game.start(ctx, wait=False)
 
+        # Wait for game to end
         def check(channel):
             return channel.id == ctx.channel.id
 
@@ -485,7 +492,7 @@ class Boggle(commands.Cog):
 
     @boggle.command(name='classic')
     async def boggle_classic(self, ctx: Context):
-        """Start's a cassic game of boggle.
+        """Starts a cassic game of boggle.
 
         Players will write down as many words as they can and send after 3 minutes has passed.
         Points are awarded to players with unique words.
@@ -494,7 +501,7 @@ class Boggle(commands.Cog):
 
     @boggle.command(name='flip')
     async def boggle_flip(self, ctx: Context):
-        """Start's a flip game of boggle.
+        """Starts a flip game of boggle.
 
         Rows will randomly shuffle every 30s.
         The first person to finda word gets the points.
@@ -503,12 +510,17 @@ class Boggle(commands.Cog):
 
     @boggle.command(name='boggle')
     async def boggle_boggle(self, ctx: Context):
-        """Start's a boggling game of boggle.
+        """Starts a boggling game of boggle.
 
         All letters will randomly shuffle flip every 30s.
         The first person to finda word gets the points.
         """
         ...
+
+    @boggle.command(name='rules', aliases=['help'])
+    async def boggle_rules(self, ctx: Context, type: str = 'discord'):
+        """Displays information about a given boggle game type."""
+        raise commands.BadArgument('This command has not been implemented yet.')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
