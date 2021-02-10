@@ -329,7 +329,7 @@ class ConnectFour(commands.Cog):
                 return True
 
             try:
-                _, opponent = self.bot.wait_for('reaction_add', check=check)
+                _, opponent = await self.bot.wait_for('reaction_add', check=check)
                 await Game().start(ctx, opponent, wait=True)
             except asyncio.TimeoutError:
                 pass
