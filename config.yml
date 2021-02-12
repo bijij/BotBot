@@ -38,6 +38,7 @@
         # cogs.games.pokemon: ~
         cogs.games.connect_four: ~
         cogs.games.boggle: ~
+        cogs.games.foggle: ~
 
         cogs.reminders: ~
         
