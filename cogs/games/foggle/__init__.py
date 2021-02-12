@@ -253,28 +253,28 @@ class DiscordGame(Game):
                 old = points
                 i += 1
 
-            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(equations)}** words, **{points}** points.', inline=False)
+            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(equations)}** equations, **{points}** points.', inline=False)
 
         return embed
 
     def setup(self):
-        self.all_words = set()
-        self.words = defaultdict(set)
+        self.all_equations = set()
+        self.equations = defaultdict(set)
 
     async def check_message(self, message: discord.Message):
-        word = message.content
-        if word is None:
+        equation = message.content
+        if equation is None:
             return
 
-        if not self.check_word(word):
+        if not self.check_equation(equation):
             return
 
-        if word in self.all_words:
+        if equation in self.all_equations:
             return
 
-        # Add to user words
-        self.all_words.add(word)
-        self.words[message.author].add(word)
+        # Add to user equations
+        self.all_equations.add(equation)
+        self.equations[message.author].add(equation)
 
         await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
@@ -287,7 +287,7 @@ class DiscordGame(Game):
 
 class FlipGame(ShuffflingGame, DiscordGame):
     name = 'Flip Foggle'
-    footer = 'Find words as fast as you can, rows will flip positions every 30 seconds.'
+    footer = 'Find equations as fast as you can, rows will flip positions every 30 seconds.'
 
     def shuffle(self):
         rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
@@ -297,7 +297,7 @@ class FlipGame(ShuffflingGame, DiscordGame):
 
 class FoggleGame(ShuffflingGame, DiscordGame):
     name = 'Foggle Foggle'
-    footer = 'Find words as fast as you can, letters will shuffle positions every 30 seconds.'
+    footer = 'Find equations as fast as you can, letters will shuffle positions every 30 seconds.'
 
     def shuffle(self):
         letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
