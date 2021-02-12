@@ -165,7 +165,7 @@ class Game(menus.Menu):
 
             state = ' '.join(emoji) + '\n' + state
 
-            state += f'\n\n The magic number is **{self.board.number}**!'
+        state += f'\n\n The magic number is **{self.board.number}**!'
 
         return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
@@ -270,10 +270,6 @@ class DiscordGame(Game):
         if word is None:
             return
 
-        if not word.isalpha():
-            return
-        word = word.upper()
-
         if not self.check_word(word):
             return
 
@@ -291,89 +287,6 @@ class DiscordGame(Game):
         if timed_out:
             await self.message.edit(content='Game Over!')
             await self.message.reply(embed=self.scores)
-
-
-class ClassicGame(Game):
-    name = 'Classic Foggle'
-    footer = 'Keep a list of equations til the end!'
-
-    @property
-    def scores(self):
-        embed = discord.Embed()
-
-        i = 0
-        old = None
-
-        for user, unique in sorted(self.unique_words.items(), key=lambda v: self.board.total_points(v[1]), reverse=True):
-            words = self.words[user]
-            points = self.board.total_points(unique)
-
-            if points != old:
-                old = points
-                i += 1
-
-            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(words)}** words, **{len(unique)}** unique, **{points}** points.', inline=False)
-
-        return embed
-
-    def filter_lists(self):
-        for user, word_list in self.word_lists.items():
-
-            for word in word_list.split():
-                word = word.strip().upper()
-
-                if not word.isalpha():
-                    continue
-
-                if not self.check_word(word):
-                    continue
-
-                self.words[user].add(word)
-
-                # Remove from all sets if not unique
-                if word in self.used_words:
-                    for list in self.unique_words.values():
-                        if word in list:
-                            list.remove(word)
-                    continue
-
-                self.used_words.add(word)
-                self.unique_words[user].add(word)
-
-    async def check_message(self, message: discord.Message):
-        if message.author == self.bot.user:
-            return
-
-        if not self.over:
-            return
-
-        if message.content is None:
-            return
-
-        if message.author in self.word_lists:
-            return
-
-        self.word_lists[message.author] = message.content
-        await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
-
-    def setup(self):
-        self.over = False
-        self.used_words = set()
-        self.word_lists = dict()
-        self.words = defaultdict(set)
-        self.unique_words = defaultdict(set)
-
-    async def finalize(self, timed_out: bool):
-        await super().finalize(timed_out)
-
-        if timed_out:
-            await self.message.edit(content='Game Over!')
-            await self.message.reply('Game Over! you have 10 seconds to send in your words.')
-            self.over = True
-            await asyncio.sleep(10)
-            self.filter_lists()
-            await self.message.reply(embed=self.scores)
-
 
 class FlipGame(ShuffflingGame, DiscordGame):
     name = 'Flip Foggle'
@@ -404,8 +317,6 @@ class Foggle(commands.Cog):
     def _get_game_type(self, ctx: Context) -> Type[Game]:
         if ctx.invoked_subcommand is None:
             return DiscordGame
-        elif ctx.invoked_subcommand is self.foggle_classic:
-            return ClassicGame
         elif ctx.invoked_subcommand is self.foggle_flip:
             return FlipGame
         elif ctx.invoked_subcommand is self.foggle_foggle:
@@ -448,15 +359,6 @@ class Foggle(commands.Cog):
 
         channel = await self.bot.wait_for('foggle_game_complete', check=check, timeout=200)
         del self.games[channel]
-
-    @foggle.command(name='classic')
-    async def foggle_classic(self, ctx: Context):
-        """Starts a cassic game of foggle.
-
-        Players will write down as many words as they can and send after 3 minutes has passed.
-        Points are awarded to players with unique equations.
-        """
-        ...
 
     @foggle.command(name='flip')
     async def foggle_flip(self, ctx: Context):
