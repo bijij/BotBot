@@ -165,6 +165,8 @@ class Game(menus.Menu):
 
             state = ' '.join(emoji) + '\n' + state
 
+            state += f'\n\n The magic number is **{self.board.number}**!'
+
         return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
     def setup(self):
