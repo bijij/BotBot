@@ -80,9 +80,9 @@ class Board:
         self.columns = board
         self.number = magic_number
 
-    def board_contains(self, word: str, pos: Position = None, passed: List[Position] = []) -> bool:
-        # Empty words
-        if len(word) == 0:
+    def board_contains(self, numbers: str, pos: Position = None, passed: List[Position] = []) -> bool:
+        # Empty numberss
+        if len(numbers) == 0:
             return True
 
         # When starting out
@@ -91,13 +91,13 @@ class Board:
             # Check all positions
             for col in range(self.size):
                 for row in range(self.size):
-                    if self.board_contains(word, Position(col, row)):
+                    if self.board_contains(numbers, Position(col, row)):
                         return True
 
         # Checking new squares
         elif pos not in passed:
-            # Check if letter matches current start of word
-            if word[0] == self.columns[pos.col][pos.row]:
+            # Check if letter matches current start of numbers
+            if numbers[0] == self.columns[pos.col][pos.row]:
 
                 # Check adjacent for next letter
                 for x in range(-1, 2):
@@ -113,15 +113,11 @@ class Board:
                         if new_pos.col < 0 or new_pos.col >= self.size or new_pos.row < 0 or new_pos.row >= self.size:
                             continue
 
-                        if self.board_contains(word[1:], new_pos, [*passed, pos]):
+                        if self.board_contains(numbers[1:], new_pos, [*passed, pos]):
                             return True
 
-        # Otherwise cannot find word
+        # Otherwise cannot find numbers
         return False
-
-    # @cached_property
-    # def legal_words(self) -> Set[str]:
-    #     return {word for word in DICTIONARY if self.is_legal(word)}
 
     def is_legal(self, equation: str) -> bool:
 
@@ -137,11 +133,11 @@ class Board:
             return False
         return View(equation).parse_full() == self.number
 
-    def points(self, word: str) -> int:
-        return 1 if self.is_legal(word) else 0
+    def points(self, equation: str) -> int:
+        return 1 if self.is_legal(equation) else 0
 
-    def total_points(self, words: List[str]) -> int:
-        return sum(self.points(word) for word in words)
+    def total_points(self, equations: List[str]) -> int:
+        return sum(self.points(equation) for equation in equations)
 
 
 class Game(menus.Menu):
@@ -177,16 +173,16 @@ class Game(menus.Menu):
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
-        # await self.bot.loop.run_in_executor(None, lambda: self.board.legal_words)
+        # await self.bot.loop.run_in_executor(None, lambda: self.board.legal_equations)
 
     async def finalize(self, timed_out):
         self.bot.dispatch('foggle_game_complete', self.message.channel)
 
-    def get_points(self, words: List[str]) -> int:
-        return self.board.total_points(words)
+    def get_points(self, equations: List[str]) -> int:
+        return self.board.total_points(equations)
 
-    def check_word(self, word: str) -> bool:
-        return self.board.is_legal(word)
+    def check_equation(self, equation: str) -> bool:
+        return self.board.is_legal(equation)
 
     async def check_message(self, message: discord.Message):
         raise NotImplementedError
@@ -227,11 +223,11 @@ class ShuffflingGame(Game):
         await super().start(*args, **kwargs)
         self.bot.loop.create_task(self.shuffle_task())
 
-    def get_points(self, words: List[str]) -> int:
+    def get_points(self, equations: List[str]) -> int:
         points = 0
-        for word in words:
+        for equation in equations:
             for board in self.boards:
-                pts = board.points(word)
+                pts = board.points(equation)
                 if pts:
                     points += pts
                     break
@@ -250,14 +246,14 @@ class DiscordGame(Game):
         i = 0
         old = None
 
-        for user, words in sorted(self.words.items(), key=lambda v: self.get_points(v[1]), reverse=True):
-            points = self.get_points(words)
+        for user, equations in sorted(self.equations.items(), key=lambda v: self.get_points(v[1]), reverse=True):
+            points = self.get_points(equations)
 
             if points != old:
                 old = points
                 i += 1
 
-            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(words)}** words, **{points}** points.', inline=False)
+            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(equations)}** words, **{points}** points.', inline=False)
 
         return embed
 
@@ -287,6 +283,7 @@ class DiscordGame(Game):
         if timed_out:
             await self.message.edit(content='Game Over!')
             await self.message.reply(embed=self.scores)
+
 
 class FlipGame(ShuffflingGame, DiscordGame):
     name = 'Flip Foggle'
@@ -374,7 +371,7 @@ class Foggle(commands.Cog):
         """Starts a boggling game of foggle.
 
         All letters will randomly shuffle flip every 30s.
-        The first person to finda word gets the points.
+        The first person to find an equation gets the points.
         """
         ...
 
