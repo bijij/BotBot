@@ -258,7 +258,7 @@ class DiscordGame(Game):
         return embed
 
     def setup(self):
-        self.all_equations = set()
+        self.all_chains = set()
         self.equations = defaultdict(set)
 
     async def check_message(self, message: discord.Message):
@@ -266,14 +266,18 @@ class DiscordGame(Game):
         if equation is None:
             return
 
+        equation = equation.strip()
+
         if not self.check_equation(equation):
             return
 
-        if equation in self.all_equations:
+        chain = re.sub(NUMBER_PATTERN, '', equation)
+
+        if chain in self.all_chains:
             return
 
         # Add to user equations
-        self.all_equations.add(equation)
+        self.all_chains.add(chain)
         self.equations[message.author].add(equation)
 
         await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
