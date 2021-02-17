@@ -436,6 +436,16 @@ class BoggleGame(ShuffflingGame, DiscordGame):
         self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)])
 
 
+def no_game_running(ctx):
+    if ctx.command.name == 'rules':
+        return True
+
+    if ctx.channel in ctx.cog.games:
+        return True
+
+    raise commands.CheckFailure('There is already a game running in this channel.')
+
+
 class Boggle(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -461,7 +471,8 @@ class Boggle(commands.Cog):
         return ORIGINAL
 
     @commands.group()
-    @commands.max_concurrency(1, per=commands.BucketType.channel)
+    # @commands.max_concurrency(1, per=commands.BucketType.channel) # rip
+    @commands.check(no_game_running)
     async def boggle(self, ctx: Context):
         """Start's a game of Boggle.
 
@@ -489,6 +500,11 @@ class Boggle(commands.Cog):
 
         channel = await self.bot.wait_for('boggle_game_complete', check=check, timeout=200)
         del self.games[channel]
+
+    @boggle.error
+    async def on_boggle_error(self, ctx, error):
+        if ctx.channel in self.games:
+            del self.games[ctx.channel]
 
     @boggle.command(name='classic')
     async def boggle_classic(self, ctx: Context):
@@ -520,7 +536,9 @@ class Boggle(commands.Cog):
     @boggle.command(name='rules', aliases=['help'])
     async def boggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given boggle game type."""
-        raise commands.BadArgument('This command has not been implemented yet.')
+        embed = discord.Embed(title='About Boggle:', description='The goal of Boggle is to using at least 3 adjacent letters, create words, longer words score more points.')
+        embed.set_image(url='https://cdn.discordapp.com/attachments/735564593048584343/811590353748230184/boggle-rules-jpeg-900x1271_orig.png')
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

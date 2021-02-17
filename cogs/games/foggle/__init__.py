@@ -7,7 +7,6 @@ from typing import List, NamedTuple, Type
 
 import discord
 from discord.ext import commands, menus
-from discord.ext.commands.errors import BadArgument
 
 from bot import BotBase, Context
 from utils.tools import ordinal
@@ -306,7 +305,18 @@ class FoggleGame(ShuffflingGame, DiscordGame):
     def shuffle(self):
         letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
         random.shuffle(letters)
-        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)], magic_number=self.board.number)
+        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size]
+                                                        for x in range(self.board.size)], magic_number=self.board.number)
+
+
+def no_game_running(ctx):
+    if ctx.command.name == 'rules':
+        return True
+
+    if ctx.channel in ctx.cog.games:
+        return True
+
+    raise commands.CheckFailure('There is already a game running in this channel.')
 
 
 class Foggle(commands.Cog):
@@ -322,7 +332,7 @@ class Foggle(commands.Cog):
             return FlipGame
         elif ctx.invoked_subcommand is self.foggle_foggle:
             return FoggleGame
-        raise BadArgument('Unknown foggle game type')
+        raise commands.BadArgument('Unknown foggle game type')
 
     def _check_size(self, ctx: Context) -> int:
         if ctx.prefix.upper().endswith('SUPER BIG '):
@@ -332,7 +342,8 @@ class Foggle(commands.Cog):
         return ORIGINAL
 
     @commands.group()
-    @commands.max_concurrency(1, per=commands.BucketType.channel)
+    # @commands.max_concurrency(1, per=commands.BucketType.channel)  # rip
+    @commands.check(no_game_running)
     async def foggle(self, ctx: Context):
         """Start's a game of Foggle.
 
@@ -361,6 +372,11 @@ class Foggle(commands.Cog):
         channel = await self.bot.wait_for('foggle_game_complete', check=check, timeout=200)
         del self.games[channel]
 
+    @foggle.error
+    async def on_foggle_error(self, ctx, error):
+        if ctx.channel in self.games:
+            del self.games[ctx.channel]
+
     @foggle.command(name='flip')
     async def foggle_flip(self, ctx: Context):
         """Starts a flip game of foggle.
@@ -382,7 +398,9 @@ class Foggle(commands.Cog):
     @foggle.command(name='rules', aliases=['help'])
     async def foggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given foggle game type."""
-        raise commands.BadArgument('This command has not been implemented yet.')
+        embed = discord.Embed(title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, create simple formulas (+-*/ and parentheses) which result in the given magic number.')
+        embed.set_image(url='https://cdn.discordapp.com/attachments/336642776609456130/809275615676334100/pic127783.png')
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
