@@ -313,7 +313,7 @@ def no_game_running(ctx):
     if ctx.command.name == 'rules':
         return True
 
-    if ctx.channel in ctx.cog.games:
+    if ctx.channel not in ctx.cog.games:
         return True
 
     raise commands.CheckFailure('There is already a game running in this channel.')
@@ -323,7 +323,7 @@ class Foggle(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.games = defaultdict(lambda: None)
+        self.games = {}
 
     def _get_game_type(self, ctx: Context) -> Type[Game]:
         if ctx.invoked_subcommand is None:
@@ -369,8 +369,9 @@ class Foggle(commands.Cog):
         def check(channel):
             return channel.id == ctx.channel.id
 
-        channel = await self.bot.wait_for('foggle_game_complete', check=check, timeout=200)
-        del self.games[channel]
+        await self.bot.wait_for('foggle_game_complete', check=check, timeout=200)
+        if ctx.channel in self.games:
+            del self.games[ctx.channel]
 
     @foggle.error
     async def on_foggle_error(self, ctx, error):
@@ -398,18 +399,18 @@ class Foggle(commands.Cog):
     @foggle.command(name='rules', aliases=['help'])
     async def foggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given foggle game type."""
-        embed = discord.Embed(title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, create simple formulas (+-*/ and parentheses) which result in the given magic number.')
+        embed = discord.Embed(
+            title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, create simple formulas (+-*/ and parentheses) which result in the given magic number.')
         embed.set_image(url='https://cdn.discordapp.com/attachments/336642776609456130/809275615676334100/pic127783.png')
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         # Check if channel has a game going
-        game = self.games[message.channel]
-        if game is None:
+        if message.channel not in self.games:
             return
 
-        await game.check_message(message)
+        await self.games[message.channel].check_message(message)
 
 
 def setup(bot: BotBase):
