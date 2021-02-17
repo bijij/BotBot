@@ -296,7 +296,7 @@ class FlipGame(ShuffflingGame, DiscordGame):
     def shuffle(self):
         rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
         random.shuffle(rows)
-        self.board = Board(size=self.board.size, board=[[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)])
+        self.board = Board(size=self.board.size, board=[[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)], magic_number=self.board.number)
 
 
 class FoggleGame(ShuffflingGame, DiscordGame):
@@ -306,7 +306,7 @@ class FoggleGame(ShuffflingGame, DiscordGame):
     def shuffle(self):
         letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
         random.shuffle(letters)
-        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)])
+        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)], magic_number=self.board.number)
 
 
 class Foggle(commands.Cog):
