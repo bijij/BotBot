@@ -504,8 +504,9 @@ class Boggle(commands.Cog):
 
     @boggle.error
     async def on_boggle_error(self, ctx, error):
-        if ctx.channel in self.games:
-            del self.games[ctx.channel]
+        if not isinstance(error, commands.CheckFailure):
+            if ctx.channel in self.games:
+                del self.games[ctx.channel]
 
     @boggle.command(name='classic')
     async def boggle_classic(self, ctx: Context):

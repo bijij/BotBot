@@ -375,8 +375,9 @@ class Foggle(commands.Cog):
 
     @foggle.error
     async def on_foggle_error(self, ctx, error):
-        if ctx.channel in self.games:
-            del self.games[ctx.channel]
+        if not isinstance(error, commands.CheckFailure):
+            if ctx.channel in self.games:
+                del self.games[ctx.channel]
 
     @foggle.command(name='flip')
     async def foggle_flip(self, ctx: Context):
