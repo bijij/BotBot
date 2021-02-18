@@ -319,12 +319,13 @@ class DiscordGame(Game):
 
         for user, equations in sorted(self.equations.items(), key=lambda v: self.get_points(v[1]), reverse=True):
             points = self.get_points(equations)
+            correct = sum(self.board.is_legal(equation) for equation in equations)
 
             if points != old:
                 old = points
                 i += 1
 
-            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(equations)}** equations, **{points}** points.', inline=False)
+            embed.add_field(name=f'{ordinal(i)}: {user}', value=f'**{len(equations)}** attempts, **{correct}** correct, **{points}** points.', inline=False)
 
         return embed
 
