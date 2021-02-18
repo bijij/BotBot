@@ -106,7 +106,7 @@ POINTS = {
     5: 2,
     6: 3,
     7: 5,
-} | {x: 11 for x in range(8, 17)}
+} | {x: 11 for x in range(8, SUPER_BIG ** 2)}
 
 
 class Position(NamedTuple):

@@ -7,6 +7,7 @@ from typing import List, NamedTuple, Type, Optional
 
 import discord
 from discord.ext import commands, menus
+from discord.mixins import EqualityComparable
 
 from bot import BotBase, Context
 from utils.tools import ordinal
@@ -111,6 +112,14 @@ DIE = {
 
 NUMBER_PATTERN = re.compile('[^0-9A-Fa-f]')
 
+POINTS = {
+    3: 1,
+    4: 1,
+    5: 2,
+    6: 3,
+    7: 5,
+} | {x: 11 for x in range(8, SUPER_BIG ** 2)}
+
 
 class Position(NamedTuple):
     col: int
@@ -172,19 +181,26 @@ class Board:
         # Otherwise cannot find numbers
         return False
 
-    def is_legal(self, equation: str) -> bool:
-
+    def get_chain(self, equation: str) -> str:
         view = View(equation, self.base)
-        numbers = re.sub(NUMBER_PATTERN, '', view.string)
+        return re.sub(NUMBER_PATTERN, '', view.string)
 
-        if len(numbers) < 3:
+    def is_legal(self, equation: str) -> bool:
+        view = View(equation, self.base)
+
+        # Check equation
+        result = view.parse_full()
+        if result is None:  # If equation is invalid discard
+            return None
+        elif result == self.number:
             return False
-        if not self.board_contains(numbers):
-            return False
-        return view.parse_full() == self.number
+
+        # Check chain is valid
+        chain = self.get_chain(equation)
+        return len(chain) >= 3 and self.board_contains(chain)
 
     def points(self, equation: str) -> int:
-        return 1 if self.is_legal(equation) else 0
+        return POINTS[len(self.get_chain(equation))] if self.is_legal(equation) else -1
 
     def total_points(self, equations: List[str]) -> int:
         return sum(self.points(equation) for equation in equations)
@@ -326,20 +342,19 @@ class DiscordGame(Game):
             equation, _ = equation.split('=')
 
         equation = equation.strip().upper()
+        chain = self.board.get_chain(equation)
 
-        if not self.check_equation(equation):
-            return
+        if chain not in self.all_chains:
+            self.all_chains.add(chain)
 
-        chain = re.sub(NUMBER_PATTERN, '', re.sub(r'0[BXbx]', '', equation))
+            is_valid = self.check_equation(equation)
+            if is_valid is None:
+                return
+            elif is_valid:
+                await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
-        if chain in self.all_chains:
-            return
-
-        # Add to user equations
-        self.all_chains.add(chain)
-        self.equations[message.author].add(equation)
-
-        await message.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+            # Add to user equations
+            self.equations[message.author].add(equation)
 
     async def finalize(self, timed_out: bool):
         await super().finalize(timed_out)
