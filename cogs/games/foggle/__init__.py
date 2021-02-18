@@ -3,7 +3,7 @@ import random
 import re
 
 from collections import defaultdict
-from typing import List, NamedTuple, Type
+from typing import List, NamedTuple, Type, Optional
 
 import discord
 from discord.ext import commands, menus
@@ -18,45 +18,98 @@ ORIGINAL = 4
 BIG = 5
 SUPER_BIG = 6
 
-NUMBER_EMOJI = (
-    '0\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '1\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '2\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '3\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '4\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '5\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '6\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '7\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '8\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '9\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-    '0\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
-)
-
-DIE = {
-    ORIGINAL: [
-        '781923', '442727', '286382', '674674',
-        '434257', '612362', '761386', '917136',
-        '389292', '912198', '218613', '522074',
-        '421587', '319059', '403934', '503529'
-    ],
-    BIG: [
-        '467377', '368015', '881118', '152754', '403491',
-        '496754', '322870', '476441', '930914', '124178',
-        '985631', '692161', '213957', '930884', '183380',
-        '140851', '217378', '853915', '932265', '727123',
-        '562516', '215186', '776605', '849463', '410954'
-    ],
-    SUPER_BIG: [
-        '150704', '153141', '695329', '829765', '147583', '433529',
-        '154691', '586481', '256164', '470592', '126134', '975732',
-        '402085', '235228', '247811', '531376', '440231', '948365',
-        '243870', '958379', '432140', '354431', '246147', '518645',
-        '413514', '722772', '791934', '553194', '175219', '971067',
-        '603808', '294025', '456713', '611644', '173820', '455798'
-    ]
+NUMBER_EMOJI = {
+    '0': '0\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '1': '1\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '2': '2\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '3': '3\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '4': '4\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '5': '5\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '6': '6\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '7': '7\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '8': '8\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    '9': '9\ufe0f\N{COMBINING ENCLOSING KEYCAP}',
+    'A': '\N{REGIONAL INDICATOR SYMBOL LETTER A}',
+    'B': '\N{REGIONAL INDICATOR SYMBOL LETTER B}',
+    'C': '\N{REGIONAL INDICATOR SYMBOL LETTER C}',
+    'D': '\N{REGIONAL INDICATOR SYMBOL LETTER D}',
+    'E': '\N{REGIONAL INDICATOR SYMBOL LETTER E}',
+    'F': '\N{REGIONAL INDICATOR SYMBOL LETTER F}',
 }
 
-NUMBER_PATTERN = re.compile('[^0-9]')
+DIE = {
+    2: {
+        ORIGINAL: [
+            '110110', '111000', '010111', '011000',
+            '100101', '101011', '101011', '101101',
+            '110110', '001011', '110100', '010000',
+            '000001', '010100', '111111', '011010'
+        ],
+        BIG: [
+            '101011', '001010', '110001', '011110', '001100',
+            '111001', '100001', '001101', '011111', '011101',
+            '110110', '011001', '000110', '000000', '101000',
+            '001110', '110001', '100100', '000011', '001000',
+            '100001', '000101', '101011', '011101', '101011'
+        ],
+        SUPER_BIG: [
+            '001111', '001010', '001111', '011000', '000001', '110111',
+            '010001', '010110', '101001', '101111', '110100', '001010',
+            '010101', '111101', '011010', '111101', '010111', '101101',
+            '100100', '101000', '101100', '110100', '011010', '101010',
+            '001011', '001001', '100110', '010101', '011111', '011001',
+            '011111', '111011', '010011', '000111', '011110', '111111'
+        ]
+    },
+    10: {
+        ORIGINAL: [
+            '781923', '442727', '286382', '674674',
+            '434257', '612362', '761386', '917136',
+            '389292', '912198', '218613', '522074',
+            '421587', '319059', '403934', '503529'
+        ],
+        BIG: [
+            '467377', '368015', '881118', '152754', '403491',
+            '496754', '322870', '476441', '930914', '124178',
+            '985631', '692161', '213957', '930884', '183380',
+            '140851', '217378', '853915', '932265', '727123',
+            '562516', '215186', '776605', '849463', '410954'
+        ],
+        SUPER_BIG: [
+            '150704', '153141', '695329', '829765', '147583', '433529',
+            '154691', '586481', '256164', '470592', '126134', '975732',
+            '402085', '235228', '247811', '531376', '440231', '948365',
+            '243870', '958379', '432140', '354431', '246147', '518645',
+            '413514', '722772', '791934', '553194', '175219', '971067',
+            '603808', '294025', '456713', '611644', '173820', '455798'
+        ]
+    },
+    16: {
+        ORIGINAL: [
+            'FDD696', 'E768F4', '2E4200', '1A56FD',
+            '710160', 'D3525E', 'CD6B3D', 'E2CB33',
+            '02F5A7', '8866C5', '2B6DB0', '51583D',
+            '55ADA7', '31D288', 'BC1DAA', '86CD4C'
+        ],
+        BIG: [
+            '73931C', 'CE3551', 'D379D8', '5F9E10', 'AD9751',
+            'A9F9AC', 'C66062', '4BB572', '3F4422', 'E0200A',
+            '87FB2F', 'BE50BA', '3793F3', 'C5F683', 'CACBE0',
+            '37BAFF', '8B535D', 'DC3CFD', '3BD64D', 'B140C3',
+            '5BAE1C', '74E597', '1AD50C', '87FA8C', 'E00C03'
+        ],
+        SUPER_BIG: [
+            '576417', '33FC3B', '1985E3', '686B97', '3FD723', 'BC09B0',
+            '151B21', '86CBC4', '244242', '83335D', '05DBE9', '949976',
+            '8E890C', 'FAF0E9', 'E723EA', '547636', '15C463', '6E2B51',
+            'D8CBC1', '4D0724', '812FA3', '544A30', 'CCD20E', '62A418',
+            '5A2200', '8D087A', '67EB11', 'F37864', '089578', 'DC625E',
+            'DAFCF8', '2D9839', '982921', '4FBC0E', 'D9AF5B', '6F244D'
+        ]
+    }
+}
+
+NUMBER_PATTERN = re.compile('[^0-9A-Fa-f]')
 
 
 class Position(NamedTuple):
@@ -66,15 +119,16 @@ class Position(NamedTuple):
 
 class Board:
 
-    def __init__(self, *, size=ORIGINAL, board=None, magic_number=None):
+    def __init__(self, *, size: int = ORIGINAL, base: int = 10, board=None, magic_number=None):
         self.size = size
+        self.base = base
 
         if board is None:
-            board = DIE[self.size].copy()
+            board = DIE[self.base][self.size].copy()
             random.shuffle(board)
             board = [[random.choice(board[row * self.size + column]) for column in range(self.size)] for row in range(self.size)]
         if magic_number is None:
-            magic_number = random.randint(00, 99)
+            magic_number = random.randint(00, base ** 2 - 1)
 
         self.columns = board
         self.number = magic_number
@@ -120,17 +174,14 @@ class Board:
 
     def is_legal(self, equation: str) -> bool:
 
-        # strip equals half if needed
-        if '=' in equation:
-            equation, _ = equation.split('=')
-
-        numbers = re.sub(NUMBER_PATTERN, '', equation)
+        view = View(equation, self.base)
+        numbers = re.sub(NUMBER_PATTERN, '', view.string)
 
         if len(numbers) < 3:
             return False
         if not self.board_contains(numbers):
             return False
-        return View(equation).parse_full() == self.number
+        return view.parse_full() == self.number
 
     def points(self, equation: str) -> int:
         return 1 if self.is_legal(equation) else 0
@@ -143,8 +194,8 @@ class Game(menus.Menu):
     name = 'Foggle'
     footer = None
 
-    def __init__(self, *, size=ORIGINAL, **kwargs):
-        self.board = Board(size=size)
+    def __init__(self, *, size: int = ORIGINAL, base: int = 10, **kwargs):
+        self.board = Board(size=size, base=base)
         self.setup()
         super().__init__(**kwargs)
 
@@ -155,12 +206,17 @@ class Game(menus.Menu):
         for row in range(self.board.size):
             emoji = []
             for column in range(self.board.size):
-                number = int(self.board.columns[column][row])
-                emoji.append(NUMBER_EMOJI[number])
+                emoji.append(NUMBER_EMOJI[self.board.columns[column][row]])
 
             state = ' '.join(emoji) + '\n' + state
 
-        state += f'\n\n The magic number is **{self.board.number}**!'
+        number = self.board.number
+        if self.board.base == 2:
+            number = bin(number)
+        elif self.board.base == 16:
+            number = hex(number)
+
+        state += f'\n\n The magic number is **{number}**!'
 
         return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
@@ -215,7 +271,7 @@ class ShuffflingGame(Game):
             await self.message.channel.send('Board Updated!')
 
             # Update Board Message
-            time = ["2 minutes, 30 seconds", '2 minutes', '1 minute, 30 seconds', '1 minute', '30 seconds'][i]
+            time = ['2 minutes, 30 seconds', '2 minutes', '1 minute, 30 seconds', '1 minute', '30 seconds'][i]
             await self.message.edit(content=f'Board Updated! You have {time} left!', embed=self.state)
 
     async def start(self, *args, **kwargs):
@@ -265,12 +321,16 @@ class DiscordGame(Game):
         if equation is None:
             return
 
-        equation = equation.strip()
+        # strip equals half if needed
+        if '=' in equation:
+            equation, _ = equation.split('=')
+
+        equation = equation.strip().upper()
 
         if not self.check_equation(equation):
             return
 
-        chain = re.sub(NUMBER_PATTERN, '', equation)
+        chain = re.sub(NUMBER_PATTERN, '', re.sub(r'0[BXbx]', '', equation))
 
         if chain in self.all_chains:
             return
@@ -295,7 +355,8 @@ class FlipGame(ShuffflingGame, DiscordGame):
     def shuffle(self):
         rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
         random.shuffle(rows)
-        self.board = Board(size=self.board.size, board=[[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)], magic_number=self.board.number)
+        new_board = [[rows[x][y]for x in range(self.board.size)] for y in range(self.board.size)]
+        self.board = Board(size=self.board.size, base=self.board.base, board=new_board, magic_number=self.board.number)
 
 
 class FoggleGame(ShuffflingGame, DiscordGame):
@@ -305,8 +366,8 @@ class FoggleGame(ShuffflingGame, DiscordGame):
     def shuffle(self):
         letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
         random.shuffle(letters)
-        self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size]
-                                                        for x in range(self.board.size)], magic_number=self.board.number)
+        new_board = [letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)]
+        self.board = Board(size=self.board.size, base=self.board.base, board=new_board, magic_number=self.board.number)
 
 
 def no_game_running(ctx):
@@ -344,12 +405,14 @@ class Foggle(commands.Cog):
     @commands.group()
     # @commands.max_concurrency(1, per=commands.BucketType.channel)  # rip
     @commands.check(no_game_running)
-    async def foggle(self, ctx: Context):
+    async def foggle(self, ctx: Context, base: Optional[int] = 10):
         """Start's a game of Foggle.
 
         The board size can be set by command prefix.
         `(bb)big foggle` will result in a 5x5 board.
         `(bb)super big foggle` will result in a 6x6 board.
+
+        `base` can be used to a custom base, supported bases are 2, 10 and 16
 
         Players have 3 minutes to find as many equation as they can, the first person to find
         an equation gets the points.
@@ -361,8 +424,17 @@ class Foggle(commands.Cog):
         # Determine the game type
         game_type = self._get_game_type(ctx)
 
+        # Determine base
+        if ctx.invoked_subcommand is not None:
+            base_str = ctx.message.content.rsplit(' ', 1)[-1]
+            if base_str.isdigit():
+                base = int(base_str)
+
+        if base not in {2, 10, 16}:
+            raise commands.BadArgument('Unsupported base')
+
         # Start the game
-        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx))
+        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx), base=base)
         await game.start(ctx, wait=False)
 
         # Wait for game to end
@@ -380,7 +452,7 @@ class Foggle(commands.Cog):
                 del self.games[ctx.channel]
 
     @foggle.command(name='flip')
-    async def foggle_flip(self, ctx: Context):
+    async def foggle_flip(self, ctx: Context, base: int = 10):
         """Starts a flip game of foggle.
 
         Rows will randomly shuffle every 30s.
@@ -388,8 +460,8 @@ class Foggle(commands.Cog):
         """
         ...
 
-    @foggle.command(name='foggle')
-    async def foggle_foggle(self, ctx: Context):
+    @ foggle.command(name='foggle')
+    async def foggle_foggle(self, ctx: Context, base: int = 10):
         """Starts a boggling game of foggle.
 
         All letters will randomly shuffle flip every 30s.
@@ -397,15 +469,16 @@ class Foggle(commands.Cog):
         """
         ...
 
-    @foggle.command(name='rules', aliases=['help'])
+    @ foggle.command(name='rules', aliases=['help'])
     async def foggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given foggle game type."""
         embed = discord.Embed(
-            title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, create simple formulas (+-*/ and parentheses) which result in the given magic number.')
+            title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, \
+create simple formulas (+-*/ and parentheses) which result in the given magic number.')
         embed.set_image(url='https://cdn.discordapp.com/attachments/336642776609456130/809275615676334100/pic127783.png')
         await ctx.send(embed=embed)
 
-    @commands.Cog.listener()
+    @ commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         # Check if channel has a game going
         if message.channel not in self.games:

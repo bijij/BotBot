@@ -1,7 +1,8 @@
 # CC0 - https://github.com/LyricLy
 
-from typing import Callable, Dict, Optional, Tuple
+import re
 
+from typing import Callable, Dict, Optional, Tuple
 
 OPS: Dict[str, Callable[[int, int], Optional[int]]] = {
     "+": lambda x, y: x + y,
@@ -12,8 +13,10 @@ OPS: Dict[str, Callable[[int, int], Optional[int]]] = {
 
 
 class View:
-    def __init__(self, string: str):
+    def __init__(self, string: str, base: int = 10):
         self.string = string
+        self.strip_base_identifier()
+        self.base = base
         self.idx = 0
 
     def peek(self) -> str:
@@ -22,6 +25,9 @@ class View:
         except IndexError:
             return ""
 
+    def strip_base_identifier(self):
+        self.string = re.sub(r"0[BXbx]", "", self.string)
+
     def strip_ws(self):
         while self.peek().isspace():
             self.idx += 1
@@ -29,8 +35,8 @@ class View:
     def parse_int(self) -> Optional[int]:
         n = 0
         got_digit = False
-        while self.peek().isdigit():
-            n = n * 10 + int(self.peek())
+        while re.match(r"[0-9A-Fa-f]", self.peek()):
+            n = n * 10 + int(self.peek(), self.base)
             self.idx += 1
             got_digit = True
         self.strip_ws()
