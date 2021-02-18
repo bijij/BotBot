@@ -192,7 +192,7 @@ class Board:
         result = view.parse_full()
         if result is None:  # If equation is invalid discard
             return None
-        elif result == self.number:
+        elif result != self.number:
             return False
 
         # Check chain is valid
