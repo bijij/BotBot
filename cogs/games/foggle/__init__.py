@@ -387,7 +387,8 @@ class FoggleGame(ShuffflingGame, DiscordGame):
 
 
 def no_game_running(ctx):
-    if ctx.command.name == 'rules':
+    # skip rules command
+    if ctx.invoked_subcommand is ctx.cog.foggle_rules:
         return True
 
     if ctx.channel not in ctx.cog.games:
@@ -476,7 +477,7 @@ class Foggle(commands.Cog):
         """
         ...
 
-    @ foggle.command(name='foggle')
+    @foggle.command(name='foggle')
     async def foggle_foggle(self, ctx: Context, base: int = 10):
         """Starts a boggling game of foggle.
 
@@ -485,7 +486,7 @@ class Foggle(commands.Cog):
         """
         ...
 
-    @ foggle.command(name='rules', aliases=['help'])
+    @foggle.command(name='rules', aliases=['help'])
     async def foggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given foggle game type."""
         embed = discord.Embed(
