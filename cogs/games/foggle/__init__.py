@@ -120,6 +120,28 @@ POINTS = {
     7: 5,
 } | {x: 11 for x in range(8, SUPER_BIG ** 2)}
 
+FOGGLE_RULES = """The goal of Foggle is create equations, using simple arithmetic (e.g. + - * / and parentheses) which equates to the given magic number.
+Numbers must be adjacent (up-down, left-right or diagonal) to eachother on the Foggle board.
+
+For example with the magic number `42` an equation such as `(3 * 6 + 3) * 2` would be valid.
+The more numbers an equation contains, the more points awarded, at least 3 numbers are required for an equation to count.
+
+Submitting equations which do not contain adjacent numbers, or do not equal the magic number will deduct points.
+
+Points are awarded as follows:
+```
+nums | points
+  3  |  1
+  4  |  1
+  5  |  2
+  6  |  3
+  7  |  5
+  8+ |  11
+```
+
+The original rules can be found below:
+"""
+
 
 class Position(NamedTuple):
     col: int
@@ -386,17 +408,6 @@ class FoggleGame(ShuffflingGame, DiscordGame):
         self.board = Board(size=self.board.size, base=self.board.base, board=new_board, magic_number=self.board.number)
 
 
-def no_game_running(ctx):
-    # skip rules command
-    if ctx.invoked_subcommand is ctx.cog.foggle_rules:
-        return True
-
-    if ctx.channel not in ctx.cog.games:
-        return True
-
-    raise commands.CheckFailure('There is already a game running in this channel.')
-
-
 class Foggle(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -421,7 +432,6 @@ class Foggle(commands.Cog):
 
     @commands.group()
     # @commands.max_concurrency(1, per=commands.BucketType.channel)  # rip
-    @commands.check(no_game_running)
     async def foggle(self, ctx: Context, base: Optional[int] = 10):
         """Start's a game of Foggle.
 
@@ -437,6 +447,10 @@ class Foggle(commands.Cog):
         # Ignore if rules invoke
         if ctx.invoked_subcommand is self.foggle_rules:
             return
+
+        # Raise if game already running
+        if ctx.channel in self.games:
+            raise commands.CheckFailure('There is already a game running in this channel.')
 
         # Determine the game type
         game_type = self._get_game_type(ctx)
@@ -490,8 +504,7 @@ class Foggle(commands.Cog):
     async def foggle_rules(self, ctx: Context, type: str = 'discord'):
         """Displays information about a given foggle game type."""
         embed = discord.Embed(
-            title='About Foggle:', description='The goal of foggle is to using at least 3 adjacent numbers, \
-create simple formulas (+-*/ and parentheses) which result in the given magic number.')
+            title='About Foggle:', description=FOGGLE_RULES)
         embed.set_image(url='https://cdn.discordapp.com/attachments/336642776609456130/809275615676334100/pic127783.png')
         await ctx.send(embed=embed)
 

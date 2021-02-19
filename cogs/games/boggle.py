@@ -436,16 +436,6 @@ class BoggleGame(ShuffflingGame, DiscordGame):
         self.board = Board(size=self.board.size, board=[letters[x * self.board.size:x * self.board.size + self.board.size] for x in range(self.board.size)])
 
 
-def no_game_running(ctx):
-    if ctx.command.name == 'rules':
-        return True
-
-    if ctx.channel not in ctx.cog.games:
-        return True
-
-    raise commands.CheckFailure('There is already a game running in this channel.')
-
-
 class Boggle(commands.Cog):
 
     def __init__(self, bot: BotBase):
@@ -472,7 +462,6 @@ class Boggle(commands.Cog):
 
     @commands.group()
     # @commands.max_concurrency(1, per=commands.BucketType.channel) # rip
-    @commands.check(no_game_running)
     async def boggle(self, ctx: Context):
         """Start's a game of Boggle.
 
@@ -486,6 +475,10 @@ class Boggle(commands.Cog):
         # Ignore if rules invoke
         if ctx.invoked_subcommand is self.boggle_rules:
             return
+
+        # Raise if game already running
+        if ctx.channel in self.games:
+            raise commands.CheckFailure('There is already a game running in this channel.')
 
         # Determine the game type
         game_type = self._get_game_type(ctx)
