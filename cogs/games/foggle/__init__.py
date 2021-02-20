@@ -274,6 +274,9 @@ class Game(menus.Menu):
     def get_points(self, equations: List[str]) -> int:
         return self.board.total_points(equations)
 
+    def get_correct(self, equations: List[str]):
+        return sum(self.board.is_legal(equation) for equation in equations)
+
     def check_equation(self, equation: str) -> bool:
         return self.board.is_legal(equation)
 
@@ -319,6 +322,9 @@ class ShuffflingGame(Game):
     def get_points(self, equations: List[str]) -> int:
         return sum(max(board.points(equation) for board in self.boards) for equation in equations)
 
+    def get_correct(self, equations: List[str]):
+        return sum(max(board.is_legal(equation) for board in self.boards) for equation in equations)
+
 
 class DiscordGame(Game):
     name = 'Discord Foggle'
@@ -333,7 +339,7 @@ class DiscordGame(Game):
 
         for user, equations in sorted(self.equations.items(), key=lambda v: self.get_points(v[1]), reverse=True):
             points = self.get_points(equations)
-            correct = sum(self.board.is_legal(equation) for equation in equations)
+            correct = self.get_correct(equations)
 
             if points != old:
                 old = points
