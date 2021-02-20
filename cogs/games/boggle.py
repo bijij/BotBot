@@ -12,7 +12,7 @@ from discord.ext.commands.errors import BadArgument
 from bot import BotBase, Context
 from utils.tools import ordinal
 
-
+SMALL = 3
 ORIGINAL = 4
 BIG = 5
 SUPER_BIG = 6
@@ -54,7 +54,7 @@ REGIONAL_INDICATOR_EMOJI = (
     '\N{REGIONAL INDICATOR SYMBOL LETTER Z}',
 )
 
-DIAGRAMS = {
+DIAGRAPHS = {
     '1': 'AN',
     '2': 'ER',
     '3': 'HE',
@@ -74,6 +74,11 @@ LETTERS_EMOJI = {
 } | {letter: emoji for letter, emoji in zip(ascii_uppercase, REGIONAL_INDICATOR_EMOJI)}
 
 DIE = {
+    SMALL: [
+        'ATSWKA', 'ZHIWIR', 'WYASAY',
+        'NELTDL', 'UJNIIQ', 'ORQPII',
+        'PCOAUB', 'TKRTAU', 'ZAQLPG'
+    ],
     ORIGINAL: [
         'RIFOBX', 'IFEHEY', 'DENOWS', 'UTOKND',
         'HMSRAO', 'LUPETS', 'ACITOA', 'YLGKUE',
@@ -145,7 +150,7 @@ class Board:
             # Check if letter matches current start of word
             letter = self.columns[pos.col][pos.row]
             if letter.isdigit():
-                letter = DIAGRAMS[letter]
+                letter = DIAGRAPHS[letter]
 
             if word[:len(letter)] == letter:
 
@@ -454,10 +459,13 @@ class Boggle(commands.Cog):
         raise BadArgument('Unknown boggle game type')
 
     def _check_size(self, ctx: Context) -> int:
-        if ctx.prefix.upper().endswith('SUPER BIG '):
+        prefix = ctx.prefix.upper()
+        if prefix.endswith('SUPER BIG '):
             return SUPER_BIG
-        elif ctx.prefix.upper().endswith('BIG '):
+        elif prefix.endswith('BIG '):
             return BIG
+        elif prefix.endswith('SMALL ') or prefix.endswith('SMOL '):
+            return SMALL
         return ORIGINAL
 
     @commands.group()

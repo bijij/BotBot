@@ -14,7 +14,7 @@ from utils.tools import ordinal
 
 from .parser import View
 
-
+SMALL = 3
 ORIGINAL = 4
 BIG = 5
 SUPER_BIG = 6
@@ -40,6 +40,11 @@ NUMBER_EMOJI = {
 
 DIE = {
     2: {
+        SMALL: [
+            '110010', '000101', '100101',
+            '000010', '101000', '010000',
+            '011000', '101101', '100010'
+        ],
         ORIGINAL: [
             '110110', '111000', '010111', '011000',
             '100101', '101011', '101011', '101101',
@@ -63,6 +68,11 @@ DIE = {
         ]
     },
     10: {
+        SMALL: [
+            '129640', '417582', '116313',
+            '304380', '615522', '469022',
+            '110322', '982485', '081472'
+        ],
         ORIGINAL: [
             '781923', '442727', '286382', '674674',
             '434257', '612362', '761386', '917136',
@@ -86,6 +96,11 @@ DIE = {
         ]
     },
     16: {
+        SMALL: [
+            '5FC8FD', '791DC0', 'FFBF88',
+            'EECD26', 'FB6C70', '401566',
+            '4144A8', '6AA545', '868638'
+        ],
         ORIGINAL: [
             'FDD696', 'E768F4', '2E4200', '1A56FD',
             '710160', 'D3525E', 'CD6B3D', 'E2CB33',
@@ -120,7 +135,7 @@ POINTS = {
     7: 5,
 } | {x: 11 for x in range(8, SUPER_BIG ** 2)}
 
-FOGGLE_RULES = """The goal of Foggle is create equations, using simple arithmetic (e.g. + - * / and parentheses) which equates to the given magic number.
+FOGGLE_RULES = """The goal of Foggle is create equations, using simple arithmetic (e.g. +, -, *, /, ^ and parentheses) which equates to the given magic number.
 Numbers must be adjacent (up-down, left-right or diagonal) to eachother on the Foggle board.
 
 For example with the magic number `42` an equation such as `(3 * 6 + 3) * 2` would be valid.
@@ -422,10 +437,13 @@ class Foggle(commands.Cog):
         raise commands.BadArgument('Unknown foggle game type')
 
     def _check_size(self, ctx: Context) -> int:
-        if ctx.prefix.upper().endswith('SUPER BIG '):
+        prefix = ctx.prefix.upper()
+        if prefix.endswith('SUPER BIG '):
             return SUPER_BIG
-        elif ctx.prefix.upper().endswith('BIG '):
+        elif prefix.endswith('BIG '):
             return BIG
+        elif prefix.endswith('SMALL ') or prefix.endswith('SMOL '):
+            return SMALL
         return ORIGINAL
 
     @commands.group()

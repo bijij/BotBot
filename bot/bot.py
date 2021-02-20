@@ -49,7 +49,7 @@ class BotBase(commands.Bot):
         intents = discord.Intents.all()
         status = get_status(self.start_time)
 
-        prefixes = [self.prefix + 'super big ', self.prefix + 'big ', self.prefix]  # for Boggle
+        prefixes = [self.prefix + 'super big ', self.prefix + 'big ', self.prefix + 'small ', self.prefix + 'smol ', self.prefix]  # for Boggle
         super().__init__(command_prefix=commands.when_mentioned_or(*prefixes), help_command=EmbedHelpCommand(),
                          allowed_mentions=allowed_mentions, intents=intents, status=status)
 
