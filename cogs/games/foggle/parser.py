@@ -73,7 +73,7 @@ class View:
         return parser
 
     def parse_expr(self) -> Optional[int]:
-        return self.parse_prec_lvl(("^",), self.parse_prec_lvl(("+", "-"), self.parse_prec_lvl(("*", "/"), self.parse_base_expr)))()
+        return self.parse_prec_lvl(("+", "-"), self.parse_prec_lvl(("*", "/"), self.parse_prec_lvl(("^",), self.parse_base_expr)))()
 
     def parse_full(self) -> Optional[int]:
         self.strip_ws()
