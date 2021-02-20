@@ -317,15 +317,7 @@ class ShuffflingGame(Game):
         self.bot.loop.create_task(self.shuffle_task())
 
     def get_points(self, equations: List[str]) -> int:
-        points = 0
-        for equation in equations:
-            for board in self.boards:
-                pts = board.points(equation)
-                if pts:
-                    points += pts
-                    break
-
-        return points
+        return sum(max(board.points(equation) for board in self.boards) for equation in equations)
 
 
 class DiscordGame(Game):
