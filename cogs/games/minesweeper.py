@@ -201,7 +201,7 @@ class Minesweeper(commands.Cog):
         if game.lost:
             message += '\nToo bad, you lose.'
         elif game.solved:
-            message += '\nCongratulations, you win!'
+            message += '\nCongratulations, you win! <:_:739613733474795520>'
 
         if game.last_state is not None:
             try:
