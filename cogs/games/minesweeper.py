@@ -121,11 +121,9 @@ class Game(boardgames.Board):
                 if cell.clicked and not cell.number:
                     for i in range(y - 1, y + 2):
                         for j in range(x - 1, x + 2):
-                            if (
-                                0 <= i < self.size_y
-                                and 0 <= j < self.size_x
-                                and not self[j, i].clicked
-                            ):
+                            if 0 <= i < self.size_y \
+                                    and 0 <= j < self.size_x \
+                                    and not self[j, i].clicked:
                                 self[j, i].flagged = False
                                 self[j, i].clicked = True
                                 self.clean()
@@ -163,7 +161,7 @@ class Minesweeper(commands.Cog):
     async def ms_start(self, ctx):
         """Starts a Minesweeper game"""
         if ctx.invoked_subcommand is None:
-            await ctx.send('Please select a difficult; easy, medium or hard.')
+            await ctx.send('Please select a difficult; easy or medium')
 
     @ms_start.command(name='easy')
     async def ms_start_easy(self, ctx):
@@ -177,11 +175,11 @@ class Minesweeper(commands.Cog):
         game = self._games[ctx.channel] = Game(17, 8)
         game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
 
-    @ms_start.command(name='hard')
-    async def ms_start_hard(self, ctx):
-        """Starts a hard difficulty Minesweeper game"""
-        game = self._games[ctx.channel] = Game(26, 10)
-        game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
+    # @ms_start.command(name='hard')
+    # async def ms_start_hard(self, ctx):
+    #     """Starts a hard difficulty Minesweeper game"""
+    #     game = self._games[ctx.channel] = Game(26, 10)
+    #     game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
 
     @minesweeper.command(name='click')
     @commands.check(is_game)
