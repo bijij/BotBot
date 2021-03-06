@@ -23,7 +23,7 @@ from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
 
 MIN_DAYS = 7
 
-IMAGE_SIZE = 8192
+IMAGE_SIZE = 4096
 DOWNSAMPLE = 2
 FINAL_SIZE = IMAGE_SIZE / DOWNSAMPLE
 
@@ -68,7 +68,7 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
 
 async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
                          timezone: datetime.timezone = datetime.timezone.utc, days: int = 30) -> List[LogEntry]:
-    status_log = list()
+    status_log = []
 
     # Fetch records from DB
     records = await get_status_records(user, conn, days=days)
@@ -316,9 +316,8 @@ class StatusLogging(commands.Cog):
         """
         user = user or ctx.author
 
-        if timezone_offset is not None:
-            if not -14 < timezone_offset < 14:
-                raise commands.BadArgument("Invalid timezone offset passed.")
+        if timezone_offset is not None and not -14 < timezone_offset < 14:
+            raise commands.BadArgument("Invalid timezone offset passed.")
 
         if timezone_offset is None:
             record = await Timezones.fetchrow(user_id=user.id)
