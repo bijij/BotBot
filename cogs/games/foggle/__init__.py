@@ -7,7 +7,6 @@ from typing import List, NamedTuple, Type, Optional
 
 import discord
 from discord.ext import commands, menus
-from discord.mixins import EqualityComparable
 
 from bot import BotBase, Context
 from utils.tools import ordinal
