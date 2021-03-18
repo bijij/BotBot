@@ -152,6 +152,15 @@ class Logging(commands.Cog):
 
         await ctx.tick()
 
+    @logging.command(name='addbot', hidden=True)
+    async def logging_addbot(self, ctx: Context, *, bot: discord.Member):
+        """Adds a bot to logging."""
+        async with ctx.db as conn:
+            await Opt_In_Status.insert(connection=conn, user_id=bot.id, public=True, nsfw=True)
+            self._opted_in.add(bot.id)
+
+        await ctx.tick()
+
     @commands.group(name='timezone', aliases=['tz'])
     async def timezone(self, ctx):
         """Timezone management commands."""
