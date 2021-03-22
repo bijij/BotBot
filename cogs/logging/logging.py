@@ -34,6 +34,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     user_id: SQLType.BigInt = Column(index=True)
     content: str
     nsfw: bool = Column(default=False)
+    deleted: bool = Column(default=False)
 
     @classmethod
     async def get_user_log(cls, user: discord.User, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
@@ -44,6 +45,12 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
         data = await cls.fetch_where('guild_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', guild.id, nsfw, connection=connection)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
+
+
+class Message_Edit_History(Table, schema='logging'):  # type: ignore
+    message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
+    created_at: datetime.datetime = Column(primary_key=True) 
+    content: str
 
 
 Status = enum('Status', 'online offline idle dnd streaming', schema='logging')
@@ -199,6 +206,16 @@ class Logging(commands.Cog):
             return
 
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw()))
+        self.bot._message_update_log.append((message.id, datetime.datetime.utcnow(), message.content))
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
+        self.bot._message_delete_log.append((payload.message_id,))
+
+    @commands.Cog.listener()
+    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
+        if payload.data.get('content'):
+            self.bot._message_update_log.append((payload.message_id, datetime.datetime.utcnow(), payload.data['content']))
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -230,11 +247,20 @@ class Logging(commands.Cog):
         async with MaybeAcquire() as conn:
             if self.bot._status_log:
                 await Status_Log.insert_many(Status_Log._columns, *self.bot._status_log, connection=conn)
-                self.bot._status_log = list()
+                self.bot._status_log = []
 
             if self.bot._message_log:
                 await Message_Log.insert_many(Message_Log._columns, *self.bot._message_log, connection=conn)
-                self.bot._message_log = list()
+                self.bot._message_log = []
+
+            if self.bot._message_delete_log:
+                await conn.executemany(f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1", self.bot._message.delete_log)
+                self.bot._message_delete_log = []
+
+            if self.bot._message_update_log:
+                await conn.executemany(f"UPDATE {Message_Log._name} SET content = $3 WHERE message_id = $1", self.bot._message_update_log)
+                await Message_Edit_History.insert_many(Message_Edit_History._columns, *self.bot._message_update_log, connection=conn)
+                self.bot._message_update_log = []
 
     @_logging_task.before_loop
     async def _before_logging_task(self):
@@ -246,7 +272,7 @@ class Logging(commands.Cog):
                 self._log_nsfw.add(record['user_id'])
 
         # Fill with current status data
-        status_log = list()
+        status_log = []
         now = datetime.datetime.utcnow()
 
         for user_id in self._opted_in:
@@ -273,7 +299,9 @@ class Logging(commands.Cog):
 def setup(bot: BotBase):
     if not hasattr(bot, '_logging'):
         bot._logging = True
-        bot._message_log = list()
-        bot._status_log = list()
-        bot._last_status = dict()
+        bot._message_log = []
+        bot._message_delete_log = []
+        bot._message_update_log = []
+        bot._status_log = []
+        bot._last_status = {}
     bot.add_cog(Logging(bot))
