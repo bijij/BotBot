@@ -49,7 +49,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
 
 class Message_Edit_History(Table, schema='logging'):  # type: ignore
     message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
-    created_at: datetime.datetime = Column(primary_key=True) 
+    created_at: datetime.datetime = Column(primary_key=True)
     content: str
 
 
@@ -205,7 +205,7 @@ class Logging(commands.Cog):
         if message.channel.is_nsfw() and message.author.id not in self._log_nsfw:
             return
 
-        self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw()))
+        self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw(), False))
         self.bot._message_update_log.append((message.id, datetime.datetime.utcnow(), message.content))
 
     @commands.Cog.listener()
