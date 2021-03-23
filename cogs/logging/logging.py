@@ -254,7 +254,7 @@ class Logging(commands.Cog):
                 self.bot._message_log = []
 
             if self.bot._message_delete_log:
-                await conn.executemany(f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1", self.bot._message.delete_log)
+                await conn.executemany(f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1", self.bot._message_delete_log)
                 self.bot._message_delete_log = []
 
             if self.bot._message_update_log:
