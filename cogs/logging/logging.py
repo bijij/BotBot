@@ -259,7 +259,9 @@ class Logging(commands.Cog):
 
             if self.bot._message_update_log:
                 await conn.executemany(f"UPDATE {Message_Log._name} SET content = $2 WHERE message_id = $1", ((entry[0], entry[2]) for entry in self.bot._message_update_log))
-                await Message_Edit_History.insert_many(Message_Edit_History._columns, *self.bot._message_update_log, connection=conn)
+                for entry in self.bot._message_update_log:
+                    with suppress(asyncpg.exceptions.IntegrityConstraintViolationError):
+                        await Message_Edit_History.insert_many(Message_Edit_History._columns, entry, connection=conn)
                 self.bot._message_update_log = []
 
     @_logging_task.before_loop
