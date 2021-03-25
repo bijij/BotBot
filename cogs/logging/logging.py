@@ -258,7 +258,7 @@ class Logging(commands.Cog):
                 self.bot._message_delete_log = []
 
             if self.bot._message_update_log:
-                await conn.executemany(f"UPDATE {Message_Log._name} SET content = $3 WHERE message_id = $1", self.bot._message_update_log)
+                await conn.executemany(f"UPDATE {Message_Log._name} SET content = $3 WHERE message_id = $1", ((entry[0], entry[2]) for entry in self.bot._message_update_log))
                 await Message_Edit_History.insert_many(Message_Edit_History._columns, *self.bot._message_update_log, connection=conn)
                 self.bot._message_update_log = []
 
