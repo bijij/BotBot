@@ -18,10 +18,14 @@ class TimedDict(dict):
 
     def __cleanup(self):
         now = datetime.datetime.utcnow()
-        for key in list(self.items()):
+        for key in list(super().items()):
             delta = now - self._state[key]
             if delta > self.expires_after:
-                del self[key]
+                try:
+                    del self[key]
+                    del self._state[key]
+                except KeyError:
+                    pass
 
     def __setitem__(self, key: Any, value: Any):
         super().__setitem__(key, value)
