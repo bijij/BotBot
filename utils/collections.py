@@ -1,9 +1,31 @@
+import datetime
+
 from collections import defaultdict
 
 from typing import Any, Callable
 
 
 __all__ = ('LRUDict', 'LRUDefaultDict')
+
+
+
+class TimedDict(dict):
+
+    def __init__(self, expires_after: datetime.timedelta, *args, **kwargs):
+        self.expires_after = expires_after
+        self._state = defaultdict(datetime.datetime.utcnow)
+        super().__init__(*args, **kwargs)
+
+    def __cleanup(self):
+        now = datetime.datetime.utcnow()
+        for key in list(self.items()):
+            delta = now - self._state[key]
+            if delta > self.expires_after:
+                del self[key]
+
+    def __getitem__(self, key: Any) -> Any:
+        self.__cleanup()
+        return super().__getitem__(key)
 
 
 class LRUDict(dict):
@@ -29,8 +51,21 @@ class LRUDict(dict):
         self.__cleanup()
 
 
+class TimedLRUDict(LRUDict, TimedDict):
+
+    def __init__(self, expires_after: datetime.timedelta, max_size: int = 1024, *args, **kwargs):
+        super().__init__(self, max_size, expires_after, *args, **kwargs)
+
+
 class LRUDefaultDict(LRUDict, defaultdict):
 
     def __init__(self, default_factory: Callable = None, max_size: int = 1024, *args, **kwargs):
         super().__init__(max_size, *args, **kwargs)
+        self.default_factory = default_factory
+
+
+class TimedLRUDefaultDict(LRUDict, TimedDict, defaultdict):
+
+    def __init__(self, default_factory: Callable, expires_after: datetime.timedelta, max_size: int = 1024, *args, **kwargs):
+        super().__init__(expires_after, max_size, *args, **kwargs)
         self.default_factory = default_factory

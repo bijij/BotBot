@@ -1,3 +1,5 @@
+import datetime
+
 from functools import partial
 from typing import Awaitable, Dict, List, Optional, Tuple, Union
 
@@ -8,7 +10,7 @@ from discord.ext import commands
 
 from bot import BotBase, Context
 from cogs.logging.logging import Message_Log, Opt_In_Status
-from utils.collections import LRUDict
+from utils.collections import TimedLRUDict
 
 
 DISCORD_PY_ID = 336642139381301249
@@ -16,37 +18,20 @@ MAX_TRIES = 32
 
 
 def make_sentence(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:
-    while tries >= 0:
-        try:
-            if seed is None:
-                sentence = model.generate()
-            else:
-                sentence = model.generate_seeded(seed)
-
-            if len(sentence.split()) < order * 4 and tries > 0:
-                raise Exception('Markov too small.')
+    if tries > 0:
+        sentence = model.generate() if seed is None else model.generate_seeded(seed)
+        if len(sentence.split()) >= order * 4:  # requite sentences of at least a given size (rust's markov lib likes two word output)
             return sentence
-
-        except Exception:
-            return make_sentence(model, order, seed=seed, tries=tries - 1)
+        return make_sentence(model, order, seed=seed, tries=tries - 1)
     return None
 
 
 def make_code(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8) -> Optional[str]:
-    while tries >= 0:
-        try:
-            sentence = model.generate()
-
-            if "```" not in sentence:
-                raise Exception('Not a code block.')
-
-            if len(sentence.split()) < order * 8 and tries > 0:
-                raise Exception('Markov too small.')
-
+    if tries > 0:
+        sentence = model.generate()
+        if "```" in sentence and len(sentence.split()) >= order * 8:
             return sentence
-
-        except Exception:
-            return make_code(model, order, tries=tries - 1)
+        return make_code(model, order, tries=tries - 1)
     return None
 
 
@@ -54,7 +39,7 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = LRUDict(max_size=32)  # idk about a good size
+        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = TimedLRUDict(max_size=32, expiry=datetime.timedelta(minutes=30))  # idk about a good size or time
 
     async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
@@ -141,7 +126,7 @@ class Markov(commands.Cog):
             raise commands.BadArgument('You need to specify at least two users.')
 
         is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-        coros = list()
+        coros = []
 
         async with ctx.typing():
             async with ctx.db as conn:
