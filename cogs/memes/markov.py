@@ -54,12 +54,12 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = LRUDict(max_size=16)  # idk about a good size
+        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = LRUDict(max_size=32)  # idk about a good size
 
     async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
-        # if query in self.model_cache:
-        #     return self.model_cache[query]
+        if query in self.model_cache:
+            return self.model_cache[query]
 
         # Generate the model
         data: List[str] = list()
@@ -123,7 +123,7 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('sum', is_nsfw, 2, user.id)
+                query = ('um', is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
@@ -226,7 +226,7 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('sgm', is_nsfw, 3, ctx.guild.id)
+                query = ('gm', is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, False, connection=conn)
                 model = await self.get_model(query, coro, order=3)
