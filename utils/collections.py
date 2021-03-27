@@ -13,7 +13,7 @@ class TimedDict(dict):
 
     def __init__(self, expires_after: datetime.timedelta, *args, **kwargs):
         self.expires_after = expires_after
-        self._state = defaultdict(datetime.datetime.utcnow)
+        self._state = {}
         super().__init__(*args, **kwargs)
 
     def __cleanup(self):
@@ -22,6 +22,10 @@ class TimedDict(dict):
             delta = now - self._state[key]
             if delta > self.expires_after:
                 del self[key]
+
+    def __setitem__(self, key: Any, value: Any):
+        super().__setitem__(key, value)
+        self._state[key] = datetime.datetime.utcnow()
 
     def __getitem__(self, key: Any) -> Any:
         self.__cleanup()
