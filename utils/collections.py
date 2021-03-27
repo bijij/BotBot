@@ -54,7 +54,7 @@ class LRUDict(dict):
 class TimedLRUDict(LRUDict, TimedDict):
 
     def __init__(self, expires_after: datetime.timedelta, max_size: int = 1024, *args, **kwargs):
-        super().__init__(self, max_size, expires_after, *args, **kwargs)
+        super().__init__(max_size, expires_after, *args, **kwargs)
 
 
 class LRUDefaultDict(LRUDict, defaultdict):
