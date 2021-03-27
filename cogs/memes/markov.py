@@ -39,7 +39,7 @@ class Markov(commands.Cog):
 
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = TimedLRUDict(max_size=32, expiry=datetime.timedelta(minutes=30))  # idk about a good size or time
+        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = TimedLRUDict(expires_after=datetime.timedelta(minutes=30), max_size=32)  # idk about a good size or time
 
     async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
         # Return cached model if one exists
