@@ -10,7 +10,7 @@ python = "^3.8"
 numpy = "^1.19.2"
 pillow = "^7.2.0"
 websockets = "^8.1"
-donphan = "^2.4.1"
+donphan = "^3.0.0"
 dateparser = "^0.7.6"
 ampharos = {git = "https://github.com/bijij/Ampharos.git"}
 discord-ext-menus = {git = "https://github.com/rapptz/discord-ext-menus.git"}
