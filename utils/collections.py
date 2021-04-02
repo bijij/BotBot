@@ -18,7 +18,7 @@ class TimedDict(dict):
 
     def __cleanup(self):
         now = datetime.datetime.utcnow()
-        for key in list(super().items()):
+        for key in list(super().keys()):
             try:
                 delta = now - self._state[key]
                 if delta > self.expires_after:
