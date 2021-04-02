@@ -8,7 +8,6 @@ from typing import Any, Callable
 __all__ = ('LRUDict', 'LRUDefaultDict')
 
 
-
 class TimedDict(dict):
 
     def __init__(self, expires_after: datetime.timedelta, *args, **kwargs):
