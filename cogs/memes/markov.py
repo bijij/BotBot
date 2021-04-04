@@ -94,6 +94,26 @@ class Markov(commands.Cog):
 
             await self.send_markov(ctx, model, 2)
 
+    @commands.command(name='low_quality_user_markov', aliases=['lqum', 'dumb'])
+    async def user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
+        """Generate a markov chain based off a users messages.
+
+        `user`: The user who's messages should be used to generate the markov chain, defaults to you.
+        """
+        user = user or ctx.author
+
+        async with ctx.typing():
+            async with ctx.db as conn:
+                await Opt_In_Status.is_public(ctx, user, connection=conn)
+
+                is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
+                query = ('lqum', is_nsfw, 1, user.id)
+
+                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                model = await self.get_model(query, coro, order=1)
+
+            await self.send_markov(ctx, model, 2)
+
     @commands.command(name='seeded_user_markov', aliases=['sum'])
     async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
         """Generate a markov chain based off a users messages which starts with a given seed.
