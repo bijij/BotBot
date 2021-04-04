@@ -26,6 +26,10 @@ class TimedDict(dict):
             except KeyError:
                 pass
 
+    def __contains__(self, key: Any) -> bool:
+        self.__cleanup()
+        return super().__contains__(key)
+
     def __setitem__(self, key: Any, value: Any):
         super().__setitem__(key, value)
         self._state[key] = datetime.datetime.utcnow()
