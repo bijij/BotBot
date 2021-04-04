@@ -112,7 +112,7 @@ class Markov(commands.Cog):
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=1)
 
-            await self.send_markov(ctx, model, 2)
+            await self.send_markov(ctx, model, 1)
 
     @commands.command(name='seeded_user_markov', aliases=['sum'])
     async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
