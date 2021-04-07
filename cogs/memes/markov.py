@@ -95,7 +95,7 @@ class Markov(commands.Cog):
             await self.send_markov(ctx, model, 2)
 
     @commands.command(name='low_quality_user_markov', aliases=['lqum', 'dumb'])
-    async def user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
+    async def low_quality_user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
         """Generate a markov chain based off a users messages.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
