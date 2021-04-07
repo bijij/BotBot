@@ -1,32 +1,33 @@
 import asyncio
-import datetime
 import logging
 import traceback
+from typing import Any, Callable, cast, Dict, Type
 
 import discord
 from discord.ext import commands
 
-from donphan import create_pool, create_types, create_tables, create_views, MaybeAcquire
+from donphan import create_pool, create_types, create_tables, create_views, MaybeAcquire, TYPE_CODECS, OPTIONAL_CODECS
 from ampharos import setup as setup_ampharos
 
 from .config import CONFIG
 from .context import Context
 from .handler import WebhookHandler
 from .help import EmbedHelpCommand
-from .timers import dispatch_timers
+from .timers import TimerBot, dispatch_timers
 
 try:
     from cogs.memes.status import get_status
 except ImportError:
     def get_status(_): return discord.Status.online  # noqa: E704
 
-
 DPY_VOICE_GENERAL = 741656304359178271
 
 
 class BotBase(commands.Bot):
+    converters: Dict[Type, Callable[..., Any]]
+
     def __init__(self):
-        self.start_time = datetime.datetime.utcnow()
+        self.start_time = discord.utils.utcnow()
 
         from utils.converters import ALL_CONVERTERS
 
@@ -55,7 +56,7 @@ class BotBase(commands.Bot):
 
         self._active_timer = asyncio.Event()
         self._current_timer = None
-        self._timer_task = self.loop.create_task(dispatch_timers(self))
+        self._timer_task = self.loop.create_task(dispatch_timers(cast(TimerBot, self)))
 
         self.whitelisted_users = set()
 
@@ -73,7 +74,7 @@ class BotBase(commands.Bot):
 
     @property
     def uptime(self) -> float:
-        return (datetime.datetime.utcnow() - self.start_time).total_seconds()
+        return (discord.utils.utcnow() - self.start_time).total_seconds()
 
     async def on_ready(self):
         self.log.info(f'Logged in as {self.user} ({self.user.id})')
@@ -117,9 +118,9 @@ class BotBase(commands.Bot):
         if message.author.bot:
             return
 
-        if message.channel.id == DPY_VOICE_GENERAL:
-            if message.author.id not in self.whitelisted_users:
-                return
+        if message.channel.id == DPY_VOICE_GENERAL\
+                and message.author.id not in self.whitelisted_users:
+            return
 
         ctx = await self.get_context(message, cls=Context)
         await self.invoke(ctx)
@@ -128,7 +129,7 @@ class BotBase(commands.Bot):
         # setup database
         dsn = f"postgres://{CONFIG.DATABASE.USERNAME}:{CONFIG.DATABASE.PASSWORD}@localhost/{CONFIG.DATABASE.DATABASE}"
 
-        await create_pool(dsn, server_settings={
+        await create_pool(dsn, TYPE_CODECS | OPTIONAL_CODECS, server_settings={
             'application_name': 'BotBot'}
         )
         self.pool = MaybeAcquire().pool
@@ -137,7 +138,7 @@ class BotBase(commands.Bot):
         await create_views()
         await setup_ampharos()
 
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = discord.utils.utcnow()
 
         return await super().connect(*args, **kwargs)
 

@@ -64,7 +64,7 @@ class VoiceLogging(commands.Cog):
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.green(),
             description=f'{member.mention} joined **{after.channel.name}**.',
-            timestamp=datetime.datetime.utcnow()
+            timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
             icon_url=member.avatar_url
@@ -84,7 +84,7 @@ class VoiceLogging(commands.Cog):
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.blue(),
             description=f'{member.mention} moved from **{before.channel.name}** to **{after.channel.name}**.',
-            timestamp=datetime.datetime.utcnow()
+            timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
             icon_url=member.avatar_url
@@ -104,7 +104,7 @@ class VoiceLogging(commands.Cog):
         await channel.send(embed=discord.Embed(
             colour=discord.Colour.red(),
             description=f'{member.mention} left **{before.channel.name}**.',
-            timestamp=datetime.datetime.utcnow()
+            timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
             icon_url=member.avatar_url

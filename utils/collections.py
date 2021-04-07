@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from typing import Any, Callable
 
+import discord
 
 __all__ = ('LRUDict', 'LRUDefaultDict')
 
@@ -16,7 +17,7 @@ class TimedDict(dict):
         super().__init__(*args, **kwargs)
 
     def __cleanup(self):
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
         for key in list(super().keys()):
             try:
                 delta = now - self._state[key]
@@ -32,7 +33,7 @@ class TimedDict(dict):
 
     def __setitem__(self, key: Any, value: Any):
         super().__setitem__(key, value)
-        self._state[key] = datetime.datetime.utcnow()
+        self._state[key] = discord.utils.utcnow()
 
     def __getitem__(self, key: Any) -> Any:
         self.__cleanup()
@@ -78,5 +79,5 @@ class LRUDefaultDict(LRUDict, defaultdict):
 class TimedLRUDefaultDict(LRUDict, TimedDict, defaultdict):
 
     def __init__(self, default_factory: Callable, expires_after: datetime.timedelta, max_size: int = 1024, *args, **kwargs):
-        super().__init__(expires_after, max_size, *args, **kwargs)
+        super().__init__(max_size, expires_after, *args, **kwargs)
         self.default_factory = default_factory

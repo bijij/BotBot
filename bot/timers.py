@@ -27,7 +27,7 @@ import datetime
 import sys
 import traceback
 
-from typing import Optional
+from typing import Optional, Protocol, cast
 
 import discord
 from discord.ext import commands
@@ -38,12 +38,11 @@ from donphan import Column, SQLType, Table
 
 
 class Timers(Table, schema='core'):  # type: ignore
-    id: SQLType.Serial = Column(primary_key=True)
-    created_at: SQLType.Timestamp = Column(default='NOW() AT TIME ZONE \'UTC\'')
-    expires_at: SQLType.Timestamp = Column(index=True)
-    event_type: str = Column(nullable=False, index=True)
-    data: SQLType.JSONB = Column(default='\'{}\'::jsonb')
-
+    id: SQLType.Serial = Column(primary_key=True)  # type: ignore
+    created_at: SQLType.Timestamp = Column(default='NOW() AT TIME ZONE \'UTC\'')  # type: ignore
+    expires_at: SQLType.Timestamp = Column(index=True)  # type: ignore
+    event_type: str = Column(nullable=False, index=True)  # type: ignore
+    data: SQLType.JSONB = Column(default='\'{}\'::jsonb')  # type: ignore
 
 class Timer:
     __slots__ = ('id', 'created_at', 'expires_at',
@@ -96,12 +95,18 @@ expires_at={self.expires_at} event_type={self.event_type}>'
         self.dispatch_event(bot)
 
 
-async def _get_active_timer(bot: commands.Bot, *, connection: asyncpg.Connection = None, days: int = 7) -> Optional[Timer]:
+class TimerBot(commands.Bot):
+    _active_timer: asyncio.Event
+    _current_timer: Optional[Timer]
+    _timer_task: asyncio.Task
+
+
+async def _get_active_timer(bot: TimerBot, *, connection: asyncpg.Connection = None, days: int = 7) -> Optional[Timer]:
     record = await Timers.fetchrow_where('expires_at < (CURRENT_DATE + $1::interval) ORDER BY expires_at ASC', datetime.timedelta(days=days))
     return Timer(record) if record else None
 
 
-async def _wait_for_active(bot: commands.Bot, *, days: int = 7) -> Timer:
+async def _wait_for_active(bot: TimerBot, *, days: int = 7) -> Timer:
     # check for active timer
     timer = await _get_active_timer(bot, days=days)
 
@@ -117,7 +122,7 @@ async def _wait_for_active(bot: commands.Bot, *, days: int = 7) -> Timer:
     return await _wait_for_active(bot, days=days)
 
 
-async def dispatch_timers(bot: commands.Bot):
+async def dispatch_timers(bot: TimerBot):
     # Wait until bot is ready
     await bot.wait_until_ready()
 
@@ -125,7 +130,7 @@ async def dispatch_timers(bot: commands.Bot):
         while not bot.is_closed():
             # fetch the next timer from the database
             timer = bot._current_timer = await _wait_for_active(bot, days=40)
-            now = datetime.datetime.utcnow()
+            now = discord.utils.utcnow()
 
             # if timer has not yet expired
             if timer.expires_at >= now:
@@ -135,7 +140,7 @@ async def dispatch_timers(bot: commands.Bot):
 
     except asyncio.CancelledError:
         pass
-    except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
+    except (OSError, discord.ConnectionClosed, asyncpg.exceptions.PostgresConnectionError):
         bot._timer_task.cancel()
         bot._timer_task = bot.loop.create_task(dispatch_timers(bot))
     except Exception as exc:
@@ -144,7 +149,9 @@ async def dispatch_timers(bot: commands.Bot):
 
 
 async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_type: str, *args, **kwargs) -> Timer:
-    now = datetime.datetime.utcnow()
+    bot = cast(TimerBot, bot)
+    
+    now = discord.utils.utcnow()
     timer = Timer.temporary(now, expires_at, event_type, *args, **kwargs)
 
     delta = (expires_at - now).total_seconds()
@@ -152,14 +159,12 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
         bot.loop.create_task(timer.call(bot))
         return timer
 
-    record = await Timers.insert(returning=Timers.id, expires_at=expires_at, event_type=event_type, data=dict(args=args, kwargs=kwargs))
+    record = await Timers.insert(returning=Timers.id, expires_at=expires_at, event_type=event_type, data=dict(args=args, kwargs=kwargs))  # type: ignore
 
     # Set the timer's ID
     timer.id = record[0]
 
-    # Only set the data check if the timer can be waited for
-    if delta <= discord.utils.MAX_ASYNCIO_SECONDS:
-        bot._active_timer.set()
+    bot._active_timer.set()
 
     # Check if the timer is earlier than the currently set timer
     if bot._current_timer is not None and expires_at < bot._current_timer.expires_at:
@@ -170,6 +175,8 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
 
 
 async def delete_timer(bot: commands.Bot, record: asyncpg.Record, *, connection: asyncpg.Connection):
+    bot = cast(TimerBot, bot)
+    
     await Timers.delete(id=record['id'])
 
     # if the current timer is being deleted skip it

@@ -1,7 +1,11 @@
+from typing import cast
+
 import discord
 from discord.ext import commands, menus
 
 from utils.paginator import EmbedPaginator
+
+from .context import Context
 
 
 class EmbedHelpCommand(commands.DefaultHelpCommand):
@@ -12,6 +16,8 @@ class EmbedHelpCommand(commands.DefaultHelpCommand):
         })
 
         super().__init__(**options)
+
+        self.paginator = cast(EmbedPaginator, self.paginator)
 
     async def send_pages(self):
         destination = self.get_destination()

@@ -85,7 +85,7 @@ class WhenAndWhat(commands.Converter):
             'RETURN_AS_TIMEZONE_AWARE': False,
             'PARSERS': ['absolute-time', 'relative-time', 'timestamp', 'base-formats']
         }
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
         find_dates = partial(search_dates, argument, languages=['en'], settings=settings)
         dates = await ctx.bot.loop.run_in_executor(None, find_dates)
 

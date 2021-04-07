@@ -206,7 +206,7 @@ class Logging(commands.Cog):
             return
 
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw(), False))
-        self.bot._message_update_log.append((message.id, datetime.datetime.utcnow(), message.content))
+        self.bot._message_update_log.append((message.id, discord.utils.utcnow(), message.content))
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
@@ -215,7 +215,7 @@ class Logging(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if payload.data.get('content'):
-            self.bot._message_update_log.append((payload.message_id, datetime.datetime.utcnow(), payload.data['content']))
+            self.bot._message_update_log.append((payload.message_id, discord.utils.utcnow(), payload.data['content']))
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -239,7 +239,7 @@ class Logging(commands.Cog):
         if status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, datetime.datetime.utcnow(), status))
+        self.bot._status_log.append((after.id, discord.utils.utcnow(), status))
         self.bot._last_status[after.id] = status
 
     @tasks.loop(seconds=60)
@@ -275,7 +275,7 @@ class Logging(commands.Cog):
 
         # Fill with current status data
         status_log = []
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
 
         for user_id in self._opted_in:
             for guild in self.bot.guilds:

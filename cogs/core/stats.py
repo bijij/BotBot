@@ -14,11 +14,11 @@ from utils.tools import plural
 
 
 class Commands(Table, schema='core'):  # type: ignore
-    message_id: SQLType.BigInt = Column(primary_key=True)
-    guild_id: SQLType.BigInt = Column(index=True)
-    channel_id: SQLType.BigInt
-    user_id: SQLType.BigInt = Column(index=True)
-    invoked_at: SQLType.Timestamp
+    message_id: SQLType.BigInt = Column(primary_key=True)  # type: ignore
+    guild_id: SQLType.BigInt = Column(index=True)  # type: ignore
+    channel_id: SQLType.BigInt  # type: ignore
+    user_id: SQLType.BigInt = Column(index=True)  # type: ignore
+    invoked_at: SQLType.Timestamp  # type: ignore
     prefix: str
     command: str
     failed: bool
@@ -35,7 +35,7 @@ class Stats(commands.Cog):
         self._batch_lock = asyncio.Lock()
         self._batch_data = []  # type: ignore
 
-        self.bulk_insert.add_exception_type(asyncpg.PostgresConnectionError)
+        self.bulk_insert.add_exception_type(asyncpg.exceptions.PostgresConnectionError)
         self.bulk_insert.start()
 
     def cog_unload(self):

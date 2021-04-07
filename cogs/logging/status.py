@@ -77,7 +77,7 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
 
     # Add padding for missing data
     records.insert(0, (None, start_of_day(records[0]['timestamp']), None))
-    records.append((None, datetime.datetime.utcnow(), None))
+    records.append((None, discord.utils.utcnow(), None))
 
     # Add in bulk of data
     for i, (_, start, status) in enumerate(records[:-1]):
@@ -322,7 +322,7 @@ class StatusLogging(commands.Cog):
         if timezone_offset is None:
             record = await Timezones.fetchrow(user_id=user.id)
             if record is not None:
-                timezone_offset = zoneinfo.ZoneInfo(record['timezone']).utcoffset(datetime.datetime.utcnow()).total_seconds() / 3600
+                timezone_offset = zoneinfo.ZoneInfo(record['timezone']).utcoffset(discord.utils.utcnow()).total_seconds() / 3600
             else:
                 timezone_offset = 0
 

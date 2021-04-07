@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from asyncio import ensure_future
 from numbers import Number
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, cast
 
 
 __all__ = (
@@ -54,7 +54,7 @@ def keycap_digit(c: Union[int, str]) -> str:
     return (str(c).encode('utf-8') + b'\xe2\x83\xa3').decode('utf-8')
 
 
-async def add_reactions(message: discord.Message, reactions: Iterable[discord.Emoji]):
+async def add_reactions(message: discord.Message, reactions: Iterable[Union[str, discord.Emoji]]):
     """Adds reactions to a message
 
     Args:
@@ -71,15 +71,14 @@ async def add_reactions(message: discord.Message, reactions: Iterable[discord.Em
 async def confirm(bot: commands.Bot, message: Union[str, discord.Message], user: discord.User, *, channel: Optional[discord.TextChannel] = None, timeout=60, delete_after=True):
     if isinstance(message, str):
         message = await channel.send(message)
+        message = cast(discord.Message, message)
 
     confirm = False
     reactions = ['\N{thumbs up sign}', '\N{thumbs down sign}']
 
     def check(payload):
-        if payload.message_id == message.id and payload.user_id == user.id:
-            if str(payload.emoji) in reactions:
-                return True
-        return False
+        message = cast(discord.Message, message)
+        return payload.message_id == message.id and payload.user_id == user.id and str(payload.emoji) in reactions
 
     await add_reactions(message, reactions)
 

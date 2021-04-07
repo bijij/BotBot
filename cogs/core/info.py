@@ -207,10 +207,9 @@ class Info(commands.Cog):
             raise commands.BadArgument('You must specify an emoji.')
 
         # If emoji is unicode emoji
-        if isinstance(emoji, discord.PartialEmoji):
-            if emoji.is_unicode_emoji():
-                raise commands.BadArgument(
-                    'Cannot retrieve information on Unicode emoji.')
+        if isinstance(emoji, discord.PartialEmoji) and emoji.is_unicode_emoji():
+            raise commands.BadArgument(
+                'Cannot retrieve information on Unicode emoji.')
 
         embed = discord.Embed().set_author(
             name=f'Information on {emoji.name}:'

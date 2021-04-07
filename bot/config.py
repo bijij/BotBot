@@ -1,6 +1,9 @@
 import os
 
+from typing import Any, Generic, TypeVar
+
 import discord
+from discord.client import Client
 import yaml
 
 from utils.tools import RawMessage
@@ -39,12 +42,11 @@ def _env_var_constructor(loader: yaml.Loader, node: yaml.Node):
     Example usage:
         key: !ENV 'KEY'
     '''
-    if node.id == 'scalar':  # type: ignore
-        value = loader.construct_scalar(node)
-        key = str(value)
-
-    else:
+    if node.id != 'scalar':  # type: ignore
         raise TypeError('Expected a string')
+
+    value = loader.construct_scalar(node)  # type: ignore
+    key = str(value)
 
     return HiddenRepr(os.getenv(key))
 
@@ -52,23 +54,28 @@ def _env_var_constructor(loader: yaml.Loader, node: yaml.Node):
 def _generate_constructor(func):
 
     def constructor(loader: yaml.Loader, node: yaml.Node):
-        ids = [int(x) for x in loader.construct_scalar(node).split()]
+        ids = [int(x) for x in loader.construct_scalar(node).split()]  # type: ignore
         return Object(ids[-1], lambda: func(*ids))
 
     return constructor
 
 
-class Config(yaml.YAMLObject):
-    _bot: discord.Client = None  # type: ignore
+BotT = TypeVar('BotT', bound=Client)
+
+class Config(yaml.YAMLObject, Generic[BotT]):
+    _bot: BotT = None  # type: ignore
     yaml_tag = u'!Config'
 
     def __init__(self, **kwargs):
         for name, value in kwargs:
             setattr(self, name, value)
 
+    def __getattribute__(self, name: str) -> Any:
+        return super().__getattribute__(name)
+
     def __reload__(self):
         self.__dict__ = load().__dict__
-        Config._bot.__version__ = self.VERSION
+        Config._bot.__version__ = self.VERSION  # type: ignore
 
     def __repr__(self):
         return f'<Config {" ".join(f"{key}={repr(value)}" for key, value in self.__dict__.items())}>'

@@ -118,13 +118,12 @@ class EmbedPaginator(discord.Embed, PaginatorSource):
         embed = discord.Embed.from_dict(self.to_dict())
         embed.description = '\n'.join(page.description)
 
-        if self._pages.index(page) >= 1:
-            if embed.author.name:
-                embed.set_author(
-                    name=embed.author.name + ' cont.',
-                    url=embed.author.url,
-                    icon_url=embed.author.icon_url
-                )
+        if self._pages.index(page) >= 1 and embed.author.name:
+            embed.set_author(
+                name=embed.author.name + ' cont.',
+                url=embed.author.url,
+                icon_url=embed.author.icon_url
+            )
 
         for field in page.fields:
             embed.add_field(**field)

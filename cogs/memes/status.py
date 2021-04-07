@@ -46,7 +46,7 @@ class StatusMeme(commands.Cog):
         self.status_task.start()
 
     async def set_status(self):
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
         status = get_status(now)
 
         if status is None:
@@ -78,7 +78,7 @@ class StatusMeme(commands.Cog):
         await self.set_status()
 
         # SLEEP until next segment
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
         timestamp = now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
         next_segment = datetime.datetime.fromtimestamp(timestamp)
         await discord.utils.sleep_until(next_segment)
