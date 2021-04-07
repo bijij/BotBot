@@ -42,7 +42,7 @@ class LogEntry(NamedTuple):
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
-    return datetime.datetime.combine(dt, datetime.time())
+    return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
 
 
 async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
@@ -91,11 +91,11 @@ def base_image(width: int = IMAGE_SIZE, height: int = IMAGE_SIZE) -> Tuple[Image
     image = Image.new('RGBA', (width, height))
     draw = ImageDraw.Draw(image)
 
-    return image, draw
+    return image, draw  # type: ignore
 
 
 def resample(image: Image.Image) -> Image.Image:
-    return image.resize((int(IMAGE_SIZE // DOWNSAMPLE),) * 2, resample=Image.LANCZOS)
+    return image.resize((int(IMAGE_SIZE // DOWNSAMPLE),) * 2, resample=Image.LANCZOS)  # type: ignore
 
 
 def as_bytes(image: Image.Image) -> BytesIO:
@@ -107,7 +107,7 @@ def as_bytes(image: Image.Image) -> BytesIO:
 
 
 def add(*tuples: Tuple[int, ...]) -> Tuple[int, ...]:
-    return tuple(map(sum, zip(*tuples)))
+    return tuple(map(sum, zip(*tuples)))  # type: ignore
 
 
 def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True) -> BytesIO:
