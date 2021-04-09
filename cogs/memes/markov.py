@@ -20,7 +20,7 @@ MAX_TRIES = 32
 def make_sentence(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:
     if tries > 0:
         sentence = model.generate() if seed is None else model.generate_seeded(seed)
-        if len(sentence.split()) >= order * 4:  # requite sentences of at least a given size (rust's markov lib likes two word output)
+        if "```" not in sentence and len(sentence.split()) >= order * 4:  # requite sentences of at least a given size (rust's markov lib likes two word output)
             return sentence
         return make_sentence(model, order, seed=seed, tries=tries - 1)
     return None
