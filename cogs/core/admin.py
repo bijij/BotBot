@@ -1,11 +1,18 @@
+import io
+
 from typing import Union
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.errors import BadArgument
 
 from jishaku.codeblocks import Codeblock
+from jishaku.shell import ShellReader
 
 from bot import BotBase, Context
+
+
+MAX_FILE_SIZE = 8_000_000
 
 
 class Admin(commands.Cog):
@@ -92,6 +99,29 @@ class Admin(commands.Cog):
         `code`: The git command to run.
         """
         await ctx.invoke(self.bot.get_command('jsk git'), argument=code)
+
+    @commands.group()
+    async def db(self, ctx: Context):
+        ...
+
+    @db.command(name='dump', aliases=['backup'])
+    async def db_dump(self, ctx: Context, *, database: str = 'botbot'):
+        db_dump = io.StringIO()
+
+        with ShellReader(f'pg_dump {database}') as reader:
+            async for line in reader:
+                db_dump.write(line)
+
+        file_size = db_dump.tell()
+        file_name = f'{database}_backup_{ctx.message.created_at}.sql'
+
+        db_dump.seek(0)
+        if file_size > MAX_FILE_SIZE:
+            with open(file_name, 'w') as f:
+                f.write(db_dump.getvalue())
+            raise BadArgument('DB dump exceeds maximim file size, saved to disk.')
+
+        await ctx.send(file=discord.File(db_dump, file_name))
 
 
 def setup(bot: BotBase):
