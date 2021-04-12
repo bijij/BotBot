@@ -1,4 +1,5 @@
 config.ini
 __pycache__/
 cogs/secret/*
+res/backup/*
 !.gitkeep
