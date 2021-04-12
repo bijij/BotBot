@@ -108,20 +108,21 @@ class Admin(commands.Cog):
     async def db_dump(self, ctx: Context, *, database: str = 'botbot'):
         db_dump = io.StringIO()
 
-        with ShellReader(f'pg_dump {database}') as reader:
-            async for line in reader:
-                db_dump.write(line)
+        async with ctx.typing():
+            with ShellReader(f'pg_dump {database}') as reader:
+                async for line in reader:
+                    db_dump.write(line)
 
-        file_size = db_dump.tell()
-        file_name = f'{database}_backup_{ctx.message.created_at}.sql'
+            file_size = db_dump.tell()
+            file_name = f'{database}_backup_{ctx.message.created_at}.sql'
 
-        db_dump.seek(0)
-        if file_size > MAX_FILE_SIZE:
-            with open(file_name, 'w') as f:
-                f.write(db_dump.getvalue())
-            raise BadArgument('DB dump exceeds maximim file size, saved to disk.')
+            db_dump.seek(0)
+            if file_size > MAX_FILE_SIZE:
+                with open(file_name, 'w') as f:
+                    f.write(db_dump.getvalue())
+                raise BadArgument('DB dump exceeds maximim file size, saved to disk.')
 
-        await ctx.send(file=discord.File(db_dump, file_name))
+            await ctx.send(file=discord.File(db_dump, file_name))
 
 
 def setup(bot: BotBase):
