@@ -106,7 +106,7 @@ class Admin(commands.Cog):
 
     @db.command(name='dump', aliases=['backup'])
     async def db_dump(self, ctx: Context, database: str = 'botbot', *, args: str = ''):
-        file_name = f'backup/{database}_backup_{ctx.message.created_at}.sql'
+        file_name = f'./res/backup/{database}_backup_{ctx.message.created_at}.sql'
 
         async with ctx.typing():
             with ShellReader(f'pg_dump {database} {args} -f {file_name}') as reader:
