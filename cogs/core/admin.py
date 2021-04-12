@@ -1,5 +1,4 @@
-import io
-
+from pathlib import Path
 from typing import Union
 
 import discord
@@ -112,6 +111,9 @@ class Admin(commands.Cog):
             with ShellReader(f'pg_dump {database} {args} -f "{file_name}"') as reader:
                 async for _ in reader:
                     ...
+
+            if Path(file_name).stat().st_size > MAX_FILE_SIZE:
+                raise commands.BadArgument(f'DB Backup to large to upload. you can find it at `{file_name}`')
 
             await ctx.send(file=discord.File(file_name))
 
