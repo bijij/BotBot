@@ -3,7 +3,6 @@ from typing import Union
 
 import discord
 from discord.ext import commands
-from discord.ext.commands.errors import BadArgument
 
 from jishaku.codeblocks import Codeblock
 from jishaku.shell import ShellReader
