@@ -27,7 +27,7 @@ import datetime
 import sys
 import traceback
 
-from typing import Optional, Protocol, cast
+from typing import Optional, cast
 
 import discord
 from discord.ext import commands
@@ -43,6 +43,7 @@ class Timers(Table, schema='core'):  # type: ignore
     expires_at: SQLType.Timestamp = Column(index=True)  # type: ignore
     event_type: str = Column(nullable=False, index=True)  # type: ignore
     data: SQLType.JSONB = Column(default='\'{}\'::jsonb')  # type: ignore
+
 
 class Timer:
     __slots__ = ('id', 'created_at', 'expires_at',
@@ -150,7 +151,7 @@ async def dispatch_timers(bot: TimerBot):
 
 async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_type: str, *args, **kwargs) -> Timer:
     bot = cast(TimerBot, bot)
-    
+
     now = discord.utils.utcnow()
     timer = Timer.temporary(now, expires_at, event_type, *args, **kwargs)
 
@@ -176,7 +177,7 @@ async def create_timer(bot: commands.Bot, expires_at: datetime.datetime, event_t
 
 async def delete_timer(bot: commands.Bot, record: asyncpg.Record, *, connection: asyncpg.Connection):
     bot = cast(TimerBot, bot)
-    
+
     await Timers.delete(id=record['id'])
 
     # if the current timer is being deleted skip it

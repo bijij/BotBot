@@ -5,8 +5,6 @@ from discord.ext import commands, menus
 
 from utils.paginator import EmbedPaginator
 
-from .context import Context
-
 
 class EmbedHelpCommand(commands.DefaultHelpCommand):
 

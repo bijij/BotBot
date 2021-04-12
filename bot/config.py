@@ -62,6 +62,7 @@ def _generate_constructor(func):
 
 BotT = TypeVar('BotT', bound=Client)
 
+
 class Config(yaml.YAMLObject, Generic[BotT]):
     _bot: BotT = None  # type: ignore
     yaml_tag = u'!Config'
