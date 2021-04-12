@@ -109,7 +109,7 @@ class Admin(commands.Cog):
         file_name = f'./res/backup/{database}_backup_{ctx.message.created_at}.sql'
 
         async with ctx.typing():
-            with ShellReader(f'pg_dump {database} {args} -f {file_name}') as reader:
+            with ShellReader(f'pg_dump {database} {args} -f "{file_name}"') as reader:
                 async for _ in reader:
                     ...
 
