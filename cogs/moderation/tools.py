@@ -65,12 +65,12 @@ class ModerationTools(commands.Cog):
             if message.author == self.bot.user:
                 to_delete.append(message)
 
-            if ctx.me.permissions_in(ctx.channel).manage_messages and context.command is not None:
+            if ctx.channel.permissions_for(ctx.me).manage_messages and context.command is not None:
                 to_delete.append(message)
 
         await ctx.send(f'Deleted {len(to_delete)} messages', delete_after=5)
 
-        if ctx.me.permissions_in(ctx.channel).manage_messages:
+        if ctx.channel.permissions_for(ctx.me).manage_messages:
             await ctx.channel.delete_messages(to_delete)
         else:
             for message in to_delete:
