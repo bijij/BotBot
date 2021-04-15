@@ -174,7 +174,7 @@ class Logging(commands.Cog):
         pass
 
     @timezone.command(name='set')
-    async def timezone_set(self, ctx, timezone: zoneinfo.ZoneInfo):
+    async def timezone_set(self, ctx, *, timezone: zoneinfo.ZoneInfo):
         """Set your timezone."""
         await Timezones.insert(update_on_conflict=Timezones.timezone, user_id=ctx.author.id, timezone=timezone.key)
         await ctx.tick()

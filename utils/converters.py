@@ -151,7 +151,7 @@ class ZoneInfoConverter(commands.Converter):
     @classmethod
     async def convert(cls, ctx: commands.Context, argument: str) -> zoneinfo.ZoneInfo:
         try:
-            return zoneinfo.ZoneInfo(argument)
+            return zoneinfo.ZoneInfo(argument.replace(' ', '_'))
         except Exception:
             raise commands.BadArgument(f'Could not find time zone "{argument}".')
 
