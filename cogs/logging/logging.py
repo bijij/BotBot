@@ -179,6 +179,28 @@ class Logging(commands.Cog):
         await Timezones.insert(update_on_conflict=Timezones.timezone, user_id=ctx.author.id, timezone=timezone.key)
         await ctx.tick()
 
+    @timezone.command(name='get')
+    async def timezone_get(self, ctx, *, user: discord.Member):
+        """Get a member's timezone."""
+        timezone = await Timezones.fetchrow(user_id=user.id)
+        
+        if timezone is None:
+            embed = discord.Embed(
+                title = "Error",
+                description = f"User {user.name} doens't have a saved timezone.",
+                colour = discord.Colour.red()
+            )
+            return await ctx.send(embed = embed)
+        
+        embed = discord.Embed(
+            title = "Timezone info",
+            description = f"User {user.name}'s timezone is {timezone['timezone']}",
+            colour = discord.Colour.blue()
+        )
+      
+        await ctx.send(embed = embed)
+        await ctx.tick()
+
     @timezone.command(name='delete', aliases=['unset'])
     async def timezone_delete(self, ctx):
         """Removes your timezone from the database"""
