@@ -42,9 +42,11 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     @classmethod
     async def get_user_log(cls, user: discord.User, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
         async with MaybeAcquire(connection) as connection:
-            query = f"""(SELECT message_id, content from {Message_Log._name} WHERE deleted = false AND user_id = $1 AND nsfw <= $2 AND content LIKE '% %') _
-            UNION
-            SELECT message_id, content from {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
+            query = f"""
+                SELECT * FROM (SELECT message_id, content, user_id, deleted, nsfw from {Message_Log._name}
+                UNION SELECT b.message_id, b.content, a.user_id, a.deleted, a.nsfw from {Message_Attachments._name}  AS b
+                INNER JOIN {Message_Log._name} AS a ON (a.message_id = b.message_id)
+                ) _ WHERE deleted = false AND user_id = $1 AND nsfw <= $2 AND content LIKE '% %';
             """
             data = await connection.fetch(query, user.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
@@ -52,9 +54,11 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     @classmethod
     async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
         async with MaybeAcquire(connection) as connection:
-            query = f"""(SELECT message_id, content FROM {Message_Log._name} WHERE deleted = false AND guild_id = $1 AND nsfw <= $2 AND content LIKE '% %') _
-            UNION
-            SELECT message_id, content FROM {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
+            query = f"""
+                SELECT * FROM (SELECT message_id, content, guild_id, deleted, nsfw from {Message_Log._name}
+                UNION SELECT b.message_id, b.content, a.guild_id, a.deleted, a.nsfw from {Message_Attachments._name}  AS b
+                INNER JOIN {Message_Log._name} AS a ON (a.message_id = b.message_id)
+                ) _ WHERE deleted = false AND guild_id = $1 AND nsfw <= $2 AND content LIKE '% %';
             """
             data = await connection.fetch(query, guild.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
