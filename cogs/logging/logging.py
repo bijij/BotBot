@@ -1,4 +1,5 @@
 import datetime
+import re
 
 try:
     import zoneinfo
@@ -15,6 +16,8 @@ import discord
 from discord.ext import commands, tasks
 
 from bot import BotBase, Context
+
+TEXT_FILE_REGEX = re.compile(r'^.*; charset=.*$')
 
 
 COLOURS = {
@@ -233,7 +236,23 @@ class Logging(commands.Cog):
 
         if message.channel.is_nsfw() and message.author.id not in self._log_nsfw:
             return
-
+        
+        for attachment in message.attachments:
+            if attachment.content_type and TEXT_FILE_REGEX.match(attachment.content_type):
+                
+                if "charset" in attachment.content_type:
+                    _, charset = attachment.content_type.rsplit("=", 1)
+                else:
+                    charset = "utf-8"
+                    
+                try:
+                    contents = await attachment.read()
+                    contents = contents.decode(charset)
+                except (LookupError, UnicodeDecodeError, discord.HTTPException):
+                    pass
+                
+             self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, contents, message.channel.is_nsfw(), False))
+                
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw(), False))
         self.bot._message_update_log.append((message.id, discord.utils.utcnow(), message.content))
 
