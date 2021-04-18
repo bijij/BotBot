@@ -41,13 +41,29 @@ class Message_Log(Table, schema='logging'):  # type: ignore
 
     @classmethod
     async def get_user_log(cls, user: discord.User, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
-        data = await cls.fetch_where('user_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', user.id, nsfw, connection=connection)
+        async with MaybeAcquire(connection) as connection:
+            query = f"""(SELECT message_id, content from {Message_Log._name} WHERE deleted = false AND user_id = $1 AND nsfw <= $2 AND content LIKE '% %') _
+            UNION
+            SELECT message_id, content from {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
+            """
+            data = connection.fetch(query, user.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
     @classmethod
     async def get_guild_log(cls, guild: discord.Guild, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
-        data = await cls.fetch_where('guild_id = $1 AND nsfw <= $2 AND content LIKE \'% %\'', guild.id, nsfw, connection=connection)
+        async with MaybeAcquire(connection) as connection:
+            query = f"""(SELECT message_id, content FROM {Message_Log._name} WHERE deleted = false AND guild_id = $1 AND nsfw <= $2 AND content LIKE '% %') _
+            UNION
+            SELECT message_id, content FROM {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
+            """
+            data = connection.fetch(query, guild.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
+
+
+class Message_Attachments(Table, schema='logging'): # type: ignore
+    message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
+    attachment_id: SQLType.BigInt
+    content: str
 
 
 class Message_Edit_History(Table, schema='logging'):  # type: ignore
@@ -237,7 +253,7 @@ class Logging(commands.Cog):
         if message.channel.is_nsfw() and message.author.id not in self._log_nsfw:
             return
         
-        for attachment in message.attachments:
+        for i, attachment in enumerate(message.attachments):
             if attachment.content_type and TEXT_FILE_REGEX.match(attachment.content_type):
                 
                 if "charset" in attachment.content_type:
@@ -246,12 +262,12 @@ class Logging(commands.Cog):
                     charset = "utf-8"
                     
                 try:
-                    contents = await attachment.read()
-                    contents = contents.decode(charset)
+                    content = await attachment.read()
+                    content = content.decode(charset)
                 except (LookupError, UnicodeDecodeError, discord.HTTPException):
-                    pass
+                    continue
                 
-             self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, contents, message.channel.is_nsfw(), False))
+                self.bot._message_attachment_log.append((message.id, i, content))
                 
         self.bot._message_log.append((message.channel.id, message.id, message.guild.id, message.author.id, message.content, message.channel.is_nsfw(), False))
         self.bot._message_update_log.append((message.id, discord.utils.utcnow(), message.content))
@@ -305,6 +321,10 @@ class Logging(commands.Cog):
                 await conn.executemany(f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1", self.bot._message_delete_log)
                 self.bot._message_delete_log = []
 
+            if self.bot._message_attachment_log:
+                await Message_Attachments.insert_many(Message_Attachments._columns, *self.bot._message_attachment_log, connection=conn)
+                self.bot._message_attachment_log = []
+
             if self.bot._message_update_log:
                 await conn.executemany(f"UPDATE {Message_Log._name} SET content = $2 WHERE message_id = $1", ((entry[0], entry[2]) for entry in self.bot._message_update_log))
                 for entry in self.bot._message_update_log:
@@ -351,6 +371,7 @@ def setup(bot: BotBase):
         bot._logging = True
         bot._message_log = []
         bot._message_delete_log = []
+        bot._message_attachment_log = []
         bot._message_update_log = []
         bot._status_log = []
         bot._last_status = {}
