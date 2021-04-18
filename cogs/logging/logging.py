@@ -46,7 +46,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
             UNION
             SELECT message_id, content from {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
             """
-            data = connection.fetch(query, user.id, nsfw)
+            data = await connection.fetch(query, user.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
     @classmethod
@@ -56,7 +56,7 @@ class Message_Log(Table, schema='logging'):  # type: ignore
             UNION
             SELECT message_id, content FROM {Message_Attachments._name} INNER JOIN _ on (message_id = _.message_id)
             """
-            data = connection.fetch(query, guild.id, nsfw)
+            data = await connection.fetch(query, guild.id, nsfw)
         return [record['content'].lower() if flatten_case else record['content'] for record in data]
 
 
