@@ -228,12 +228,12 @@ class Logging(commands.Cog):
             description=f"User {user.name}'s timezone is {timezone} ({utc_offset})",
             colour=discord.Colour.blue()
         )
-        
+
         current_datetime = datetime.datetime.now(timezone)
-        formatted_time = current_datetime.strftime("%H:%M")
-        
+        formatted_time = current_datetime.strftime("%c")
+
         result_embed.set_footer(text=f"Their time is {formatted_time}")
-            
+
         await ctx.send(embed=result_embed)
         await ctx.tick()
 
