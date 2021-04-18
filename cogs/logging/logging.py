@@ -223,12 +223,20 @@ class Logging(commands.Cog):
 
         utc_offset = f"UTC{seconds // 3600:+03}:{abs(seconds) // 60 % 60:02}"
 
-        await ctx.send(embed=discord.Embed(
+        result_embed = discord.Embed(
             title="Timezone info",
             description=f"User {user.name}'s timezone is {timezone} ({utc_offset})",
             colour=discord.Colour.blue()
-        ))
+        )
 
+        current_datetime = datetime.datetime.now(timezone)
+        day = current_datetime.day
+        date_modif = f"{day}{'tsnrhtdd'[(day//10%10!=1)*(day%10<4)*day%10::4]}"
+        formatted_time = current_datetime.strftime(f"%A {date_modif} of %B %Y @ %H:%M %Z (%z)")
+
+        result_embed.set_footer(text=f"{formatted_time}")
+
+        await ctx.send(embed=result_embed)
         await ctx.tick()
 
     @timezone.command(name='delete', aliases=['unset'])
