@@ -230,9 +230,11 @@ class Logging(commands.Cog):
         )
 
         current_datetime = datetime.datetime.now(timezone)
-        formatted_time = current_datetime.strftime("%c")
+        day = current_datetime.day
+        date_modif = f"{day}{'tsnrhtdd'[(day//10%10!=1)*(day%10<4)*day%10::4]}"
+        formatted_time = current_datetime.strftime(f"%A {date_modif} of %B %Y @ %H:%M %Z (%z)")
 
-        result_embed.set_footer(text=f"Their time is {formatted_time}")
+        result_embed.set_footer(text=f"{formatted_time}")
 
         await ctx.send(embed=result_embed)
         await ctx.tick()
