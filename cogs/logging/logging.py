@@ -229,7 +229,7 @@ class Logging(commands.Cog):
             colour=discord.Colour.blue()
         )
         
-        current_datetime = datetime.now(timezone)
+        current_datetime = datetime.datetime.now(timezone)
         formatted_time = current_datetime.strftime("%H:%M")
         
         result_embed.set_footer(text=f"Their time is {formatted_time}")
