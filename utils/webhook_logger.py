@@ -3,7 +3,7 @@ import aiohttp
 
 from contextlib import suppress
 
-from discord import AsyncWebhookAdapter, Embed, Webhook, HTTPException
+from discord import Embed, Webhook, HTTPException
 
 
 class EmbedWebhookLogger:
@@ -19,7 +19,7 @@ class EmbedWebhookLogger:
 
     async def _loop(self):
         self._session = aiohttp.ClientSession()
-        self._webhook = Webhook.from_url(self._webhook_url, adapter=AsyncWebhookAdapter(self._session))
+        self._webhook = Webhook.from_url(self._webhook_url, session=self._session)
 
         while True:
 
