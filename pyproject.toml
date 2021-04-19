@@ -15,7 +15,7 @@ dateparser = "^0.7.6"
 ampharos = {git = "https://github.com/bijij/Ampharos.git"}
 discord-ext-menus = {git = "https://github.com/rapptz/discord-ext-menus.git"}
 humanize = {git = "https://github.com/jmoiron/humanize.git"}
-discord-ext-alternatives = {git = "https://github.com/ext-creators/discord-ext-alternatives.git"}
+discord-ext-alternatives = "^2021.4.13"
 "discord.py" = {git = "https://github.com/rapptz/discord.py.git"}
 "backports.zoneinfo" = "^0.2.1"
 psutil = "^5.7.2"

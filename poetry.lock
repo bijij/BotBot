@@ -156,21 +156,14 @@ tzlocal = "*"
 
 [[package]]
 name = "discord-ext-alternatives"
-version = "2020.10.11"
-description = "A discord.py extension with additional and alternative features."
+version = "2021.4.13"
+description = "A discord.py extension with additional and alternative features. Use with caution."
 category = "main"
 optional = false
 python-versions = ">=3.5.3"
-develop = false
 
 [package.dependencies]
-"discord.py" = ">=1.3.4"
-
-[package.source]
-type = "git"
-url = "https://github.com/ext-creators/discord-ext-alternatives.git"
-reference = "master"
-resolved_reference = "5956858654b7c96e6d47ba9ce0491ef45a884e8a"
+"discord.py" = ">=1.6"
 
 [[package]]
 name = "discord-ext-boardgames"
@@ -203,7 +196,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a2964+g23aaa758"
+version = "2.0.0a3013+g18bf3d3a"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -221,26 +214,22 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "23aaa75802e46ea13f49375c6abdc48e7b8c40dc"
+resolved_reference = "18bf3d3a7d833990c0c8c67fe1dd9824160ee762"
 
 [[package]]
 name = "donphan"
-version = "3.1.0"
+version = "3.2.1"
 description = "Asyncronous Database ORM for Postgres"
 category = "main"
 optional = false
-python-versions = ">=3.7.2"
+python-versions = ">=3.7.2,<4.0.0"
 
 [package.dependencies]
 asyncpg = ">=0.18.3"
 
-[package.extras]
-docs = ["sphinx (==3.2.1)", "sphinxcontrib-trio (==1.1.2)", "sphinxcontrib-websupport"]
-test = ["flake8 (>=3.9.0)", "pytest (>=6.2.0)", "mypy"]
-
 [[package]]
 name = "flake8"
-version = "3.9.0"
+version = "3.9.1"
 description = "the modular source code checker: pep8 pyflakes and co"
 category = "dev"
 optional = false
@@ -542,7 +531,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9dbe86ef03eb57f73101e3fcd8dddec97c3ed35afc7325f303884751920be92c"
+content-hash = "6416ce68b1ed6b88e198e3a9a5f52717c0f747a911b89e792261cc1ddfe26a1a"
 
 [metadata.files]
 aiohttp = [
@@ -663,7 +652,10 @@ dateparser = [
     {file = "dateparser-0.7.6-py2.py3-none-any.whl", hash = "sha256:7552c994f893b5cb8fcf103b4cd2ff7f57aab9bfd2619fdf0cf571c0740fd90b"},
     {file = "dateparser-0.7.6.tar.gz", hash = "sha256:e875efd8c57c85c2d02b238239878db59ff1971f5a823457fcc69e493bf6ebfa"},
 ]
-discord-ext-alternatives = []
+discord-ext-alternatives = [
+    {file = "discord-ext-alternatives-2021.4.13.tar.gz", hash = "sha256:20b7a4a1924a26397cd2a4d486def842438591cd56b63c137f60afadbe18c6cb"},
+    {file = "discord_ext_alternatives-2021.4.13-py3-none-any.whl", hash = "sha256:f40a8aecd0c24c360c209b2b60638f90cdb52003390f7dc74add6980385b0bf0"},
+]
 discord-ext-boardgames = [
     {file = "discord-ext-boardgames-0.2.3.tar.gz", hash = "sha256:1eb457e4e05f7fa837b193afb3c101743a89d9136b35f2dd6af7e9d8c4674668"},
     {file = "discord_ext_boardgames-0.2.3-py3-none-any.whl", hash = "sha256:02d81f535c8bab3fa9b1cc8c903ec69f24c53a785dac67267ead089f313346f4"},
@@ -671,12 +663,12 @@ discord-ext-boardgames = [
 discord-ext-menus = []
 "discord.py" = []
 donphan = [
-    {file = "donphan-3.1.0-py3-none-any.whl", hash = "sha256:c4e03054860ad0b47f460e3894515a02bd885dc303f27a054c80ee9a4126bdba"},
-    {file = "donphan-3.1.0.tar.gz", hash = "sha256:6362af8a3e15013390b19b9dcbe6c6cfa77e39c59b44f8702fd11bbf5ed62861"},
+    {file = "Donphan-3.2.1-py3-none-any.whl", hash = "sha256:973e262518626f69e464b3ec43b16fcc2afd466718c97efd3dd676b8d63d1f71"},
+    {file = "Donphan-3.2.1.tar.gz", hash = "sha256:78f08b01e67bcb099cc15dc07a4a370f5184ccf8a7df3c78d59867c924e9510f"},
 ]
 flake8 = [
-    {file = "flake8-3.9.0-py2.py3-none-any.whl", hash = "sha256:12d05ab02614b6aee8df7c36b97d1a3b2372761222b19b58621355e82acddcff"},
-    {file = "flake8-3.9.0.tar.gz", hash = "sha256:78873e372b12b093da7b5e5ed302e8ad9e988b38b063b61ad937f26ca58fc5f0"},
+    {file = "flake8-3.9.1-py2.py3-none-any.whl", hash = "sha256:3b9f848952dddccf635be78098ca75010f073bfe14d2c6bda867154bea728d2a"},
+    {file = "flake8-3.9.1.tar.gz", hash = "sha256:1aa8990be1e689d96c745c5682b687ea49f2e05a443aff1f8251092b0014e378"},
 ]
 humanize = []
 ics = [
