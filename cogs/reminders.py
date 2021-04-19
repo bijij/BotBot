@@ -43,7 +43,7 @@ class Reminders(commands.Cog):
             description=reminder
         ).set_author(
             name=f'Reminder for {ctx.author.name} set',
-            icon_url=ctx.author.avatar_url
+            icon_url=ctx.author.avatar.url
         )
 
         if timer.id is not None:
@@ -64,7 +64,7 @@ class Reminders(commands.Cog):
         paginator = EmbedPaginator(
             colour=discord.Colour.blurple(), max_fields=10
         ).set_author(
-            name=f'{ctx.author.name}\'s reminders.', icon_url=ctx.author.avatar_url
+            name=f'{ctx.author.name}\'s reminders.', icon_url=ctx.author.avatar.url
         ).set_footer(text=f'Use {self.bot.prefix}reminder cancel id to cancel a reminder.')
 
         for id, _, expires_at, _, data in records:
@@ -111,7 +111,7 @@ class Reminders(commands.Cog):
             colour=discord.Colour.blurple(),
             description=reminder
         ).set_author(
-            name=f'Reminder for {user.name}.', icon_url=user.avatar_url
+            name=f'Reminder for {user.name}.', icon_url=user.avatar.url
         ).add_field(
             name='Jump URL:', value=f'[Jump!](<https://discord.com/channels/{guild_id}/{channel_id}/{message_id}>)'
         )

@@ -24,7 +24,7 @@ class Meta(commands.Cog):
         embed = discord.Embed(
             colour=ctx.me.colour,
             description=f'I am {self.bot.user}, a bot made by {self.bot.owner}. My prefix is `{self.bot.prefix}`.'
-        ).set_author(name=f'About {self.bot.user.name}:', icon_url=self.bot.user.avatar_url)
+        ).set_author(name=f'About {self.bot.user.name}:', icon_url=self.bot.user.avatar.url)
 
         await ctx.send(embed=embed)
 
@@ -44,7 +44,7 @@ class Meta(commands.Cog):
                 title=f'{self.bot.user.name} Status',
                 colour=self.bot.user.colour
             ).set_thumbnail(
-                url=self.bot.user.avatar_url
+                url=self.bot.user.avatar.url
             ).add_field(
                 name='Users:', value=len(self.bot.users)
             ).add_field(

@@ -58,7 +58,7 @@ class Stats(commands.Cog):
         embed = discord.Embed(
             colour=ctx.me.colour,
             description=f'Recieved {total_occurunces} command invokes. ({total_per_min:.2f}/min)'
-        ).set_author(name=f'{self.bot.user.name} command usage stats:', icon_url=self.bot.user.avatar_url)
+        ).set_author(name=f'{self.bot.user.name} command usage stats:', icon_url=self.bot.user.avatar.url)
 
         for command, occurunces in self.bot._command_stats.most_common(5):
             per_minute = occurunces / (self.bot.uptime / 60)
@@ -73,7 +73,7 @@ class Stats(commands.Cog):
 
         embed = discord.Embed(
             colour=ctx.me.colour
-        ).set_author(name=f'{self.bot.user.name} command history:', icon_url=self.bot.user.avatar_url).set_footer(text='commands marked with a [!] failed.')
+        ).set_author(name=f'{self.bot.user.name} command history:', icon_url=self.bot.user.avatar.url).set_footer(text='commands marked with a [!] failed.')
 
         for message_id, _, channel_id, user_id, invoked_at, prefix, command, failed in records:
             embed.add_field(
@@ -97,7 +97,7 @@ class Stats(commands.Cog):
         embed = discord.Embed(
             colour=ctx.me.colour,
             description=f'Observed {total_occurunces} socket events. ({total_per_min:.2f}/min)'
-        ).set_author(name=f'{self.bot.user.name} socket event stats:', icon_url=self.bot.user.avatar_url)
+        ).set_author(name=f'{self.bot.user.name} socket event stats:', icon_url=self.bot.user.avatar.url)
 
         for event, occurunces in self.bot._socket_stats.most_common(25):
             per_minute = occurunces / (self.bot.uptime / 60)

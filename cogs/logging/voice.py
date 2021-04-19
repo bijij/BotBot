@@ -65,7 +65,7 @@ class VoiceLogging(commands.Cog):
             timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
-            icon_url=member.avatar_url
+            icon_url=member.avatar.url
         ))
 
     @commands.Cog.listener()
@@ -85,7 +85,7 @@ class VoiceLogging(commands.Cog):
             timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
-            icon_url=member.avatar_url
+            icon_url=member.avatar.url
         ))
 
     @commands.Cog.listener()
@@ -105,7 +105,7 @@ class VoiceLogging(commands.Cog):
             timestamp=discord.utils.utcnow()
         ).set_footer(
             text='Server log update',
-            icon_url=member.avatar_url
+            icon_url=member.avatar.url
         ))
 
 

@@ -122,7 +122,7 @@ class EmbedPaginator(discord.Embed, PaginatorSource):
             embed.set_author(
                 name=embed.author.name + ' cont.',
                 url=embed.author.url,
-                icon_url=embed.author.icon_url
+                icon_url=embed.author.icon.url
             )
 
         for field in page.fields:

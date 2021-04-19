@@ -33,7 +33,7 @@ class Info(commands.Cog):
         embed = discord.Embed().set_author(
             name=f'Information on {guild}:'
         ).set_thumbnail(
-            url=guild.icon_url
+            url=guild.icon.url
         ).add_field(
             name='ID:', value=guild.id
         ).add_field(
@@ -164,7 +164,7 @@ class Info(commands.Cog):
         ).set_author(
             name=f'Information on {user}:'
         ).set_thumbnail(
-            url=user.avatar_url
+            url=user.avatar.url
         ).add_field(
             name='ID:', value=user.id
         ).add_field(
@@ -246,7 +246,7 @@ class Info(commands.Cog):
         embed = discord.Embed().set_author(
             name=f'Information on invite to {invite.guild}:'
         ).set_thumbnail(
-            url=invite.guild.icon_url
+            url=invite.guild.icon.url
         ).add_field(
             name='Created At:', value=format_dt(invite.created_at) if invite.created_at else 'Unknown'
         ).add_field(
