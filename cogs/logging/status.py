@@ -40,7 +40,7 @@ class LogEntry(NamedTuple):
     start: datetime.datetime
     duration: datetime.timedelta
 
-class Options(commands.FlagConverter, case_insensitive=True, prefix='--'):
+class Options(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
     show_labels: bool = False
     labels: Optional[bool]
     timezone: Optional[float]
@@ -312,7 +312,7 @@ class StatusLogging(commands.Cog):
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Options):
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Options = None):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
