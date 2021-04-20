@@ -43,7 +43,7 @@ class LogEntry(NamedTuple):
 class Options(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
     show_labels: bool = commands.flag(aliases=['labels'], default=False)
     timezone: Optional[float] = commands.flag(aliases=['tz'])
-    num_days: int =  30
+    num_days: int = commands.flag(aliases=['days'], default=30)
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -334,19 +334,19 @@ class StatusLogging(commands.Cog):
 
         timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
 
-        if days < MIN_DAYS:
+        if flags.num_days < MIN_DAYS:
             raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
         async with ctx.typing():
             async with ctx.db as conn:
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_log(user, conn, timezone=timezone, days=flags.days)
+                data = await get_status_log(user, conn, timezone=timezone, days=flags.num_days)
 
                 if not data:
                     raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
             delta = (ctx.message.created_at - data[0].start).days
-            days = max(min(days, delta), MIN_DAYS)
+            days = max(min(flags.num_days, delta), MIN_DAYS)
 
             draw_call = partial(draw_status_log, data, timezone=timezone, show_labels=flags.show_labels, num_days=days)
             image = await self.bot.loop.run_in_executor(None, draw_call)
