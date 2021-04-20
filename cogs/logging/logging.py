@@ -36,8 +36,8 @@ class Message_Log(Table, schema='logging'):  # type: ignore
     guild_id: SQLType.BigInt = Column(index=True)
     user_id: SQLType.BigInt = Column(index=True)
     content: str
-    nsfw: bool = Column(default=False)
-    deleted: bool = Column(default=False)
+    nsfw: SQLType.Boolean = Column(default=False)
+    deleted: SQLType.Boolean = Column(default=False)
 
     @classmethod
     async def get_user_log(cls, user: discord.User, nsfw: bool = False, flatten_case: bool = False, *, connection: asyncpg.Connection = None) -> List[str]:
@@ -72,7 +72,7 @@ class Message_Attachments(Table, schema='logging'): # type: ignore
 
 class Message_Edit_History(Table, schema='logging'):  # type: ignore
     message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
-    created_at: datetime.datetime = Column(primary_key=True)
+    created_at: SQLType.Timestamp = Column(primary_key=True)
     content: str
 
 
@@ -81,19 +81,19 @@ Status = enum('Status', 'online offline idle dnd streaming', schema='logging')
 
 class Status_Log(Table, schema='logging'):  # type: ignore
     user_id: SQLType.BigInt = Column(primary_key=True, index=True)
-    timestamp: datetime.datetime = Column(primary_key=True)
+    timestamp: SQLType.Timestamp = Column(primary_key=True)
     status: Status  # type: ignore
 
 
 class Timezones(Table, schema='logging'):  # type: ignore
     user_id: SQLType.BigInt = Column(primary_key=True, index=True)
-    timezone: str = Column(nullable=False)
+    timezone: SQLType.Text = Column(nullable=False)
 
 
 class Opt_In_Status(Table, schema='logging'):  # type: ignore
     user_id: SQLType.BigInt = Column(primary_key=True, index=True)
-    public: bool = Column(default=False)
-    nsfw: bool = Column(default=False)
+    public: SQLType.Boolean = Column(default=False)
+    nsfw: SQLType.Boolean = Column(default=False)
 
     @classmethod
     async def is_opted_in(cls, ctx: Context, *, connection: asyncpg.Connection = None):

@@ -7,29 +7,28 @@ license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-numpy = "^1.19.2"
-pillow = "^7.2.0"
-websockets = "^8.1"
-donphan = "^3.0.0"
-dateparser = "^0.7.6"
+numpy = ">=1.19.2"
+pillow = ">=7.2.0"
+donphan = ">=3.3.0"
+dateparser = ">=0.7.6"
 ampharos = {git = "https://github.com/bijij/Ampharos.git"}
 discord-ext-menus = {git = "https://github.com/rapptz/discord-ext-menus.git"}
 humanize = {git = "https://github.com/jmoiron/humanize.git"}
-discord-ext-alternatives = "^2021.4.13"
+discord-ext-alternatives = ">=2021.4.13"
 "discord.py" = {git = "https://github.com/rapptz/discord.py.git"}
-"backports.zoneinfo" = "^0.2.1"
-psutil = "^5.7.2"
-ics = "^0.7"
+"backports.zoneinfo" = ">=0.2.1"
+psutil = ">=5.7.2"
+ics = ">=0.7"
 rusty_snake_markov = {git = "https://github.com/bijij/rusty_python_markov.git"}
 jishaku = {git = "https://github.com/Gorialis/jishaku"}
-PyYAML = "^5.3.1"
-bottomify = "^1.1.1"
-discord-ext-boardgames = "^0.2.3"
+PyYAML = ">=5.3.1"
+bottomify = ">=1.1.1"
+discord-ext-boardgames = ">=0.2.3"
 
 [tool.poetry.dev-dependencies]
-autopep8 = "^1.5.4"
-flake8 = "^3.8.4"
-mypy = "^0.812"
+autopep8 = ">=1.5.4"
+flake8 = ">=3.8.4"
+mypy = ">=0.812"
 
 [build-system]
 requires = ["poetry>=0.12"]

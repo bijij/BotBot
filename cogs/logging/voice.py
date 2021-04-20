@@ -7,7 +7,7 @@ from donphan import Column, Table, SQLType
 class Voice_Log_Configuration(Table, schema="logging"):  # type: ignore
     guild_id: SQLType.BigInt = Column(primary_key=True)
     log_channel_id: SQLType.BigInt
-    display_hidden_channels: bool = Column(default=True)
+    display_hidden_channels: SQLType.Boolean = Column(default=True)
 
 
 class VoiceLogging(commands.Cog):

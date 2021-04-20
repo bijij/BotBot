@@ -8,7 +8,7 @@ from utils.paginator import EmbedPaginator
 
 
 class Voice_Woes_Whitelist(Table):
-    user_id: SQLType.BigInt = Column(primary_key=True)  # type: ignore
+    user_id: SQLType.BigInt = Column(primary_key=True)
 
 
 DPY_ID = 336642139381301249

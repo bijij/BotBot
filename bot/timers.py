@@ -37,12 +37,12 @@ import asyncpg
 from donphan import Column, SQLType, Table
 
 
-class Timers(Table, schema='core'):  # type: ignore
-    id: SQLType.Serial = Column(primary_key=True)  # type: ignore
-    created_at: SQLType.Timestamp = Column(default='NOW() AT TIME ZONE \'UTC\'')  # type: ignore
-    expires_at: SQLType.Timestamp = Column(index=True)  # type: ignore
-    event_type: str = Column(nullable=False, index=True)  # type: ignore
-    data: SQLType.JSONB = Column(default='\'{}\'::jsonb')  # type: ignore
+class Timers(Table, schema='core'):
+    id: SQLType.Serial = Column(primary_key=True)
+    created_at: SQLType.Timestamp = Column(default='NOW() AT TIME ZONE \'UTC\'')
+    expires_at: SQLType.Timestamp = Column(index=True)
+    event_type: SQLType.Text = Column(nullable=False, index=True)
+    data: SQLType.JSONB = Column(default='\'{}\'::jsonb')
 
 
 class Timer:
@@ -90,7 +90,7 @@ expires_at={self.expires_at} event_type={self.event_type}>'
 
     async def call(self, bot: commands.Bot):
         if self.id is None:
-            await discord.utils.sleep_until(self.expires_at)
+            await discord.utils.sleep_until(self.expires_at, None)
         else:
             await Timers.delete(id=self.id)
         self.dispatch_event(bot)
@@ -135,7 +135,7 @@ async def dispatch_timers(bot: TimerBot):
 
             # if timer has not yet expired
             if timer.expires_at >= now:
-                await discord.utils.sleep_until(timer.expires_at)
+                await discord.utils.sleep_until(self.expires_at, None)
 
             await timer.call(bot)
 

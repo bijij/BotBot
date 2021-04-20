@@ -35,7 +35,7 @@ K = 32  # Ranking K-factor
 
 class Games(Table, schema="connect_four"):
     game_id: SQLType.Serial = Column(primary_key=True)
-    players: [SQLType.BigInt]  # type: ignore
+    players: List[SQLType.BigInt]
     winner: SQLType.SmallInt
     finished: SQLType.Boolean
 

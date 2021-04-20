@@ -13,12 +13,12 @@ from bot import BotBase, Context
 from utils.tools import plural
 
 
-class Commands(Table, schema='core'):  # type: ignore
-    message_id: SQLType.BigInt = Column(primary_key=True)  # type: ignore
-    guild_id: SQLType.BigInt = Column(index=True)  # type: ignore
-    channel_id: SQLType.BigInt  # type: ignore
-    user_id: SQLType.BigInt = Column(index=True)  # type: ignore
-    invoked_at: SQLType.Timestamp  # type: ignore
+class Commands(Table, schema='core'):
+    message_id: SQLType.BigInt = Column(primary_key=True)
+    guild_id: SQLType.BigInt = Column(index=True)
+    channel_id: SQLType.BigInt
+    user_id: SQLType.BigInt = Column(index=True)
+    invoked_at: SQLType.Timestamp
     prefix: str
     command: str
     failed: bool

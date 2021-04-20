@@ -40,6 +40,13 @@ class LogEntry(NamedTuple):
     start: datetime.datetime
     duration: datetime.timedelta
 
+class Options(commands.FlagConverter, case_insensitive=True, prefix='--'):
+    show_labels: bool = False
+    labels: Optional[bool]
+    timezone: Optional[float]
+    tz: Optional[float]
+    days: int = 30
+
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
     return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
@@ -305,16 +312,20 @@ class StatusLogging(commands.Cog):
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None,
-                         show_labels: Optional[bool] = False, timezone_offset: Optional[float] = None, days: int = 30):
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Options):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
-        `show_labels`: Sets whether date and time labels should be shown, defaults to False.
-        `timezone_offset`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
-        `days`: The number of days to fetch status log data for. Defaults to 30.
+        `--labels`: Sets whether date and time labels should be shown, defaults to False.
+        `--timezone`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
+        `--days`: The number of days to fetch status log data for. Defaults to 30.
         """
         user = user or ctx.author
+
+
+        show_labels = flags.show_labels if flags.labels is None else flags.labels
+        timezone_offset = flags.timezone if flags.tz is None else flags.tz
+        days = flags.days
 
         if timezone_offset is not None and not -14 < timezone_offset < 14:
             raise commands.BadArgument("Invalid timezone offset passed.")
