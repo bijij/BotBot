@@ -7,7 +7,7 @@ except ImportError:
 from collections import Counter
 from io import BytesIO, StringIO
 from functools import partial
-from typing import List, NamedTuple, Optional, Tuple
+from typing import cast, List, NamedTuple, Optional, Tuple
 
 import asyncpg
 import numpy
@@ -41,11 +41,9 @@ class LogEntry(NamedTuple):
     duration: datetime.timedelta
 
 class Options(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
-    show_labels: bool = False
-    labels: Optional[bool]
-    timezone: Optional[float]
-    tz: Optional[float]
-    days: int = 30
+    show_labels: bool = commands.flag(aliases=['labels'], default=False)
+    timezone: Optional[float] = commands.flag(aliases=['tz'])
+    num_days: int =  30
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -312,7 +310,7 @@ class StatusLogging(commands.Cog):
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Optional[Options]):
+    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, *, flags: Options):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
@@ -320,12 +318,9 @@ class StatusLogging(commands.Cog):
         `--timezone`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
         `--days`: The number of days to fetch status log data for. Defaults to 30.
         """
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
-
-        show_labels = flags.show_labels if flags.labels is None else flags.labels
-        timezone_offset = flags.timezone if flags.tz is None else flags.tz
-        days = flags.days
+        timezone_offset = flags.timezone
 
         if timezone_offset is not None and not -14 < timezone_offset < 14:
             raise commands.BadArgument("Invalid timezone offset passed.")
@@ -345,7 +340,7 @@ class StatusLogging(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_log(user, conn, timezone=timezone, days=days)
+                data = await get_status_log(user, conn, timezone=timezone, days=flags.days)
 
                 if not data:
                     raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
@@ -353,7 +348,7 @@ class StatusLogging(commands.Cog):
             delta = (ctx.message.created_at - data[0].start).days
             days = max(min(days, delta), MIN_DAYS)
 
-            draw_call = partial(draw_status_log, data, timezone=timezone, show_labels=show_labels, num_days=days)
+            draw_call = partial(draw_status_log, data, timezone=timezone, show_labels=flags.show_labels, num_days=days)
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
