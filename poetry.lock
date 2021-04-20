@@ -221,7 +221,7 @@ resolved_reference = "ac7588f735dcfc0ff7dd34ace68f8734965e2b45"
 
 [[package]]
 name = "donphan"
-version = "3.3.0"
+version = "3.3.1"
 description = "Asyncronous Database ORM for Postgres"
 category = "main"
 optional = false
@@ -658,8 +658,8 @@ discord-ext-boardgames = [
 discord-ext-menus = []
 "discord.py" = []
 donphan = [
-    {file = "Donphan-3.3.0-py3-none-any.whl", hash = "sha256:351d24c6ededb5a632c81d3aaf1e8a0a81f56f5fda9026977bcccd9a0a8a6f9f"},
-    {file = "Donphan-3.3.0.tar.gz", hash = "sha256:10ec8857e4f39d3a4bb12f20c75e10cc7037ef72a234c85a925d96cc672968c0"},
+    {file = "Donphan-3.3.1-py3-none-any.whl", hash = "sha256:b89ee8dcda37f97ee6f2ed518052c1ae0eefa1c9ebd4534d0b11edd4296bbf42"},
+    {file = "Donphan-3.3.1.tar.gz", hash = "sha256:62387882ca8e8f425d698dc984ef60ba2585fb4e46a77fe9beded5a48090b8b6"},
 ]
 flake8 = [
     {file = "flake8-3.9.1-py2.py3-none-any.whl", hash = "sha256:3b9f848952dddccf635be78098ca75010f073bfe14d2c6bda867154bea728d2a"},
