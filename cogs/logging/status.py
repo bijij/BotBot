@@ -40,10 +40,13 @@ class LogEntry(NamedTuple):
     start: datetime.datetime
     duration: datetime.timedelta
 
-class Options(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
+
+class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
     show_labels: bool = commands.flag(aliases=['labels'], default=False)
-    timezone: Optional[float] = commands.flag(aliases=['tz'])
     num_days: int = commands.flag(aliases=['days'], default=30)
+
+class StatusLogOptions(StatusPieOptions):
+    timezone: Optional[float] = commands.flag(aliases=['tz'])
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -285,18 +288,21 @@ class StatusLogging(commands.Cog):
         self.bot = bot
 
     @commands.command(name='status_pie', aliases=['sp'])
-    async def status_pie(self, ctx: Context, user: Optional[discord.User] = None, show_totals: bool = True):
+    async def status_pie(self, ctx: Context, user: Optional[discord.User] = None, *, flags: StatusPieOptions):
         """Display a status pie.
 
         `user`: The user who's status log to look at, defaults to you.
         `show_totals`: Sets whether status percentages should be shown, defaults to True.
         """
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
+
+        if flags.num_days < MIN_DAYS:
+            raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
         async with ctx.typing():
             async with ctx.db as conn:
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_totals(user, conn, days=30)
+                data = await get_status_totals(user, conn, days=flags.num_days)
 
                 if not data:
                     raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
@@ -304,13 +310,13 @@ class StatusLogging(commands.Cog):
             avatar_fp = BytesIO()
             await user.avatar.replace(format='png', size=IMAGE_SIZE // 2).save(avatar_fp)
 
-            draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=show_totals)
+            draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=flags.show_totals)
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, *, flags: Options):
+    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, *, flags: StatusLogOptions):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
@@ -354,9 +360,9 @@ class StatusLogging(commands.Cog):
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @status_log.command(name='calendar', aliases=['cal'])
-    async def status_log_calendar(self, ctx: commands.Context, user: Optional[discord.User] = None):
+    async def status_log_calendar(self, ctx: Context, user: Optional[discord.User] = None):
         """Output an `ical` format status log"""
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
         async with ctx.db as conn:
             await Opt_In_Status.is_public(ctx, user, connection=conn)
