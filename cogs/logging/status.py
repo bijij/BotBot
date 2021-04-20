@@ -312,7 +312,7 @@ class StatusLogging(commands.Cog):
             await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
 
     @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Options = None):
+    async def status_log(self, ctx: commands.Context, user: Optional[discord.User] = None, *, flags: Optional[Options]):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
