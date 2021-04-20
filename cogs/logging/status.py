@@ -45,7 +45,7 @@ class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix='--
     show_labels: bool = commands.flag(aliases=['labels'], default=False)
     num_days: int = commands.flag(aliases=['days'], default=30)
 
-class StatusLogOptions(StatusPieOptions):
+class StatusLogOptions(StatusPieOptions, case_insensitive=True, prefix='--', delimiter=' '):
     timezone: Optional[float] = commands.flag(aliases=['tz'])
 
 
