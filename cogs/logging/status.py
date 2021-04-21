@@ -45,8 +45,10 @@ class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix='--
     show_totals: bool = commands.flag(aliases=['totals'], default=True)
     num_days: int = commands.flag(aliases=['days'], default=30)
 
-class StatusLogOptions(StatusPieOptions, case_insensitive=True, prefix='--', delimiter=' '):
+class StatusLogOptions(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
     timezone: Optional[float] = commands.flag(aliases=['tz'])
+    show_labels: bool = commands.flag(aliases=['labels'], default=True)
+    num_days: int = commands.flag(aliases=['days'], default=30)
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
