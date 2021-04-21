@@ -42,7 +42,7 @@ class LogEntry(NamedTuple):
 
 
 class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
-    show_labels: bool = commands.flag(aliases=['labels'], default=False)
+    show_totals: bool = commands.flag(aliases=['totals'], default=False)
     num_days: int = commands.flag(aliases=['days'], default=30)
 
 class StatusLogOptions(StatusPieOptions, case_insensitive=True, prefix='--', delimiter=' '):
