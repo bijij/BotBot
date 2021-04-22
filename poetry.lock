@@ -171,9 +171,9 @@ develop = false
 
 [package.source]
 type = "git"
-url = "https://github.com/bijij/discord-ext-alternatives.git"
-reference = "feature/2.0"
-resolved_reference = "5cc708afee131a6dd22a3808d46f44cb2479b531"
+url = "https://github.com/Ext-Creators/discord-ext-alternatives.git"
+reference = "discord.py@v2"
+resolved_reference = "cc03ce5a70d0356bdfb91b80c7b6f29502db4241"
 
 [[package]]
 name = "discord-ext-boardgames"
@@ -533,7 +533,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "8318f296064b857aa9653159ca266a8167ce9396b1d21cb9d70f2aedd67d098e"
+content-hash = "8d0c0ca4fb54c33bc99674761ac3d8d9704af174fc4b4d0e2d40e98ab7c03eef"
 
 [metadata.files]
 aiohttp = [
