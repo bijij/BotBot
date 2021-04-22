@@ -160,13 +160,20 @@ calendars = ["convertdate", "hijri-converter", "convertdate"]
 [[package]]
 name = "discord-ext-alternatives"
 version = "2021.4.13"
-description = "A discord.py extension with additional and alternative features. Use with caution."
+description = "A discord.py extension with additional and alternative features."
 category = "main"
 optional = false
-python-versions = ">=3.5.3"
+python-versions = ">=3.8"
+develop = false
 
 [package.dependencies]
 "discord.py" = ">=1.6"
+
+[package.source]
+type = "git"
+url = "https://github.com/bijij/discord-ext-alternatives.git"
+reference = "feature/2.0"
+resolved_reference = "1d990aa691538670d33c058fd8648f6fee9cc966"
 
 [[package]]
 name = "discord-ext-boardgames"
@@ -199,7 +206,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3017+gac7588f7"
+version = "2.0.0a3029+g275a754a"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -217,7 +224,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "ac7588f735dcfc0ff7dd34ace68f8734965e2b45"
+resolved_reference = "275a754abd781b5cc13e548b2389c66058ca8d12"
 
 [[package]]
 name = "donphan"
@@ -526,7 +533,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "6963f7db3cd79105d34bf7945ec81ca9bb6f5dc8ccfa33439685be205326f2a6"
+content-hash = "19ff0583b02e066b61dab575c3a6522e4991bbafddb7addac0b410b83a92dc86"
 
 [metadata.files]
 aiohttp = [
@@ -647,10 +654,7 @@ dateparser = [
     {file = "dateparser-1.0.0-py2.py3-none-any.whl", hash = "sha256:17202df32c7a36e773136ff353aa3767e987f8b3e27374c39fd21a30a803d6f8"},
     {file = "dateparser-1.0.0.tar.gz", hash = "sha256:159cc4e01a593706a15cd4e269a0b3345edf3aef8bf9278a57dac8adf5bf1e4a"},
 ]
-discord-ext-alternatives = [
-    {file = "discord-ext-alternatives-2021.4.13.tar.gz", hash = "sha256:20b7a4a1924a26397cd2a4d486def842438591cd56b63c137f60afadbe18c6cb"},
-    {file = "discord_ext_alternatives-2021.4.13-py3-none-any.whl", hash = "sha256:f40a8aecd0c24c360c209b2b60638f90cdb52003390f7dc74add6980385b0bf0"},
-]
+discord-ext-alternatives = []
 discord-ext-boardgames = [
     {file = "discord-ext-boardgames-0.2.3.tar.gz", hash = "sha256:1eb457e4e05f7fa837b193afb3c101743a89d9136b35f2dd6af7e9d8c4674668"},
     {file = "discord_ext_boardgames-0.2.3-py3-none-any.whl", hash = "sha256:02d81f535c8bab3fa9b1cc8c903ec69f24c53a785dac67267ead089f313346f4"},
