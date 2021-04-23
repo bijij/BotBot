@@ -1,6 +1,6 @@
 import datetime
 
-from ampharos import setup as setup_ampharos
+from ampharos import setup_ampharos
 
 import discord
 from discord.ext import commands
