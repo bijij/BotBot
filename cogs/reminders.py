@@ -1,123 +1,70 @@
+import datetime
+
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
+import humanize
 
-from humanize import precisedelta
-
-from bot import BotBase, Context, timers
-from utils.converters import WhenAndWhat
-from utils.paginator import EmbedPaginator
+from ditto import BotBase, Context, Cog
+from ditto.utils.strings import ZWSP
 
 
-class Reminders(commands.Cog):
+class Reminders(Cog):
+    @commands.group(aliases=["remind"], invoke_without_command=True)
+    async def reminder(
+        self, ctx: Context, *, argument: tuple[datetime.datetime, str]
+    ) -> None:
+        """Set a reminder."""
+        when, what = argument
+        what = what or "..."
 
-    def __init__(self, bot: BotBase):
-        self.bot = bot
+        if when <= ctx.message.created_at:
+            raise commands.BadArgument("You can not set a reminder in the past")
 
-    @commands.group(name='reminder', aliases=['remind'], invoke_without_command=True)
-    async def reminder(self, ctx: Context, *, when_and_what: WhenAndWhat):
-        """Reminds you of something after a certain amount of time.
-
-        The input can be any direct date (e.g. YYYY-MM-DD) or a human
-        readable offset. Examples:
-        - 'next thursday at 3pm do something funny'
-        - 'do the dishes tomorrow'
-        - 'in 3 days do the thing'
-        - '2d unmute someone'
-        Times are in UTC.
-        """
-
-        expires_at, reminder = when_and_what
-
-        if expires_at < ctx.message.created_at:
-            raise commands.BadArgument('You cannot set a reminder in the past.')
-
-        if reminder.lower().startswith(('me to ', 'me that ')):
-            reminder = reminder.split(maxsplit=2)[-1]
-
-        timer = await timers.create_timer(self.bot, expires_at, 'reminder', ctx.author.id, ctx.channel.id, ctx.message.id, reminder)
-
-        delta = expires_at - ctx.message.created_at
+        event = await self.bot.schedule_event(
+            when, "reminder", ctx.author.id, ctx.channel.id, ctx.message.id, what
+        )
+        delta = when - ctx.message.created_at
 
         embed = discord.Embed(
-            title=f'In {precisedelta(delta, format="%0.0f")}:',
-            description=reminder
-        ).set_author(
-            name=f'Reminder for {ctx.author.name} set',
-            icon_url=ctx.author.avatar.url
+            title=f"In {humanize.precisedelta(delta, format='%0.0f')}:",
+            description=what,
         )
+        embed.set_author(name="Reminder set")
 
-        if timer.id is not None:
-            embed.set_footer(text=f'Reminder ID #{timer.id} | Use {self.bot.prefix}reminder cancel {timer.id} to cancel this reminder.')
+        if event.id is not None:
+            embed.set_footer(
+                text=f"Reminder ID: {event.id} | Use {self.bot.prefix}reminder cancel {event.id} to cancel this reminder."
+            )
 
-        await ctx.send(embed=embed)
-
-    @reminder.group(name='list')
-    async def reminder_list(self, ctx: Context):
-        """List your upcoming reminders."""
-
-        async with ctx.db as conn:
-            records = await conn.fetch('SELECT * FROM core.timers WHERE event_type = \'reminder\' AND data #>> \'{args,0}\' = $1', str(ctx.author.id))
-
-        if len(records) == 0:
-            raise commands.BadArgument('You currently don\'t have any reminders set')
-
-        paginator = EmbedPaginator(
-            colour=discord.Colour.blurple(), max_fields=10
-        ).set_author(
-            name=f'{ctx.author.name}\'s reminders.', icon_url=ctx.author.avatar.url
-        ).set_footer(text=f'Use {self.bot.prefix}reminder cancel id to cancel a reminder.')
-
-        for id, _, expires_at, _, data in records:
-            delta = expires_at - ctx.message.created_at
-            paginator.add_field(name=f'ID #{id}: In {precisedelta(delta, format="%0.0f")}', value=data['args'][3])
-
-        menu = menus.MenuPages(paginator, clear_reactions_after=True, check_embeds=True)
-        await menu.start(ctx)
-
-    @reminder.group(name='cancel', aliases=['delete'])
-    async def reminder_cancel(self, ctx: Context, id: int):
-        """Cancel an upcoming reminder."""
-
-        async with ctx.db as conn:
-            record = await conn.fetchrow('SELECT * FROM core.timers \
-                WHERE id = $1 AND event_type = \'reminder\' AND data #>> \'{args,0}\' = $2', id, str(ctx.author.id))
-            if record is None:
-                raise commands.BadArgument(f'Could not find a reminder with id #{id}')
-
-            await timers.delete_timer(self.bot, record, connection=conn)
-
-        await ctx.tick()
+        await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
-    async def on_reminder_timer_complete(self, user_id, channel_id, message_id, reminder):
-
-        user = self.bot.get_user(user_id)
-        channel = self.bot.get_channel(channel_id)
-
-        # Return if the user could not be found
-        if user is None:
+    async def on_reminder(
+        self, user_id: int, channel_id: int, message_id: int, what: str
+    ) -> None:
+        try:
+            user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
+        except discord.NotFound:
             return
 
-        if channel_id is not None and not isinstance(channel, discord.DMChannel):
-            guild_id = channel.guild.id
-        else:
-            guild_id = '@me'
+        channel = self.bot.get_channel(channel_id)
 
-        # DM To user if channel is deleted
-        if channel is None:
-            channel = user
+        guild_id = getattr(getattr(channel, "guild", None), "id", "@me")
 
-        embed = discord.Embed(
-            colour=discord.Colour.blurple(),
-            description=reminder
-        ).set_author(
-            name=f'Reminder for {user.name}.', icon_url=user.avatar.url
-        ).add_field(
-            name='Jump URL:', value=f'[Jump!](<https://discord.com/channels/{guild_id}/{channel_id}/{message_id}>)'
+        jump_url = f"https://discord.com/channels/{guild_id}/{channel.id}/{message_id}"
+
+        embed = (
+            discord.Embed(colour=discord.Colour.blurple(), description=what)
+            .set_author(name=f"Reminder for {user}.", icon_url=user.avatar.url)
+            .add_field(name=ZWSP, value=f"[Jump!]({jump_url})")
         )
 
-        allowed_mentions = discord.AllowedMentions(users=True)
-        await channel.send(user.mention, embed=embed, allowed_mentions=allowed_mentions)
+        if channel is not None:
+            reference = discord.PartialMessage(channel=channel, id=message_id)
+            await channel.send(embed=embed, reference=reference, mention_author=True)
+            return
+
+        await user.send(user.mention, embed=embed, mention_author=True)
 
 
 def setup(bot: BotBase):

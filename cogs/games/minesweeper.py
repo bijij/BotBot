@@ -17,17 +17,19 @@ class Cell:
         count = 0
         for y in range(self.y - 1, self.y + 2):
             for x in range(self.x - 1, self.x + 2):
-                if 0 <= y < self.board.size_y \
-                        and 0 <= x < self.board.size_x \
-                        and self.board[x, y].mine:
+                if (
+                    0 <= y < self.board.size_y
+                    and 0 <= x < self.board.size_x
+                    and self.board[x, y].mine
+                ):
                     count += 1
         return count
 
     def __str__(self):
         if self.clicked:
-            return '💥' if self.mine else boardgames.keycap_digit(self.number)
+            return "💥" if self.mine else boardgames.keycap_digit(self.number)
         else:
-            return '🚩' if self.flagged else '⬜'
+            return "🚩" if self.flagged else "⬜"
 
 
 class Game(boardgames.Board):
@@ -36,13 +38,16 @@ class Game(boardgames.Board):
         self.record = None
         self.last_state = None
 
-        self._state = [[Cell(self, y, x) for x in range(self.size_x)]
-                       for y in range(self.size_y)]
+        self._state = [
+            [Cell(self, y, x) for x in range(self.size_x)] for y in range(self.size_y)
+        ]
 
     def setup(self, click_y: int, click_x: int):
         """Places mines on the board"""
-        cells = [(i // self.size_x, i % self.size_x)
-                 for i in range(self.size_x * self.size_y)]
+        cells = [
+            (i // self.size_x, i % self.size_x)
+            for i in range(self.size_x * self.size_y)
+        ]
         cells.remove((click_y, click_x))
 
         for y, x in sample(cells, int((self.size_y * self.size_x) // (6 + 2 / 4))):
@@ -90,7 +95,7 @@ class Game(boardgames.Board):
     def click(self, y: int, x: int):
         """Clicks on a cell"""
         if self.size_x < x or self.size_y < y:
-            raise commands.BadArgument('Cell out side the board.')
+            raise commands.BadArgument("Cell out side the board.")
 
         cell = self[x, y]
 
@@ -98,19 +103,19 @@ class Game(boardgames.Board):
             self.setup(y, x)
 
         if cell.flagged:
-            raise commands.BadArgument('You cannot click on a flagged cell.')
+            raise commands.BadArgument("You cannot click on a flagged cell.")
 
         cell.clicked = True
 
     def flag(self, y: int, x: int):
         """Flags a cell"""
         if self.size_x < x or self.size_y < y:
-            raise commands.BadArgument('Cell out side the board.')
+            raise commands.BadArgument("Cell out side the board.")
 
         cell = self[x, y]
 
         if cell.clicked:
-            raise commands.BadArgument('You cannot flag a revealed cell.')
+            raise commands.BadArgument("You cannot flag a revealed cell.")
 
         cell.flagged = not cell.flagged
 
@@ -121,9 +126,11 @@ class Game(boardgames.Board):
                 if cell.clicked and not cell.number:
                     for i in range(y - 1, y + 2):
                         for j in range(x - 1, x + 2):
-                            if 0 <= i < self.size_y \
-                                    and 0 <= j < self.size_x \
-                                    and not self[j, i].clicked:
+                            if (
+                                0 <= i < self.size_y
+                                and 0 <= j < self.size_x
+                                and not self[j, i].clicked
+                            ):
                                 self[j, i].flagged = False
                                 self[j, i].clicked = True
                                 self.clean()
@@ -131,8 +138,7 @@ class Game(boardgames.Board):
 
 def is_no_game(ctx: commands.Context):
     if ctx.channel in ctx.cog._games:
-        raise commands.CheckFailure(
-            'There is already a Connect Four game running.')
+        raise commands.CheckFailure("There is already a Connect Four game running.")
     return True
 
 
@@ -141,7 +147,7 @@ def is_game(ctx: commands.context):
         is_no_game(ctx)
     except commands.CheckFailure:
         return True
-    raise commands.CheckFailure('No Connect Four game is running.')
+    raise commands.CheckFailure("No Connect Four game is running.")
 
 
 class Minesweeper(commands.Cog):
@@ -150,30 +156,34 @@ class Minesweeper(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._games = {}
 
-    @commands.group(name='minesweeper', aliases=['ms'], invoke_without_command=True)
+    @commands.group(name="minesweeper", aliases=["ms"], invoke_without_command=True)
     async def minesweeper(self, ctx):
         """Minesweeper game commands"""
         pass
 
-    @minesweeper.group(name='start')
+    @minesweeper.group(name="start")
     @commands.check(is_no_game)
     # @commands.check(is_war_channel)
     async def ms_start(self, ctx):
         """Starts a Minesweeper game"""
         if ctx.invoked_subcommand is None:
-            await ctx.send('Please select a difficult; easy or medium')
+            await ctx.send("Please select a difficult; easy or medium")
 
-    @ms_start.command(name='easy')
+    @ms_start.command(name="easy")
     async def ms_start_easy(self, ctx):
         """Starts a easy difficulty Minesweeper game"""
         game = self._games[ctx.channel] = Game(10, 7)
-        game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
+        game.last_state = await ctx.send(
+            f"Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`."
+        )
 
-    @ms_start.command(name='medium')
+    @ms_start.command(name="medium")
     async def ms_start_medium(self, ctx):
         """Starts a medium difficulty Minesweeper game"""
         game = self._games[ctx.channel] = Game(17, 8)
-        game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
+        game.last_state = await ctx.send(
+            f"Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`."
+        )
 
     # @ms_start.command(name='hard')
     # async def ms_start_hard(self, ctx):
@@ -181,7 +191,7 @@ class Minesweeper(commands.Cog):
     #     game = self._games[ctx.channel] = Game(26, 10)
     #     game.last_state = await ctx.send(f'Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`.')
 
-    @minesweeper.command(name='click')
+    @minesweeper.command(name="click")
     @commands.check(is_game)
     async def ms_click(self, ctx, cells: commands.Greedy[boardgames.Cell]):
         """Clicks a cell on the board.
@@ -195,24 +205,24 @@ class Minesweeper(commands.Cog):
 
         game.clean()
 
-        message = ''
+        message = ""
         if game.lost:
-            message += '\nToo bad, you lose.'
+            message += "\nToo bad, you lose."
         elif game.solved:
-            message += '\nCongratulations, you win! <:_:739613733474795520>'
+            message += "\nCongratulations, you win! <:_:739613733474795520>"
 
         if game.last_state is not None:
             try:
                 await game.last_state.delete()
             except Exception:
                 pass
-        game.last_state = await ctx.send(f'>>> {game}' + message)
+        game.last_state = await ctx.send(f">>> {game}" + message)
 
         # If game over delete the game.
         if game.lost or game.solved:
             del self._games[ctx.channel]
 
-    @minesweeper.command(name='flag', aliases=['guess'])
+    @minesweeper.command(name="flag", aliases=["guess"])
     @commands.check(is_game)
     async def ms_flag(self, ctx, cells: commands.Greedy[boardgames.Cell]):
         """Flags a cell on the board.
@@ -229,7 +239,7 @@ class Minesweeper(commands.Cog):
                 await game.last_state.delete()
             except Exception:
                 pass
-        game.last_state = await ctx.send(f'>>> {game}')
+        game.last_state = await ctx.send(f">>> {game}")
 
 
 def setup(bot: commands.Bot):

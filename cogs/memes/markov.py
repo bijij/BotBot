@@ -1,32 +1,38 @@
 import datetime
 
 from functools import partial
-from typing import Awaitable, Dict, List, Optional, Tuple, Union
+from typing import Awaitable, Optional, Union
 
-import rusty_snake_markov as markov
+import rsmarkov
 
 import discord
 from discord.ext import commands
 
-from bot import BotBase, Context
+from ditto import BotBase, Context, CONFIG
+from ditto.utils.collections import TimedLRUDict
+
 from cogs.logging.logging import Message_Log, Opt_In_Status
-from utils.collections import TimedLRUDict
 
 
-DISCORD_PY_ID = 336642139381301249
 MAX_TRIES = 32
 
 
-def make_sentence(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:
+def make_sentence(
+    model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES
+) -> Optional[str]:
     if tries > 0:
         sentence = model.generate() if seed is None else model.generate_seeded(seed)
-        if "```" not in sentence and len(sentence.split()) >= order * 4:  # requite sentences of at least a given size (rust's markov lib likes two word output)
+        if (
+            "```" not in sentence and len(sentence.split()) >= order * 4
+        ):  # requite sentences of at least a given size (rust's markov lib likes two word output)
             return sentence
         return make_sentence(model, order, seed=seed, tries=tries - 1)
     return None
 
 
-def make_code(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8) -> Optional[str]:
+def make_code(
+    model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8
+) -> Optional[str]:
     if tries > 0:
         sentence = model.generate()
         if "```" in sentence and len(sentence.split()) >= order * 8:
@@ -36,45 +42,63 @@ def make_code(model: markov.Markov, order: int, *, seed: str = None, tries=MAX_T
 
 
 class Markov(commands.Cog):
-
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: Dict[Tuple[Union[str, int], ...], markov.Markov] = TimedLRUDict(expires_after=datetime.timedelta(minutes=30), max_size=32)
+        self.model_cache: dict[
+            tuple[Union[str, int], ...], rsmarkov.Markov
+        ] = TimedLRUDict(expires_after=datetime.timedelta(minutes=30), max_size=32)
 
-    async def get_model(self, query: Tuple[Union[str, int], ...], *coros: Awaitable[List[str]], order: int = 2) -> markov.Markov:
+    async def get_model(
+        self,
+        query: tuple[Union[str, int], ...],
+        *coros: Awaitable[list[str]],
+        order: int = 2
+    ) -> rsmarkov.Markov:
         # Return cached model if one exists
         if query in self.model_cache:
             return self.model_cache[query]
 
         # Generate the model
-        data: List[str] = list()
+        data: list[str] = list()
         for coro in coros:
             data.extend(await coro)
         if not data:
-            raise commands.BadArgument('There was not enough message log data, please try again later.')
+            raise commands.BadArgument(
+                "There was not enough message log data, please try again later."
+            )
 
         def generate_model():
-            model = markov.Markov(order)
+            model = rsmarkov.Markov(order)
             model.train(data)
             return model
 
-        self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, generate_model)
+        self.model_cache[query] = m = await self.bot.loop.run_in_executor(
+            None, generate_model
+        )
         return m
 
-    async def send_markov(self, ctx: Context, model: markov.Markov, order: int, *, seed: str = None, callable=make_sentence):
+    async def send_markov(
+        self,
+        ctx: Context,
+        model: rsmarkov.Markov,
+        order: int,
+        *,
+        seed: str = None,
+        callable=make_sentence
+    ):
         markov_call = partial(callable, model, order, seed=seed)
         markov = await self.bot.loop.run_in_executor(None, markov_call)
 
         if not markov:
-            raise commands.BadArgument('Markov could not be generated')
-        if getattr(ctx.guild, 'id', None) == DISCORD_PY_ID:
+            raise commands.BadArgument("Markov could not be generated")
+        if ctx.guild == CONFIG.DISCORD_PY:
             allowed_mentions = discord.AllowedMentions.none()  # <3 Moogy
         else:
             allowed_mentions = discord.AllowedMentions(users=True)
 
         await ctx.send(markov, allowed_mentions=allowed_mentions)
 
-    @commands.command(name='user_markov', aliases=['um'])
+    @commands.command(name="user_markov", aliases=["um"])
     async def user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
         """Generate a markov chain based off a users messages.
 
@@ -87,15 +111,17 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('um', is_nsfw, 2, user.id)
+                query = ("um", is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2)
 
-    @commands.command(name='low_quality_user_markov', aliases=['lqum', 'dumb'])
-    async def low_quality_user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
+    @commands.command(name="low_quality_user_markov", aliases=["lqum", "dumb"])
+    async def low_quality_user_markov(
+        self, ctx: Context, *, user: Optional[discord.User] = None
+    ):
         """Generate a markov chain based off a users messages.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
@@ -107,15 +133,17 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('lqum', is_nsfw, 1, user.id)
+                query = ("lqum", is_nsfw, 1, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=1)
 
             await self.send_markov(ctx, model, 1)
 
-    @commands.command(name='seeded_user_markov', aliases=['sum'])
-    async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
+    @commands.command(name="seeded_user_markov", aliases=["sum"])
+    async def seeded_user_markov(
+        self, ctx: Context, user: Optional[discord.User] = None, *, seed: str
+    ):
         """Generate a markov chain based off a users messages which starts with a given seed.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
@@ -128,14 +156,14 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('um', is_nsfw, 2, user.id)
+                query = ("um", is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, seed=seed.lower())
 
-    @commands.command(name='multi_user_markov', aliases=['mum'])
+    @commands.command(name="multi_user_markov", aliases=["mum"])
     async def multi_user_markov(self, ctx: Context, *users: discord.User):
         """Generate a markov chain based off a list of users messages.
 
@@ -143,7 +171,7 @@ class Markov(commands.Cog):
         """
         users = set(users)  # type: ignore
         if len(users) < 2:
-            raise commands.BadArgument('You need to specify at least two users.')
+            raise commands.BadArgument("You need to specify at least two users.")
 
         is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
         coros = []
@@ -156,58 +184,59 @@ class Markov(commands.Cog):
                     else:
                         await Opt_In_Status.is_public(ctx, user, connection=conn)
 
-                    coros.append(Message_Log.get_user_log(user, is_nsfw, connection=conn))
+                    coros.append(
+                        Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                    )
 
-                query = ('mum', is_nsfw, 3) + tuple(user.id for user in users)
+                query = ("mum", is_nsfw, 3) + tuple(user.id for user in users)
                 model = await self.get_model(query, *coros, order=3)
 
             await self.send_markov(ctx, model, 3)
 
-    @commands.command(name='dual_user_markov', aliases=['dum'])
+    @commands.command(name="dual_user_markov", aliases=["dum"])
     async def dual_user_markov(self, ctx: Context, *, user: discord.User):
         """Generate a markov chain based off you and another users messages.
 
         `user`: The user who's messages should be used to generate the markov chain.
         """
         if user == ctx.author:
-            raise commands.BadArgument('You can\'t generate a dual user markov with yourself.')
+            raise commands.BadArgument(
+                "You can't generate a dual user markov with yourself."
+            )
 
         await ctx.invoke(self.multi_user_markov, ctx.author, user)
 
-    @commands.command(name='guild_markov', aliases=['gm'])
+    @commands.command(name="guild_markov", aliases=["gm"])
     @commands.guild_only()
     async def guild_markov(self, ctx: Context):
-        """Generate a markov chain based off messages in the server.
-        """
+        """Generate a markov chain based off messages in the server."""
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('gm', is_nsfw, 3, ctx.guild.id)
+                query = ("gm", is_nsfw, 3, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3)
 
-    @commands.command(name='code_guild_markov', aliases=['cgm'])
+    @commands.command(name="code_guild_markov", aliases=["cgm"])
     @commands.guild_only()
     async def code_guild_markov(self, ctx: Context):
-        """Generate a markov chain code block.
-        """
+        """Generate a markov chain code block."""
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('cgm', is_nsfw, 2, ctx.guild.id)
+                query = ("cgm", is_nsfw, 2, ctx.guild.id)
 
                 coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
 
-    @commands.command(name='code_user_markov', aliases=['cum'])
+    @commands.command(name="code_user_markov", aliases=["cum"])
     async def code_user_markov(self, ctx: Context, user: Optional[discord.User] = None):
-        """Generate a markov chain code block.
-        """
+        """Generate a markov chain code block."""
         user = user or ctx.author
 
         async with ctx.typing():
@@ -215,14 +244,14 @@ class Markov(commands.Cog):
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('cum', is_nsfw, 2, user.id)
+                query = ("cum", is_nsfw, 2, user.id)
 
                 coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
 
-    @commands.command(name='seeded_guild_markov', aliases=['sgm'])
+    @commands.command(name="seeded_guild_markov", aliases=["sgm"])
     async def seeded_guild_markov(self, ctx: Context, *, seed: str):
         """Generate a markov chain based off messages in the server which starts with a given seed.
 
@@ -231,9 +260,11 @@ class Markov(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-                query = ('gm', is_nsfw, 3, ctx.guild.id)
+                query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, False, connection=conn)
+                coro = Message_Log.get_guild_log(
+                    ctx.guild, is_nsfw, False, connection=conn
+                )
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3, seed=seed.lower())

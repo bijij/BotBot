@@ -11,19 +11,21 @@ from cogs.logging.logging import Status_Log
 DEFAULT_STATUS = discord.Status.online
 
 STATUSES = {
-    '0': discord.Status.online,
-    '1': discord.Status.offline,
-    '2': discord.Status.idle,
-    '3': discord.Status.dnd,
-    '4': None
+    "0": discord.Status.online,
+    "1": discord.Status.offline,
+    "2": discord.Status.idle,
+    "3": discord.Status.dnd,
+    "4": None,
 }
 
-TEST_FILE = 'res/status_maps/year.json'
-with open(TEST_FILE, 'r') as f:
+TEST_FILE = "res/status_maps/year.json"
+with open(TEST_FILE, "r") as f:
     data = json.load(f)
 
-    START_TIME = datetime.datetime.fromisoformat(data['start']).replace(tzinfo=datetime.timezone.utc)
-    STATUS_MAP = data['data']
+    START_TIME = datetime.datetime.fromisoformat(data["start"]).replace(
+        tzinfo=datetime.timezone.utc
+    )
+    STATUS_MAP = data["data"]
 
     SECONDS_PER_DAY = 60 * 60 * 24
     SEGMENT_DURATION = SECONDS_PER_DAY // len(STATUS_MAP[0])
@@ -40,7 +42,6 @@ def get_status(time: datetime.datetime):
 
 
 class StatusMeme(commands.Cog):
-
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.status_task.start()
@@ -52,9 +53,11 @@ class StatusMeme(commands.Cog):
         if status is None:
             await self.bot.change_presence(
                 status=discord.Status.online,
-                activity=discord.Streaming(name='...', url='https://twitch.tv/monstercat')
+                activity=discord.Streaming(
+                    name="...", url="https://twitch.tv/monstercat"
+                ),
             )
-            status = 'streaming'
+            status = "streaming"
         else:
             await self.bot.change_presence(status=status)
             status = status.name
@@ -79,8 +82,12 @@ class StatusMeme(commands.Cog):
 
         # SLEEP until next segment
         now = discord.utils.utcnow()
-        timestamp = now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
-        next_segment = datetime.datetime.fromtimestamp(timestamp).replace(tzinfo=datetime.timezone.utc)
+        timestamp = (
+            now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
+        )
+        next_segment = datetime.datetime.fromtimestamp(timestamp).replace(
+            tzinfo=datetime.timezone.utc
+        )
         await discord.utils.sleep_until(next_segment)
 
     def cog_unload(self):

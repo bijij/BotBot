@@ -1,7 +1,7 @@
 import datetime
 
 from functools import cached_property
-from typing import Dict, Optional
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -29,31 +29,39 @@ class GlobalCoolDown(commands.CooldownMapping):
         return key in self._cache
 
 
-class Spam_Checker(Table, schema='moderation'):  # type: ignore
+class Spam_Checker(Table, schema="moderation"):  # type: ignore
     guild_id: SQLType.BigInt = Column(primary_key=True)
     max_mentions: int
 
 
 class SpamCheckerConfig:
     guild_id: int
-    # mention_spam_channel_ids: List[int]
+    # mention_spam_channel_ids: list[int]
     max_mentions: Optional[int]
 
     def __init__(self, bot: BotBase, record):
         self.bot = bot
         self.__dict__.update(record)
 
-        self.content_bucket = CooldownByContent.from_cooldown(15, 17.0, commands.BucketType.member)
-        self.user_bucket = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
-        self.just_joined_bucket = commands.CooldownMapping.from_cooldown(10, 12, commands.BucketType.channel)
-        self.new_user_bucket = commands.CooldownMapping.from_cooldown(30, 35.0, commands.BucketType.channel)
+        self.content_bucket = CooldownByContent.from_cooldown(
+            15, 17.0, commands.BucketType.member
+        )
+        self.user_bucket = commands.CooldownMapping.from_cooldown(
+            10, 12.0, commands.BucketType.user
+        )
+        self.just_joined_bucket = commands.CooldownMapping.from_cooldown(
+            10, 12, commands.BucketType.channel
+        )
+        self.new_user_bucket = commands.CooldownMapping.from_cooldown(
+            30, 35.0, commands.BucketType.channel
+        )
 
     @cached_property
     def guild(self) -> discord.Guild:
         return self.bot.get_guild(self.guild_id)
 
     # @property
-    # def mention_spam_channels(self) -> List[discord.TextChannel]:
+    # def mention_spam_channels(self) -> list[discord.TextChannel]:
     #     return [v for c in self.mention_spam_channel_ids if (v := self.bot.get_channel(c)) is not None]
 
     @classmethod
@@ -62,8 +70,12 @@ class SpamCheckerConfig:
 
     @classmethod
     def user_is_new(cls, message: discord.Message) -> bool:
-        account_is_new = message.author.created_at > message.created_at - datetime.timedelta(days=50)
-        recently_joined_server = message.author.joined_at > message.created_at - datetime.timedelta(days=7)
+        account_is_new = (
+            message.author.created_at > message.created_at - datetime.timedelta(days=50)
+        )
+        recently_joined_server = (
+            message.author.joined_at > message.created_at - datetime.timedelta(days=7)
+        )
         return account_is_new and recently_joined_server
 
     def is_spamming(self, message) -> bool:
@@ -97,9 +109,11 @@ class SpamCheckerConfig:
         #     return False
 
         try:
-            await message.author.ban(reason=f'Reaction spam ({mention_count} mentions)')
+            await message.author.ban(reason=f"Reaction spam ({mention_count} mentions)")
         except Exception:
-            self.bot.log.info(f'Failed to auto ban member {message.author} (ID: {message.author.id}) in guild {message.guild}')
+            self.bot.log.info(
+                f"Failed to auto ban member {message.author} (ID: {message.author.id}) in guild {message.guild}"
+            )
 
         return True
 
@@ -109,18 +123,19 @@ class SpamCheckerConfig:
             return False
 
         try:
-            await message.author.ban(reason='Message spam')
+            await message.author.ban(reason="Message spam")
         except Exception:
-            self.bot.log.info(f'Failed to auto ban member {message.author} (ID: {message.author.id}) in guild {message.guild}')
+            self.bot.log.info(
+                f"Failed to auto ban member {message.author} (ID: {message.author.id}) in guild {message.guild}"
+            )
 
         return True
 
 
 class SpamChecker(commands.Cog):
-
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.config: Dict[discord.Guild, SpamCheckerConfig] = {}
+        self.config: dict[discord.Guild, SpamCheckerConfig] = {}
 
         self.bot.loop.create_task(self.load_config())
 

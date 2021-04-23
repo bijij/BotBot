@@ -11,12 +11,16 @@ class Voice_Log_Configuration(Table, schema="logging"):  # type: ignore
 
 
 class VoiceLogging(commands.Cog):
-
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
 
         # TODO: Perms in
 
@@ -38,75 +42,81 @@ class VoiceLogging(commands.Cog):
 
         # On Join
         if before.channel is None:
-            return self.bot.dispatch('voice_state_join', member, after)
+            return self.bot.dispatch("voice_state_join", member, after)
 
         # On Leave
         if after.channel is None:
-            return self.bot.dispatch('voice_state_leave', member, before)
+            return self.bot.dispatch("voice_state_leave", member, before)
 
         # On Move
-        return self.bot.dispatch('voice_state_move', member, before, after)
+        return self.bot.dispatch("voice_state_move", member, before, after)
 
     @commands.Cog.listener()
-    async def on_voice_state_join(self, member: discord.Member, after: discord.VoiceState):
+    async def on_voice_state_join(
+        self, member: discord.Member, after: discord.VoiceState
+    ):
 
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
         if record is None:
             return
 
-        channel = self.bot.get_channel(record['log_channel_id'])
+        channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:
             return
 
-        await channel.send(embed=discord.Embed(
-            colour=discord.Colour.green(),
-            description=f'{member.mention} joined **{after.channel.name}**.',
-            timestamp=discord.utils.utcnow()
-        ).set_footer(
-            text='Server log update',
-            icon_url=member.avatar.url
-        ))
+        await channel.send(
+            embed=discord.Embed(
+                colour=discord.Colour.green(),
+                description=f"{member.mention} joined **{after.channel.name}**.",
+                timestamp=discord.utils.utcnow(),
+            ).set_footer(text="Server log update", icon_url=member.avatar.url)
+        )
 
     @commands.Cog.listener()
-    async def on_voice_state_move(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_move(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
         if record is None:
             return
 
-        channel = self.bot.get_channel(record['log_channel_id'])
+        channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:
             return
 
-        await channel.send(embed=discord.Embed(
-            colour=discord.Colour.blue(),
-            description=f'{member.mention} moved from **{before.channel.name}** to **{after.channel.name}**.',
-            timestamp=discord.utils.utcnow()
-        ).set_footer(
-            text='Server log update',
-            icon_url=member.avatar.url
-        ))
+        await channel.send(
+            embed=discord.Embed(
+                colour=discord.Colour.blue(),
+                description=f"{member.mention} moved from **{before.channel.name}** to **{after.channel.name}**.",
+                timestamp=discord.utils.utcnow(),
+            ).set_footer(text="Server log update", icon_url=member.avatar.url)
+        )
 
     @commands.Cog.listener()
-    async def on_voice_state_leave(self, member: discord.Member, before: discord.VoiceState):
+    async def on_voice_state_leave(
+        self, member: discord.Member, before: discord.VoiceState
+    ):
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
         if record is None:
             return
 
-        channel = self.bot.get_channel(record['log_channel_id'])
+        channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:
             return
 
-        await channel.send(embed=discord.Embed(
-            colour=discord.Colour.red(),
-            description=f'{member.mention} left **{before.channel.name}**.',
-            timestamp=discord.utils.utcnow()
-        ).set_footer(
-            text='Server log update',
-            icon_url=member.avatar.url
-        ))
+        await channel.send(
+            embed=discord.Embed(
+                colour=discord.Colour.red(),
+                description=f"{member.mention} left **{before.channel.name}**.",
+                timestamp=discord.utils.utcnow(),
+            ).set_footer(text="Server log update", icon_url=member.avatar.url)
+        )
 
 
 def setup(bot: commands.Bot):

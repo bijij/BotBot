@@ -1,13 +1,9 @@
 import datetime
-try:
-    import zoneinfo
-except ImportError:
-    from backports import zoneinfo
 
 from collections import Counter
 from io import BytesIO, StringIO
 from functools import partial
-from typing import cast, List, NamedTuple, Optional, Tuple
+from typing import cast, NamedTuple, Optional
 
 import asyncpg
 import numpy
@@ -18,8 +14,10 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 import discord
 from discord.ext import commands
 
-from bot import BotBase, Context
-from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log, Timezones
+from ditto import BotBase, Context
+from ditto.db import Time_Zones
+
+from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log
 
 MIN_DAYS = 7
 
@@ -41,26 +39,40 @@ class LogEntry(NamedTuple):
     duration: datetime.timedelta
 
 
-class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
-    show_totals: bool = commands.flag(aliases=['totals'], default=True)
-    num_days: int = commands.flag(aliases=['days'], default=30)
+class StatusPieOptions(
+    commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "
+):
+    show_totals: bool = commands.flag(aliases=["totals"], default=True)
+    num_days: int = commands.flag(aliases=["days"], default=30)
 
-class StatusLogOptions(commands.FlagConverter, case_insensitive=True, prefix='--', delimiter=' '):
-    timezone: Optional[float] = commands.flag(aliases=['tz'])
-    show_labels: bool = commands.flag(aliases=['labels'], default=True)
-    num_days: int = commands.flag(aliases=['days'], default=30)
+
+class StatusLogOptions(
+    commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "
+):
+    timezone: Optional[float] = commands.flag(aliases=["tz"])
+    show_labels: bool = commands.flag(aliases=["labels"], default=True)
+    num_days: int = commands.flag(aliases=["days"], default=30)
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
-    return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
+    return datetime.datetime.combine(dt, datetime.time()).astimezone(
+        datetime.timezone.utc
+    )
 
 
-async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> List[asyncpg.Record]:
-    return await Status_Log.fetch_where(f'user_id = $1 AND "timestamp" > CURRENT_DATE - INTERVAL \'{days} days\'',
-                                        user.id, order_by='"timestamp" ASC')
+async def get_status_records(
+    user: discord.User, conn: asyncpg.Connection, *, days: int = 30
+) -> list[asyncpg.Record]:
+    return await Status_Log.fetch_where(
+        f"user_id = $1 AND \"timestamp\" > CURRENT_DATE - INTERVAL '{days} days'",
+        user.id,
+        order_by='"timestamp" ASC',
+    )
 
 
-async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> Counter:
+async def get_status_totals(
+    user: discord.User, conn: asyncpg.Connection, *, days: int = 30
+) -> Counter:
     records = await get_status_records(user, conn, days=days)
 
     if not records:
@@ -68,16 +80,24 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
 
     status_totals = Counter()  # type: ignore
 
-    total_duration = (records[-1]['timestamp'] - records[0]['timestamp']).total_seconds()
+    total_duration = (
+        records[-1]["timestamp"] - records[0]["timestamp"]
+    ).total_seconds()
 
     for i, record in enumerate(records[:-1]):
-        status_totals[record['status']] += (records[i + 1]['timestamp'] - record['timestamp']).total_seconds() / total_duration
+        status_totals[record["status"]] += (
+            records[i + 1]["timestamp"] - record["timestamp"]
+        ).total_seconds() / total_duration
 
     return status_totals
 
 
-async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
-                         timezone: datetime.timezone = datetime.timezone.utc, days: int = 30) -> List[LogEntry]:
+async def get_status_log(
+    user: discord.User,
+    conn: asyncpg.Connection,
+    *,
+    days: int = 30,
+) -> list[LogEntry]:
     status_log = []
 
     # Fetch records from DB
@@ -86,7 +106,7 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
         return status_log
 
     # Add padding for missing data
-    records.insert(0, (None, start_of_day(records[0]['timestamp']), None))
+    records.insert(0, (None, start_of_day(records[0]["timestamp"]), None))
     records.append((None, discord.utils.utcnow(), None))
 
     # Add in bulk of data
@@ -97,8 +117,10 @@ async def get_status_log(user: discord.User, conn: asyncpg.Connection, *,
     return status_log
 
 
-def base_image(width: int = IMAGE_SIZE, height: int = IMAGE_SIZE) -> Tuple[Image.Image, ImageDraw.ImageDraw]:
-    image = Image.new('RGBA', (width, height))
+def base_image(
+    width: int = IMAGE_SIZE, height: int = IMAGE_SIZE
+) -> tuple[Image.Image, ImageDraw.ImageDraw]:
+    image = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(image)
 
     return image, draw  # type: ignore
@@ -110,17 +132,19 @@ def resample(image: Image.Image) -> Image.Image:
 
 def as_bytes(image: Image.Image) -> BytesIO:
     image_fp = BytesIO()
-    image.save(image_fp, format='png')
+    image.save(image_fp, format="png")
 
     image_fp.seek(0)
     return image_fp
 
 
-def add(*tuples: Tuple[int, ...]) -> Tuple[int, ...]:
+def add(*tuples: tuple[int, ...]) -> tuple[int, ...]:
     return tuple(map(sum, zip(*tuples)))  # type: ignore
 
 
-def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True) -> BytesIO:
+def draw_status_pie(
+    status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True
+) -> BytesIO:
 
     image, draw = base_image()
 
@@ -145,16 +169,16 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
     if avatar_fp is not None:
         # Load avatar image
         avatar = Image.open(avatar_fp)
-        if avatar.mode != 'RGBA':
-            avatar = avatar.convert('RGBA')
+        if avatar.mode != "RGBA":
+            avatar = avatar.convert("RGBA")
         avatar = avatar.resize((int(pie_size // 1.5),) * 2, resample=Image.LANCZOS)
 
         # Apply circular mask to image
         _, _, _, alpha = avatar.split()
-        if alpha.mode != 'L':
-            alpha = alpha.convert('L')
+        if alpha.mode != "L":
+            alpha = alpha.convert("L")
 
-        mask = Image.new('L', avatar.size, 0)
+        mask = Image.new("L", avatar.size, 0)
         draw = ImageDraw.Draw(mask)
         draw.ellipse((0, 0) + avatar.size, fill=255)
 
@@ -167,7 +191,7 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
     # Add status percentages
     if show_totals:
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // 20)
+        font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // 20)
 
         x_offset = IMAGE_SIZE // 4 * 3
         y_offset = IMAGE_SIZE // 3
@@ -177,15 +201,26 @@ def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, sho
             offset = (x_offset, y_offset)
 
             draw.ellipse(offset + add(offset, circle_size), fill=COLOURS[status])
-            draw.text((x_offset + IMAGE_SIZE // 20, y_offset - IMAGE_SIZE // 60), f'{percentage:.2%}', font=font, align='left', fill=WHITE)
+            draw.text(
+                (x_offset + IMAGE_SIZE // 20, y_offset - IMAGE_SIZE // 60),
+                f"{percentage:.2%}",
+                font=font,
+                align="left",
+                fill=WHITE,
+            )
 
             y_offset += IMAGE_SIZE // 8
 
     return as_bytes(resample(image))
 
 
-def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
-                    datetime.timezone.utc, show_labels: bool = False, num_days: int = 30) -> BytesIO:
+def draw_status_log(
+    status_log: list[LogEntry],
+    *,
+    timezone: datetime.tzinfo = datetime.timezone.utc,
+    show_labels: bool = False,
+    num_days: int = 30,
+) -> BytesIO:
 
     row_count = 1 + num_days + show_labels
     image, draw = base_image(IMAGE_SIZE * row_count, 1)
@@ -218,15 +253,17 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
     # pixels = pixels[:, IMAGE_SIZE:]
     pixels = pixels.reshape(row_count, IMAGE_SIZE, 4)
     pixels = pixels.repeat(day_height, 0)
-    image = Image.fromarray(pixels, 'RGBA')
+    image = Image.fromarray(pixels, "RGBA")
 
     if show_labels:
-        overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
         # Set offsets based on font size
-        font = ImageFont.truetype('res/roboto-bold.ttf', IMAGE_SIZE // int(1.66 * num_days))
-        text_width, text_height = draw.textsize('\N{FULL BLOCK}' * 2, font=font)
+        font = ImageFont.truetype(
+            "res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * num_days)
+        )
+        text_width, text_height = draw.textsize("\N{FULL BLOCK}" * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
         x_offset = text_width
@@ -234,26 +271,47 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
 
         # Add date labels
         date = now - datetime.timedelta(seconds=total_duration)
-        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
+        for _ in range(
+            int(total_duration // ONE_DAY) + 2
+        ):  # 2 because of timezone offset woes
 
             # if weekend draw signifier
             if date.weekday() == 5:
-                draw.rectangle((0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)), fill=TRANSLUCENT)
+                draw.rectangle(
+                    (0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)),
+                    fill=TRANSLUCENT,
+                )
 
             # Add date
-            _, text_height = draw.textsize(date.strftime('%b. %d'), font=font)
-            draw.text((x_offset, y_offset + height_offset), date.strftime('%b. %d'), font=font, align='left', fill=WHITE)
+            _, text_height = draw.textsize(date.strftime("%b. %d"), font=font)
+            draw.text(
+                (x_offset, y_offset + height_offset),
+                date.strftime("%b. %d"),
+                font=font,
+                align="left",
+                fill=WHITE,
+            )
             y_offset += day_height
             date += datetime.timedelta(days=1)
 
         # Add timezone label
-        draw.text((x_offset, height_offset), str(timezone), font=font, align='left', fill='WHITE')
+        draw.text(
+            (x_offset, height_offset),
+            str(timezone),
+            font=font,
+            align="left",
+            fill="WHITE",
+        )
 
         # Add hour lines
         for i in range(1, 24):
             x_offset = ONE_HOUR * i
             colour = WHITE if not i % 6 else OPAQUE
-            draw.line((x_offset, day_height, x_offset, IMAGE_SIZE), fill=colour, width=DOWNSAMPLE * 4)
+            draw.line(
+                (x_offset, day_height, x_offset, IMAGE_SIZE),
+                fill=colour,
+                width=DOWNSAMPLE * 4,
+            )
 
         image = Image.alpha_composite(image, overlay)
         draw = ImageDraw.Draw(image)
@@ -262,13 +320,19 @@ def draw_status_log(status_log: List[LogEntry], *, timezone: datetime.timezone =
         time = start_of_day(now)
         for x_offset in (ONE_HOUR * 6, ONE_HOUR * 12, ONE_HOUR * 18):
             time += datetime.timedelta(hours=6)
-            text_width, _ = draw.textsize(time.strftime('%H:00'), font=font)
-            draw.text((x_offset - (text_width // 2), height_offset), time.strftime('%H:00'), font=font, align='left', fill=WHITE)
+            text_width, _ = draw.textsize(time.strftime("%H:00"), font=font)
+            draw.text(
+                (x_offset - (text_width // 2), height_offset),
+                time.strftime("%H:00"),
+                font=font,
+                align="left",
+                fill=WHITE,
+            )
 
     return as_bytes(resample(image))
 
 
-def generate_status_calendar(status_log: List[LogEntry]) -> StringIO:
+def generate_status_calendar(status_log: list[LogEntry]) -> StringIO:
     calendar = Calendar()
 
     for status, start, duration in status_log:
@@ -285,12 +349,17 @@ def generate_status_calendar(status_log: List[LogEntry]) -> StringIO:
 
 
 class StatusLogging(commands.Cog):
-
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-    @commands.command(name='status_pie', aliases=['sp'])
-    async def status_pie(self, ctx: Context, user: Optional[discord.User] = None, *, flags: StatusPieOptions):
+    @commands.command(name="status_pie", aliases=["sp"])
+    async def status_pie(
+        self,
+        ctx: Context,
+        user: Optional[discord.User] = None,
+        *,
+        flags: StatusPieOptions,
+    ):
         """Display a status pie.
 
         `user`: The user who's status log to look at, defaults to you.
@@ -307,18 +376,36 @@ class StatusLogging(commands.Cog):
                 data = await get_status_totals(user, conn, days=flags.num_days)
 
                 if not data:
-                    raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+                    raise commands.BadArgument(
+                        f'User "{user}" currently has no status log data, please try again later.'
+                    )
 
             avatar_fp = BytesIO()
-            await user.avatar.replace(format='png', size=IMAGE_SIZE // 2).save(avatar_fp)
+            await user.avatar.replace(format="png", size=IMAGE_SIZE // 2).save(
+                avatar_fp
+            )
 
-            draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=flags.show_totals)
+            draw_call = partial(
+                draw_status_pie, data, avatar_fp, show_totals=flags.show_totals
+            )
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
-            await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
+            await ctx.send(
+                file=discord.File(
+                    image, f"{user.id}_status_{ctx.message.created_at}.png"
+                )
+            )
 
-    @commands.group(name='status_log', aliases=['sl', 'sc'], invoke_without_command=True)
-    async def status_log(self, ctx: Context, user: Optional[discord.User] = None, *, flags: StatusLogOptions):
+    @commands.group(
+        name="status_log", aliases=["sl", "sc"], invoke_without_command=True
+    )
+    async def status_log(
+        self,
+        ctx: Context,
+        user: Optional[discord.User] = None,
+        *,
+        flags: StatusLogOptions,
+    ):
         """Display a status log.
 
         `user`: The user who's status log to look at, defaults to you.
@@ -334,13 +421,9 @@ class StatusLogging(commands.Cog):
             raise commands.BadArgument("Invalid timezone offset passed.")
 
         if timezone_offset is None:
-            record = await Timezones.fetchrow(user_id=user.id)
-            if record is not None:
-                timezone_offset = zoneinfo.ZoneInfo(record['timezone']).utcoffset(discord.utils.utcnow()).total_seconds() / 3600
-            else:
-                timezone_offset = 0
-
-        timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
+            timezone = await Time_Zones.get_timezone(user) or datetime.timezone.utc
+        else:
+            timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
 
         if flags.num_days < MIN_DAYS:
             raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
@@ -348,21 +431,35 @@ class StatusLogging(commands.Cog):
         async with ctx.typing():
             async with ctx.db as conn:
                 await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_log(user, conn, timezone=timezone, days=flags.num_days)
+                data = await get_status_log(user, conn, days=flags.num_days)
 
                 if not data:
-                    raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+                    raise commands.BadArgument(
+                        f'User "{user}" currently has no status log data, please try again later.'
+                    )
 
             delta = (ctx.message.created_at - data[0].start).days
             days = max(min(flags.num_days, delta), MIN_DAYS)
 
-            draw_call = partial(draw_status_log, data, timezone=timezone, show_labels=flags.show_labels, num_days=days)
+            draw_call = partial(
+                draw_status_log,
+                data,
+                timezone=timezone,
+                show_labels=flags.show_labels,
+                num_days=days,
+            )
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
-            await ctx.send(file=discord.File(image, f'{user.id}_status_{ctx.message.created_at}.png'))
+            await ctx.send(
+                file=discord.File(
+                    image, f"{user.id}_status_{ctx.message.created_at}.png"
+                )
+            )
 
-    @status_log.command(name='calendar', aliases=['cal'])
-    async def status_log_calendar(self, ctx: Context, user: Optional[discord.User] = None):
+    @status_log.command(name="calendar", aliases=["cal"])
+    async def status_log_calendar(
+        self, ctx: Context, user: Optional[discord.User] = None
+    ):
         """Output an `ical` format status log"""
         user = cast(discord.User, user or ctx.author)
 
@@ -371,10 +468,16 @@ class StatusLogging(commands.Cog):
             data = await get_status_log(user, conn, days=30)
 
             if not data:
-                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
+                raise commands.BadArgument(
+                    f'User "{user}" currently has no status log data, please try again later.'
+                )
 
         calendar = generate_status_calendar(data)
-        await ctx.send(file=discord.File(calendar, f'{user.id}_status_{ctx.message.created_at}.ical'))
+        await ctx.send(
+            file=discord.File(
+                calendar, f"{user.id}_status_{ctx.message.created_at}.ical"
+            )
+        )
 
 
 def setup(bot: BotBase):

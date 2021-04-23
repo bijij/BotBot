@@ -2,9 +2,9 @@
 
 import re
 
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Optional
 
-OPS: Dict[str, Callable[[int, int], Optional[int]]] = {
+OPS: dict[str, Callable[[int, int], Optional[int]]] = {
     "^": lambda x, y: x ** y,
     "+": lambda x, y: x + y,
     "-": lambda x, y: x - y,
@@ -56,7 +56,9 @@ class View:
         else:
             return self.parse_int()
 
-    def parse_prec_lvl(self, ops: Tuple[str, ...], below: Callable[[], Optional[int]]) -> Callable[[], Optional[int]]:
+    def parse_prec_lvl(
+        self, ops: tuple[str, ...], below: Callable[[], Optional[int]]
+    ) -> Callable[[], Optional[int]]:
         def parser():
             e = below()
             if e is None:
@@ -70,10 +72,13 @@ class View:
                     return None
                 e = op(e, next)
             return e
+
         return parser
 
     def parse_expr(self) -> Optional[int]:
-        return self.parse_prec_lvl(("+", "-"), self.parse_prec_lvl(("*", "/"), self.parse_base_expr))()
+        return self.parse_prec_lvl(
+            ("+", "-"), self.parse_prec_lvl(("*", "/"), self.parse_base_expr)
+        )()
 
     def parse_full(self) -> Optional[int]:
         self.strip_ws()
