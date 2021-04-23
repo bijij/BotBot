@@ -13,6 +13,8 @@ from ditto.utils.paginator import EmbedPaginator
 from ditto.utils.strings import ZWSP
 
 
+from ditto.utils.files import get_base_dir
+
 class Reminders(Cog):
     @staticmethod
     async def get_reminder(id: int) -> Optional[asyncpg.Record]:

@@ -42,7 +42,7 @@
 
         # Game Extensions
         # cogs.games.tangrams: ~
-        # cogs.games.pokemon: ~
+        cogs.games.pokemon: ~
         cogs.games.connect_four: ~
         cogs.games.boggle: ~
         cogs.games.foggle: ~

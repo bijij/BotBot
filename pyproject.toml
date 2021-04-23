@@ -15,7 +15,7 @@ jishaku = {git = "https://github.com/Gorialis/jishaku"}
 # end - added to appease poetry
 ditto = {git = "https://github.com/bijij/ditto"}
 numpy = ">=1.19.2"
-ampharos = {git = "https://github.com/bijij/ampharos"}
+ampharos = ">=2.0"
 psutil = ">=5.7.2"
 ics = ">=0.7"
 rsmarkov = ">=0.1.2"

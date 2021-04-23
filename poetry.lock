@@ -19,22 +19,14 @@ speedups = ["aiodns", "brotlipy", "cchardet"]
 
 [[package]]
 name = "ampharos"
-version = "1.1.3a0"
-description = "Lightweight Pokemon Database"
+version = "2.0.0"
+description = "A Pokemon Database for Donphan"
 category = "main"
 optional = false
-python-versions = ">=3.6.0"
-develop = false
+python-versions = ">=3.7.2,<4.0.0"
 
 [package.dependencies]
-asyncpg = ">=0.18.3"
-donphan = ">=1.0.2a"
-
-[package.source]
-type = "git"
-url = "https://github.com/bijij/ampharos"
-reference = "master"
-resolved_reference = "8b53817ea749a38c406e1e0c15850b4628af3e7d"
+donphan = ">=3.4"
 
 [[package]]
 name = "appdirs"
@@ -595,7 +587,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "766ddd4506b86892d81b44672a6648f95a478c9b08adcfb805c0c57d4ef538bb"
+content-hash = "0b47c5f42d54aeeb9a7f5de9ea5914171a049b5bcb80d034304100734d56a2f0"
 
 [metadata.files]
 aiohttp = [
@@ -637,7 +629,10 @@ aiohttp = [
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win_amd64.whl", hash = "sha256:02f46fc0e3c5ac58b80d4d56eb0a7c7d97fcef69ace9326289fb9f1955e65cfe"},
     {file = "aiohttp-3.7.4.post0.tar.gz", hash = "sha256:493d3299ebe5f5a7c66b9819eacdcfbbaaf1a8e84911ddffcdc48888497afecf"},
 ]
-ampharos = []
+ampharos = [
+    {file = "Ampharos-2.0.0-py3-none-any.whl", hash = "sha256:391c5ab73fbeca5946dc0fedd323cee4736f7322a951cdee26bb3bc7df1113b2"},
+    {file = "Ampharos-2.0.0.tar.gz", hash = "sha256:7de23486eb85b6018d29c86b043916cc86f55f788ffc1d0b9d94d0bff0111d63"},
+]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},

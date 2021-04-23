@@ -1,6 +1,6 @@
 import datetime
 
-# from ampharos import setup as setup_ampharos
+from ampharos import setup as setup_ampharos
 
 import discord
 from discord.ext import commands
@@ -33,7 +33,7 @@ class BotBase(BotBase):
 
     async def setup_database(self) -> None:
         await super().setup_database()
-        # await setup_ampharos()
+        await setup_ampharos()
 
 
 class Bot(BotBase, commands.Bot):
