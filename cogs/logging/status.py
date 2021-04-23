@@ -39,30 +39,22 @@ class LogEntry(NamedTuple):
     duration: datetime.timedelta
 
 
-class StatusPieOptions(
-    commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "
-):
+class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
     show_totals: bool = commands.flag(aliases=["totals"], default=True)
     num_days: int = commands.flag(aliases=["days"], default=30)
 
 
-class StatusLogOptions(
-    commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "
-):
+class StatusLogOptions(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
     timezone: Optional[float] = commands.flag(aliases=["tz"])
     show_labels: bool = commands.flag(aliases=["labels"], default=True)
     num_days: int = commands.flag(aliases=["days"], default=30)
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
-    return datetime.datetime.combine(dt, datetime.time()).astimezone(
-        datetime.timezone.utc
-    )
+    return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
 
 
-async def get_status_records(
-    user: discord.User, conn: asyncpg.Connection, *, days: int = 30
-) -> list[asyncpg.Record]:
+async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> list[asyncpg.Record]:
     return await Status_Log.fetch_where(
         f"user_id = $1 AND \"timestamp\" > CURRENT_DATE - INTERVAL '{days} days'",
         user.id,
@@ -70,9 +62,7 @@ async def get_status_records(
     )
 
 
-async def get_status_totals(
-    user: discord.User, conn: asyncpg.Connection, *, days: int = 30
-) -> Counter:
+async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> Counter:
     records = await get_status_records(user, conn, days=days)
 
     if not records:
@@ -80,9 +70,7 @@ async def get_status_totals(
 
     status_totals = Counter()  # type: ignore
 
-    total_duration = (
-        records[-1]["timestamp"] - records[0]["timestamp"]
-    ).total_seconds()
+    total_duration = (records[-1]["timestamp"] - records[0]["timestamp"]).total_seconds()
 
     for i, record in enumerate(records[:-1]):
         status_totals[record["status"]] += (
@@ -117,9 +105,7 @@ async def get_status_log(
     return status_log
 
 
-def base_image(
-    width: int = IMAGE_SIZE, height: int = IMAGE_SIZE
-) -> tuple[Image.Image, ImageDraw.ImageDraw]:
+def base_image(width: int = IMAGE_SIZE, height: int = IMAGE_SIZE) -> tuple[Image.Image, ImageDraw.ImageDraw]:
     image = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(image)
 
@@ -142,9 +128,7 @@ def add(*tuples: tuple[int, ...]) -> tuple[int, ...]:
     return tuple(map(sum, zip(*tuples)))  # type: ignore
 
 
-def draw_status_pie(
-    status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True
-) -> BytesIO:
+def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True) -> BytesIO:
 
     image, draw = base_image()
 
@@ -260,9 +244,7 @@ def draw_status_log(
         draw = ImageDraw.Draw(overlay)
 
         # Set offsets based on font size
-        font = ImageFont.truetype(
-            "res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * num_days)
-        )
+        font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * num_days))
         text_width, text_height = draw.textsize("\N{FULL BLOCK}" * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
@@ -271,9 +253,7 @@ def draw_status_log(
 
         # Add date labels
         date = now - datetime.timedelta(seconds=total_duration)
-        for _ in range(
-            int(total_duration // ONE_DAY) + 2
-        ):  # 2 because of timezone offset woes
+        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
 
             # if weekend draw signifier
             if date.weekday() == 5:
@@ -381,24 +361,14 @@ class StatusLogging(commands.Cog):
                     )
 
             avatar_fp = BytesIO()
-            await user.avatar.replace(format="png", size=IMAGE_SIZE // 2).save(
-                avatar_fp
-            )
+            await user.avatar.replace(format="png", size=IMAGE_SIZE // 2).save(avatar_fp)
 
-            draw_call = partial(
-                draw_status_pie, data, avatar_fp, show_totals=flags.show_totals
-            )
+            draw_call = partial(draw_status_pie, data, avatar_fp, show_totals=flags.show_totals)
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
-            await ctx.send(
-                file=discord.File(
-                    image, f"{user.id}_status_{ctx.message.created_at}.png"
-                )
-            )
+            await ctx.send(file=discord.File(image, f"{user.id}_status_{ctx.message.created_at}.png"))
 
-    @commands.group(
-        name="status_log", aliases=["sl", "sc"], invoke_without_command=True
-    )
+    @commands.group(name="status_log", aliases=["sl", "sc"], invoke_without_command=True)
     async def status_log(
         self,
         ctx: Context,
@@ -450,16 +420,10 @@ class StatusLogging(commands.Cog):
             )
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
-            await ctx.send(
-                file=discord.File(
-                    image, f"{user.id}_status_{ctx.message.created_at}.png"
-                )
-            )
+            await ctx.send(file=discord.File(image, f"{user.id}_status_{ctx.message.created_at}.png"))
 
     @status_log.command(name="calendar", aliases=["cal"])
-    async def status_log_calendar(
-        self, ctx: Context, user: Optional[discord.User] = None
-    ):
+    async def status_log_calendar(self, ctx: Context, user: Optional[discord.User] = None):
         """Output an `ical` format status log"""
         user = cast(discord.User, user or ctx.author)
 
@@ -468,16 +432,10 @@ class StatusLogging(commands.Cog):
             data = await get_status_log(user, conn, days=30)
 
             if not data:
-                raise commands.BadArgument(
-                    f'User "{user}" currently has no status log data, please try again later.'
-                )
+                raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')
 
         calendar = generate_status_calendar(data)
-        await ctx.send(
-            file=discord.File(
-                calendar, f"{user.id}_status_{ctx.message.created_at}.ical"
-            )
-        )
+        await ctx.send(file=discord.File(calendar, f"{user.id}_status_{ctx.message.created_at}.ical"))
 
 
 def setup(bot: BotBase):

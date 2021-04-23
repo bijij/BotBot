@@ -15,9 +15,7 @@ class Bottom(Cog):
         ...
 
     @bottom.command(name="bottomify", aliases=["b", "encode"])
-    async def bottom_bottomify(
-        self, ctx: Context, *, message: Optional[Union[discord.Message, str]] = None
-    ):
+    async def bottom_bottomify(self, ctx: Context, *, message: Optional[Union[discord.Message, str]] = None):
         """Encodes a messsage."""
         ref = ctx.message.reference
         if message is None:
@@ -35,9 +33,7 @@ class Bottom(Cog):
         await ctx.send(bottom.encode(message))
 
     @bottom.command(name="regress", aliases=["r", "decode"])
-    async def bottom_regress(
-        self, ctx: Context, *, message: Optional[Union[discord.Message, str]] = None
-    ):
+    async def bottom_regress(self, ctx: Context, *, message: Optional[Union[discord.Message, str]] = None):
         """Decodes a messsage."""
         ref = ctx.message.reference
         if message is None:

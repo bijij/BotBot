@@ -38,7 +38,7 @@ CommandInvoke = namedtuple(
 )
 
 
-class Stats(commands.Cog):
+class CommandStats(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 

@@ -1,18 +1,29 @@
 import datetime
+from typing import Optional
+import asyncpg
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
+from ditto.types.types import User
 import humanize
 
 from ditto import BotBase, Context, Cog
+from ditto.db.scheduler import Events
+from ditto.utils.paginator import EmbedPaginator
 from ditto.utils.strings import ZWSP
 
 
 class Reminders(Cog):
+    @staticmethod
+    async def get_reminder(id: int) -> Optional[asyncpg.Record]:
+        return await Events.fetchrow_where("id = $1 AND event_type = 'reminder'", str(id))
+
+    @staticmethod
+    async def get_reminders(user: User) -> list[asyncpg.Record]:
+        return await Events.fetch_where("event_type = 'reminder' AND data #>> '{args,0}' = $1", str(user.id))
+
     @commands.group(aliases=["remind"], invoke_without_command=True)
-    async def reminder(
-        self, ctx: Context, *, argument: tuple[datetime.datetime, str]
-    ) -> None:
+    async def reminder(self, ctx: Context, *, argument: tuple[datetime.datetime, str]) -> None:
         """Set a reminder."""
         when, what = argument
         what = what or "..."
@@ -20,9 +31,7 @@ class Reminders(Cog):
         if when <= ctx.message.created_at:
             raise commands.BadArgument("You can not set a reminder in the past")
 
-        event = await self.bot.schedule_event(
-            when, "reminder", ctx.author.id, ctx.channel.id, ctx.message.id, what
-        )
+        event = await self.bot.schedule_event(when, "reminder", ctx.author.id, ctx.channel.id, ctx.message.id, what)
         delta = when - ctx.message.created_at
 
         embed = discord.Embed(
@@ -38,10 +47,53 @@ class Reminders(Cog):
 
         await ctx.reply(embed=embed)
 
+    @reminder.command(name="clear")
+    async def reminder_clear(self, ctx: Context) -> None:
+
+        reminders = await self.get_reminders(ctx.author)
+
+        if len(reminders) == 0:
+            raise commands.BadArgument("You do not have any reminders.")
+
+        if not await ctx.confirm("Are you sure you want to clear your reminders?"):
+            await ctx.send("Cancelled..")
+            return
+
+        await Events.delete_where("event_type = 'reminder' AND data #>> '{args,0}' = $1", str(ctx.author.id))
+        await ctx.send("Reminders cleared.")
+
+    @reminder.command(name="cancel", aliases=["delete"])
+    async def reminder_cancel(self, ctx: Context, *, id: int) -> None:
+
+        reminder = await self.get_reminder(id)
+
+        if reminder is None or reminder["data"]["args"][0] != ctx.author.id:
+            raise commands.BadArgument(f"Reminder with ID: {id} not found.")
+
+        await Events.delete_record(reminder)
+
+        await ctx.send("Reminder deleted.")
+
+    @reminder.command(name="list")
+    async def reminder_list(self, ctx: Context) -> None:
+
+        reminders = await self.get_reminders(ctx.author)
+
+        if len(reminders) == 0:
+            raise commands.BadArgument("You do not have any reminders.")
+
+        embed = EmbedPaginator[discord.Embed](max_fields=8, colour=discord.Colour.blurple())
+        embed.set_author(name=f"{ctx.author}'s Reminders", icon_url=ctx.author.avatar.url)
+        embed.set_footer(text=f"{len(reminders)} reminder")
+
+        for id, _, when, _, data in reminders:
+            delta = when - ctx.message.created_at
+            embed.add_field(name=f"{id}: In {humanize.precisedelta(delta, format='%0.0f')}:", value=data["args"][3])
+
+        await menus.MenuPages(embed).start(ctx)
+
     @commands.Cog.listener()
-    async def on_reminder(
-        self, user_id: int, channel_id: int, message_id: int, what: str
-    ) -> None:
+    async def on_reminder(self, user_id: int, channel_id: int, message_id: int, what: str) -> None:
         try:
             user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
         except discord.NotFound:

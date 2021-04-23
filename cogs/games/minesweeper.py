@@ -17,11 +17,7 @@ class Cell:
         count = 0
         for y in range(self.y - 1, self.y + 2):
             for x in range(self.x - 1, self.x + 2):
-                if (
-                    0 <= y < self.board.size_y
-                    and 0 <= x < self.board.size_x
-                    and self.board[x, y].mine
-                ):
+                if 0 <= y < self.board.size_y and 0 <= x < self.board.size_x and self.board[x, y].mine:
                     count += 1
         return count
 
@@ -38,16 +34,11 @@ class Game(boardgames.Board):
         self.record = None
         self.last_state = None
 
-        self._state = [
-            [Cell(self, y, x) for x in range(self.size_x)] for y in range(self.size_y)
-        ]
+        self._state = [[Cell(self, y, x) for x in range(self.size_x)] for y in range(self.size_y)]
 
     def setup(self, click_y: int, click_x: int):
         """Places mines on the board"""
-        cells = [
-            (i // self.size_x, i % self.size_x)
-            for i in range(self.size_x * self.size_y)
-        ]
+        cells = [(i // self.size_x, i % self.size_x) for i in range(self.size_x * self.size_y)]
         cells.remove((click_y, click_x))
 
         for y, x in sample(cells, int((self.size_y * self.size_x) // (6 + 2 / 4))):
@@ -126,11 +117,7 @@ class Game(boardgames.Board):
                 if cell.clicked and not cell.number:
                     for i in range(y - 1, y + 2):
                         for j in range(x - 1, x + 2):
-                            if (
-                                0 <= i < self.size_y
-                                and 0 <= j < self.size_x
-                                and not self[j, i].clicked
-                            ):
+                            if 0 <= i < self.size_y and 0 <= j < self.size_x and not self[j, i].clicked:
                                 self[j, i].flagged = False
                                 self[j, i].clicked = True
                                 self.clean()

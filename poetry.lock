@@ -264,8 +264,8 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 [package.source]
 type = "git"
 url = "https://github.com/bijij/ditto"
-reference = "rewrite"
-resolved_reference = "d66ef9fe2eb1a3f570308222029034f6c55b8bce"
+reference = "master"
+resolved_reference = "32a12be0681ee5ab5b13277e1d4b80f768beffb6"
 
 [[package]]
 name = "donphan"
@@ -595,7 +595,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c7679a2ac00d527e1319f5106c89bebbf8ff2ca23ff9521d228cb839187e7879"
+content-hash = "766ddd4506b86892d81b44672a6648f95a478c9b08adcfb805c0c57d4ef538bb"
 
 [metadata.files]
 aiohttp = [

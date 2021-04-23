@@ -167,9 +167,7 @@ class Position(NamedTuple):
 
 
 class Board:
-    def __init__(
-        self, *, size: int = ORIGINAL, base: int = 10, board=None, magic_number=None
-    ):
+    def __init__(self, *, size: int = ORIGINAL, base: int = 10, board=None, magic_number=None):
         self.size = size
         self.base = base
 
@@ -177,10 +175,7 @@ class Board:
             board = DIE[self.base][self.size].copy()
             random.shuffle(board)
             board = [
-                [
-                    random.choice(board[row * self.size + column])
-                    for column in range(self.size)
-                ]
+                [random.choice(board[row * self.size + column]) for column in range(self.size)]
                 for row in range(self.size)
             ]
         if magic_number is None:
@@ -189,9 +184,7 @@ class Board:
         self.columns = board
         self.number = magic_number
 
-    def board_contains(
-        self, numbers: str, pos: Position = None, passed: list[Position] = []
-    ) -> bool:
+    def board_contains(self, numbers: str, pos: Position = None, passed: list[Position] = []) -> bool:
         # Empty numberss
         if len(numbers) == 0:
             return True
@@ -221,12 +214,7 @@ class Board:
                         new_pos = Position(pos.col + x, pos.row + y)
 
                         # don't check out of bounds
-                        if (
-                            new_pos.col < 0
-                            or new_pos.col >= self.size
-                            or new_pos.row < 0
-                            or new_pos.row >= self.size
-                        ):
+                        if new_pos.col < 0 or new_pos.col >= self.size or new_pos.row < 0 or new_pos.row >= self.size:
                             continue
 
                         if self.board_contains(numbers[1:], new_pos, [*passed, pos]):
@@ -288,17 +276,13 @@ class Game(menus.Menu):
 
         state += f"\n\n The magic number is **{number}**!"
 
-        return discord.Embed(title=self.name, description=state).set_footer(
-            text=self.footer
-        )
+        return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
     def setup(self):
         raise NotImplementedError
 
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(
-            content="Foggle game started, you have 3 minutes!", embed=self.state
-        )
+        return await channel.send(content="Foggle game started, you have 3 minutes!", embed=self.state)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
@@ -354,25 +338,17 @@ class ShuffflingGame(Game):
                 "1 minute",
                 "30 seconds",
             ][i]
-            await self.message.edit(
-                content=f"Board Updated! You have {time} left!", embed=self.state
-            )
+            await self.message.edit(content=f"Board Updated! You have {time} left!", embed=self.state)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
         self.bot.loop.create_task(self.shuffle_task())
 
     def get_points(self, equations: list[str]) -> int:
-        return sum(
-            max(board.points(equation) for board in self.boards)
-            for equation in equations
-        )
+        return sum(max(board.points(equation) for board in self.boards) for equation in equations)
 
     def get_correct(self, equations: list[str]):
-        return sum(
-            max(board.is_legal(equation) for board in self.boards)
-            for equation in equations
-        )
+        return sum(max(board.is_legal(equation) for board in self.boards) for equation in equations)
 
 
 class DiscordGame(Game):
@@ -386,9 +362,7 @@ class DiscordGame(Game):
         i = 0
         old = None
 
-        for user, equations in sorted(
-            self.equations.items(), key=lambda v: self.get_points(v[1]), reverse=True
-        ):
+        for user, equations in sorted(self.equations.items(), key=lambda v: self.get_points(v[1]), reverse=True):
             points = self.get_points(equations)
             correct = self.get_correct(equations)
 
@@ -441,19 +415,12 @@ class DiscordGame(Game):
 
 class FlipGame(ShuffflingGame, DiscordGame):
     name = "Flip Foggle"
-    footer = (
-        "Find equations as fast as you can, rows will flip positions every 30 seconds."
-    )
+    footer = "Find equations as fast as you can, rows will flip positions every 30 seconds."
 
     def shuffle(self):
-        rows = [
-            [self.board.columns[x][y] for x in range(self.board.size)]
-            for y in range(self.board.size)
-        ]
+        rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
         random.shuffle(rows)
-        new_board = [
-            [rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)
-        ]
+        new_board = [[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
         self.board = Board(
             size=self.board.size,
             base=self.board.base,
@@ -467,15 +434,10 @@ class FoggleGame(ShuffflingGame, DiscordGame):
     footer = "Find equations as fast as you can, letters will shuffle positions every 30 seconds."
 
     def shuffle(self):
-        letters = [
-            self.board.columns[y][x]
-            for x in range(self.board.size)
-            for y in range(self.board.size)
-        ]
+        letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
         random.shuffle(letters)
         new_board = [
-            letters[x * self.board.size : x * self.board.size + self.board.size]
-            for x in range(self.board.size)
+            letters[x * self.board.size : x * self.board.size + self.board.size] for x in range(self.board.size)
         ]
         self.board = Board(
             size=self.board.size,
@@ -529,9 +491,7 @@ class Foggle(commands.Cog):
 
         # Raise if game already running
         if ctx.channel in self.games:
-            raise commands.CheckFailure(
-                "There is already a game running in this channel."
-            )
+            raise commands.CheckFailure("There is already a game running in this channel.")
 
         # Determine the game type
         game_type = self._get_game_type(ctx)
@@ -546,9 +506,7 @@ class Foggle(commands.Cog):
             raise commands.BadArgument("Unsupported base")
 
         # Start the game
-        self.games[ctx.channel] = game = game_type(
-            size=self._check_size(ctx), base=base
-        )
+        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx), base=base)
         await game.start(ctx, wait=False)
 
         # Wait for game to end

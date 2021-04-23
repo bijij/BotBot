@@ -22,9 +22,7 @@ TEST_FILE = "res/status_maps/year.json"
 with open(TEST_FILE, "r") as f:
     data = json.load(f)
 
-    START_TIME = datetime.datetime.fromisoformat(data["start"]).replace(
-        tzinfo=datetime.timezone.utc
-    )
+    START_TIME = datetime.datetime.fromisoformat(data["start"]).replace(tzinfo=datetime.timezone.utc)
     STATUS_MAP = data["data"]
 
     SECONDS_PER_DAY = 60 * 60 * 24
@@ -53,9 +51,7 @@ class StatusMeme(commands.Cog):
         if status is None:
             await self.bot.change_presence(
                 status=discord.Status.online,
-                activity=discord.Streaming(
-                    name="...", url="https://twitch.tv/monstercat"
-                ),
+                activity=discord.Streaming(name="...", url="https://twitch.tv/monstercat"),
             )
             status = "streaming"
         else:
@@ -82,12 +78,8 @@ class StatusMeme(commands.Cog):
 
         # SLEEP until next segment
         now = discord.utils.utcnow()
-        timestamp = (
-            now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
-        )
-        next_segment = datetime.datetime.fromtimestamp(timestamp).replace(
-            tzinfo=datetime.timezone.utc
-        )
+        timestamp = now.timestamp() + SEGMENT_DURATION - (now.timestamp() % SEGMENT_DURATION)
+        next_segment = datetime.datetime.fromtimestamp(timestamp).replace(tzinfo=datetime.timezone.utc)
         await discord.utils.sleep_until(next_segment)
 
     def cog_unload(self):

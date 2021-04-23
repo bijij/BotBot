@@ -52,9 +52,7 @@ class VoiceLogging(commands.Cog):
         return self.bot.dispatch("voice_state_move", member, before, after)
 
     @commands.Cog.listener()
-    async def on_voice_state_join(
-        self, member: discord.Member, after: discord.VoiceState
-    ):
+    async def on_voice_state_join(self, member: discord.Member, after: discord.VoiceState):
 
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
@@ -98,9 +96,7 @@ class VoiceLogging(commands.Cog):
         )
 
     @commands.Cog.listener()
-    async def on_voice_state_leave(
-        self, member: discord.Member, before: discord.VoiceState
-    ):
+    async def on_voice_state_leave(self, member: discord.Member, before: discord.VoiceState):
         # Fetch DB entry
         record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
         if record is None:

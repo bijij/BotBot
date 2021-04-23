@@ -47,12 +47,8 @@ class Ranking(Table, schema="connect_four"):
 
 
 class Board:
-    def __init__(
-        self, *, state: list[list[str]] = None, move: tuple[tuple[int, int], str] = None
-    ):
-        self.columns = state or [
-            [BACKGROUND for _ in range(ROWS)] for _ in range(COLUMNS)
-        ]
+    def __init__(self, *, state: list[list[str]] = None, move: tuple[tuple[int, int], str] = None):
+        self.columns = state or [[BACKGROUND for _ in range(ROWS)] for _ in range(COLUMNS)]
 
         if move is not None:
             (column, row), disc = move
@@ -80,9 +76,7 @@ class Board:
 
     @classmethod
     def copy(cls, board, *, move=None):
-        return cls(
-            state=[[state for state in column] for column in board.columns], move=move
-        )
+        return cls(state=[[state for state in column] for column in board.columns], move=move)
 
     def check_game_over(self) -> bool:
         for column in range(COLUMNS):
@@ -177,9 +171,7 @@ class Game(menus.Menu):
 
         for player in self.players:
             async with MaybeAcquire() as connection:
-                await Ranking.insert(
-                    connection=connection, ignore_on_conflict=True, user_id=player.id
-                )
+                await Ranking.insert(connection=connection, ignore_on_conflict=True, user_id=player.id)
 
         self.board = Board()
         self.current_player = 0
@@ -238,12 +230,8 @@ class Game(menus.Menu):
                 finished=resignation is None,
             )
 
-            record_1 = await Ranking.fetchrow(
-                connection=connection, user_id=self.players[0].id
-            )
-            record_2 = await Ranking.fetchrow(
-                connection=connection, user_id=self.players[1].id
-            )
+            record_1 = await Ranking.fetchrow(connection=connection, user_id=self.players[0].id)
+            record_2 = await Ranking.fetchrow(connection=connection, user_id=self.players[1].id)
 
             R1 = 10 ** (record_1["ranking"] / 400)
             R2 = 10 ** (record_2["ranking"] / 400)
@@ -323,9 +311,7 @@ class ConnectFour(commands.Cog):
 
     async def _get_opponent(self, ctx) -> discord.Member:
         message = await ctx.channel.send(
-            embed=discord.Embed(
-                description=f"{ctx.author.mention} wants to play Connect Four."
-            ).set_footer(
+            embed=discord.Embed(description=f"{ctx.author.mention} wants to play Connect Four.").set_footer(
                 text="react with \N{WHITE HEAVY CHECK MARK} to accept the challenge."
             )
         )
@@ -435,9 +421,7 @@ class ConnectFour(commands.Cog):
 
         embed = EmbedPaginator(title="Connect 4 Ranking", colour=discord.Colour.blue())
 
-        for user_id, ranking, games, wins, losses in await Ranking.fetch(
-            order_by="Ranking DESC"
-        ):
+        for user_id, ranking, games, wins, losses in await Ranking.fetch(order_by="Ranking DESC"):
             user = self.bot.get_user(user_id) or "Unknown User"
             embed.add_field(
                 name=f"{user} | {ranking}",

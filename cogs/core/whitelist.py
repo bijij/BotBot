@@ -32,9 +32,7 @@ def is_dpy_mod():
             raise commands.CheckFailure("Fuck")
 
         if mod_role not in member.roles:
-            raise commands.CheckFailure(
-                "You must be a discord.py server moderator to use this command."
-            )
+            raise commands.CheckFailure("You must be a discord.py server moderator to use this command.")
 
         return True
 
@@ -58,9 +56,7 @@ class Whitelist(commands.Cog):
             title="Voice Woes Whitelist",
             max_description=512,
         )
-        paginator.set_footer(
-            text="user (bb)vww add, and (bb)vww remove to manage the whitelist."
-        )
+        paginator.set_footer(text="user (bb)vww add, and (bb)vww remove to manage the whitelist.")
 
         for user_id in self.bot.whitelisted_users:
             paginator.add_line(f"<@{user_id}>")

@@ -17,9 +17,7 @@ from cogs.logging.logging import Message_Log, Opt_In_Status
 MAX_TRIES = 32
 
 
-def make_sentence(
-    model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES
-) -> Optional[str]:
+def make_sentence(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:
     if tries > 0:
         sentence = model.generate() if seed is None else model.generate_seeded(seed)
         if (
@@ -30,9 +28,7 @@ def make_sentence(
     return None
 
 
-def make_code(
-    model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8
-) -> Optional[str]:
+def make_code(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8) -> Optional[str]:
     if tries > 0:
         sentence = model.generate()
         if "```" in sentence and len(sentence.split()) >= order * 8:
@@ -44,15 +40,12 @@ def make_code(
 class Markov(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.model_cache: dict[
-            tuple[Union[str, int], ...], rsmarkov.Markov
-        ] = TimedLRUDict(expires_after=datetime.timedelta(minutes=30), max_size=32)
+        self.model_cache: dict[tuple[Union[str, int], ...], rsmarkov.Markov] = TimedLRUDict(
+            expires_after=datetime.timedelta(minutes=30), max_size=32
+        )
 
     async def get_model(
-        self,
-        query: tuple[Union[str, int], ...],
-        *coros: Awaitable[list[str]],
-        order: int = 2
+        self, query: tuple[Union[str, int], ...], *coros: Awaitable[list[str]], order: int = 2
     ) -> rsmarkov.Markov:
         # Return cached model if one exists
         if query in self.model_cache:
@@ -63,28 +56,18 @@ class Markov(commands.Cog):
         for coro in coros:
             data.extend(await coro)
         if not data:
-            raise commands.BadArgument(
-                "There was not enough message log data, please try again later."
-            )
+            raise commands.BadArgument("There was not enough message log data, please try again later.")
 
         def generate_model():
             model = rsmarkov.Markov(order)
             model.train(data)
             return model
 
-        self.model_cache[query] = m = await self.bot.loop.run_in_executor(
-            None, generate_model
-        )
+        self.model_cache[query] = m = await self.bot.loop.run_in_executor(None, generate_model)
         return m
 
     async def send_markov(
-        self,
-        ctx: Context,
-        model: rsmarkov.Markov,
-        order: int,
-        *,
-        seed: str = None,
-        callable=make_sentence
+        self, ctx: Context, model: rsmarkov.Markov, order: int, *, seed: str = None, callable=make_sentence
     ):
         markov_call = partial(callable, model, order, seed=seed)
         markov = await self.bot.loop.run_in_executor(None, markov_call)
@@ -119,9 +102,7 @@ class Markov(commands.Cog):
             await self.send_markov(ctx, model, 2)
 
     @commands.command(name="low_quality_user_markov", aliases=["lqum", "dumb"])
-    async def low_quality_user_markov(
-        self, ctx: Context, *, user: Optional[discord.User] = None
-    ):
+    async def low_quality_user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
         """Generate a markov chain based off a users messages.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
@@ -141,9 +122,7 @@ class Markov(commands.Cog):
             await self.send_markov(ctx, model, 1)
 
     @commands.command(name="seeded_user_markov", aliases=["sum"])
-    async def seeded_user_markov(
-        self, ctx: Context, user: Optional[discord.User] = None, *, seed: str
-    ):
+    async def seeded_user_markov(self, ctx: Context, user: Optional[discord.User] = None, *, seed: str):
         """Generate a markov chain based off a users messages which starts with a given seed.
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
@@ -184,9 +163,7 @@ class Markov(commands.Cog):
                     else:
                         await Opt_In_Status.is_public(ctx, user, connection=conn)
 
-                    coros.append(
-                        Message_Log.get_user_log(user, is_nsfw, connection=conn)
-                    )
+                    coros.append(Message_Log.get_user_log(user, is_nsfw, connection=conn))
 
                 query = ("mum", is_nsfw, 3) + tuple(user.id for user in users)
                 model = await self.get_model(query, *coros, order=3)
@@ -200,9 +177,7 @@ class Markov(commands.Cog):
         `user`: The user who's messages should be used to generate the markov chain.
         """
         if user == ctx.author:
-            raise commands.BadArgument(
-                "You can't generate a dual user markov with yourself."
-            )
+            raise commands.BadArgument("You can't generate a dual user markov with yourself.")
 
         await ctx.invoke(self.multi_user_markov, ctx.author, user)
 
@@ -262,9 +237,7 @@ class Markov(commands.Cog):
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(
-                    ctx.guild, is_nsfw, False, connection=conn
-                )
+                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, False, connection=conn)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3, seed=seed.lower())

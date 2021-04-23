@@ -15,7 +15,6 @@ except ImportError:
 
 
 class BotBase(BotBase):
-    
     def __init__(self) -> None:
         status = get_status(datetime.datetime.now(datetime.timezone.utc))
         self.whitelisted_users: set[int] = set()
@@ -26,10 +25,7 @@ class BotBase(BotBase):
         if message.author.bot:
             return
 
-        if (
-            message.channel == CONFIG.DPY_VOICE_GENERAL
-            and message.author.id not in self.whitelisted_users
-        ):
+        if message.channel == CONFIG.DPY_VOICE_GENERAL and message.author.id not in self.whitelisted_users:
             return
 
         ctx = await self.get_context(message, cls=Context)

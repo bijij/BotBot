@@ -49,10 +49,7 @@ class Message_Log(Table, schema="logging"):  # type: ignore
                 ) _ WHERE deleted = false AND user_id = $1 AND nsfw <= $2 AND content LIKE '% %';
             """
             data = await connection.fetch(query, user.id, nsfw)
-        return [
-            record["content"].lower() if flatten_case else record["content"]
-            for record in data
-        ]
+        return [record["content"].lower() if flatten_case else record["content"] for record in data]
 
     @classmethod
     async def get_guild_log(
@@ -71,24 +68,17 @@ class Message_Log(Table, schema="logging"):  # type: ignore
                 ) _ WHERE deleted = false AND guild_id = $1 AND nsfw <= $2 AND content LIKE '% %';
             """
             data = await connection.fetch(query, guild.id, nsfw)
-        return [
-            record["content"].lower() if flatten_case else record["content"]
-            for record in data
-        ]
+        return [record["content"].lower() if flatten_case else record["content"] for record in data]
 
 
 class Message_Attachments(Table, schema="logging"):  # type: ignore
-    message_id: SQLType.BigInt = Column(
-        primary_key=True, references=Message_Log.message_id
-    )
+    message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
     attachment_id: SQLType.BigInt
     content: str
 
 
 class Message_Edit_History(Table, schema="logging"):  # type: ignore
-    message_id: SQLType.BigInt = Column(
-        primary_key=True, references=Message_Log.message_id
-    )
+    message_id: SQLType.BigInt = Column(primary_key=True, references=Message_Log.message_id)
     created_at: SQLType.Timestamp = Column(primary_key=True)
     content: str
 
@@ -116,17 +106,13 @@ class Opt_In_Status(Table, schema="logging"):  # type: ignore
             )
 
     @classmethod
-    async def is_not_opted_in(
-        cls, ctx: Context, *, connection: asyncpg.Connection = None
-    ):
+    async def is_not_opted_in(cls, ctx: Context, *, connection: asyncpg.Connection = None):
         opt_in_status = await cls.fetchrow(connection=connection, user_id=ctx.author.id)
         if opt_in_status is not None:
             raise commands.BadArgument("You have already opted into logging.")
 
     @classmethod
-    async def is_public(
-        cls, ctx: Context, user: discord.User, *, connection: asyncpg.Connection = None
-    ):
+    async def is_public(cls, ctx: Context, user: discord.User, *, connection: asyncpg.Connection = None):
         opt_in_status = await cls.fetchrow(connection=connection, user_id=user.id)
         if opt_in_status is None:
             if user == ctx.author:
@@ -134,9 +120,7 @@ class Opt_In_Status(Table, schema="logging"):  # type: ignore
                     f"You have not opted in to logging. You can do so with `{ctx.bot.prefix}logging start`"
                 )
             else:
-                raise commands.BadArgument(
-                    f'User "{user}" has not opted in to logging.'
-                )
+                raise commands.BadArgument(f'User "{user}" has not opted in to logging.')
 
         if user != ctx.author and not opt_in_status["public"]:
             raise commands.BadArgument(f'User "{user}" has not made their logs public.')
@@ -149,9 +133,7 @@ class Logging(commands.Cog):
         self._opted_in: set[int] = set()
         self._log_nsfw: set[int] = set()
 
-        self._logging_task.add_exception_type(
-            asyncpg.exceptions.PostgresConnectionError
-        )
+        self._logging_task.add_exception_type(asyncpg.exceptions.PostgresConnectionError)
         self._logging_task.start()
 
     def cog_unload(self):
@@ -187,9 +169,7 @@ class Logging(commands.Cog):
         """Set your logging visibility preferences."""
         async with ctx.db as conn:
             await Opt_In_Status.is_opted_in(ctx, connection=conn)
-            await Opt_In_Status.update_where(
-                "user_id = $1", ctx.author.id, connection=conn, public=public
-            )
+            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, public=public)
 
         await ctx.tick()
 
@@ -198,9 +178,7 @@ class Logging(commands.Cog):
         """Set your NSFW channel logging preferences."""
         async with ctx.db as conn:
             await Opt_In_Status.is_opted_in(ctx, connection=conn)
-            await Opt_In_Status.update_where(
-                "user_id = $1", ctx.author.id, connection=conn, nsfw=nsfw
-            )
+            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, nsfw=nsfw)
             if nsfw:
                 self._log_nsfw.add(ctx.author.id)
             else:
@@ -213,9 +191,7 @@ class Logging(commands.Cog):
     async def logging_addbot(self, ctx: Context, *, bot: discord.Member):
         """Adds a bot to logging."""
         async with ctx.db as conn:
-            await Opt_In_Status.insert(
-                connection=conn, user_id=bot.id, public=True, nsfw=True
-            )
+            await Opt_In_Status.insert(connection=conn, user_id=bot.id, public=True, nsfw=True)
             self._opted_in.add(bot.id)
 
         await ctx.tick()
@@ -241,9 +217,7 @@ class Logging(commands.Cog):
             return
 
         for i, attachment in enumerate(message.attachments):
-            if attachment.content_type and TEXT_FILE_REGEX.match(
-                attachment.content_type
-            ):
+            if attachment.content_type and TEXT_FILE_REGEX.match(attachment.content_type):
 
                 if "charset" in attachment.content_type:
                     _, charset = attachment.content_type.rsplit("=", 1)
@@ -269,9 +243,7 @@ class Logging(commands.Cog):
                 False,
             )
         )
-        self.bot._message_update_log.append(
-            (message.id, discord.utils.utcnow(), message.content)
-        )
+        self.bot._message_update_log.append((message.id, discord.utils.utcnow(), message.content))
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
@@ -280,16 +252,12 @@ class Logging(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if payload.data.get("content"):
-            self.bot._message_update_log.append(
-                (payload.message_id, discord.utils.utcnow(), payload.data["content"])
-            )
+            self.bot._message_update_log.append((payload.message_id, discord.utils.utcnow(), payload.data["content"]))
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status == after.status:
-            changed = {a.type for a in before.activities} ^ {
-                a.type for a in after.activities
-            }
+            changed = {a.type for a in before.activities} ^ {a.type for a in after.activities}
             if discord.ActivityType.streaming not in changed:
                 return
 
@@ -315,15 +283,11 @@ class Logging(commands.Cog):
     async def _logging_task(self):
         async with MaybeAcquire() as conn:
             if self.bot._status_log:
-                await Status_Log.insert_many(
-                    Status_Log._columns, *self.bot._status_log, connection=conn
-                )
+                await Status_Log.insert_many(Status_Log._columns, *self.bot._status_log, connection=conn)
                 self.bot._status_log = []
 
             if self.bot._message_log:
-                await Message_Log.insert_many(
-                    Message_Log._columns, *self.bot._message_log, connection=conn
-                )
+                await Message_Log.insert_many(Message_Log._columns, *self.bot._message_log, connection=conn)
                 self.bot._message_log = []
 
             if self.bot._message_delete_log:
@@ -348,9 +312,7 @@ class Logging(commands.Cog):
                 )
                 for entry in self.bot._message_update_log:
                     with suppress(asyncpg.exceptions.IntegrityConstraintViolationError):
-                        await Message_Edit_History.insert_many(
-                            Message_Edit_History._columns, entry, connection=conn
-                        )
+                        await Message_Edit_History.insert_many(Message_Edit_History._columns, entry, connection=conn)
                 self.bot._message_update_log = []
 
     @_logging_task.before_loop
@@ -372,9 +334,7 @@ class Logging(commands.Cog):
                 if member is not None:
 
                     # Handle streaming edge case
-                    if discord.ActivityType.streaming in {
-                        a.type for a in member.activities
-                    }:
+                    if discord.ActivityType.streaming in {a.type for a in member.activities}:
                         status = "streaming"
                     else:
                         status = member.status.name

@@ -124,18 +124,13 @@ class Board:
             board = DIE[self.size].copy()
             random.shuffle(board)
             board = [
-                [
-                    random.choice(board[row * self.size + column])
-                    for column in range(self.size)
-                ]
+                [random.choice(board[row * self.size + column]) for column in range(self.size)]
                 for row in range(self.size)
             ]
 
         self.columns = board
 
-    def board_contains(
-        self, word: str, pos: Position = None, passed: list[Position] = []
-    ) -> bool:
+    def board_contains(self, word: str, pos: Position = None, passed: list[Position] = []) -> bool:
         # Empty words
         if len(word) == 0:
             return True
@@ -169,17 +164,10 @@ class Board:
                         new_pos = Position(pos.col + x, pos.row + y)
 
                         # don't check out of bounds
-                        if (
-                            new_pos.col < 0
-                            or new_pos.col >= self.size
-                            or new_pos.row < 0
-                            or new_pos.row >= self.size
-                        ):
+                        if new_pos.col < 0 or new_pos.col >= self.size or new_pos.row < 0 or new_pos.row >= self.size:
                             continue
 
-                        if self.board_contains(
-                            word[len(letter) :], new_pos, [*passed, pos]
-                        ):
+                        if self.board_contains(word[len(letter) :], new_pos, [*passed, pos]):
                             return True
 
         # Otherwise cannot find word
@@ -224,17 +212,13 @@ class Game(menus.Menu):
 
             state = " ".join(emoji) + "\n" + state
 
-        return discord.Embed(title=self.name, description=state).set_footer(
-            text=self.footer
-        )
+        return discord.Embed(title=self.name, description=state).set_footer(text=self.footer)
 
     def setup(self):
         raise NotImplementedError
 
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(
-            content="Boggle game started, you have 3 minutes!", embed=self.state
-        )
+        return await channel.send(content="Boggle game started, you have 3 minutes!", embed=self.state)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
@@ -287,9 +271,7 @@ class ShuffflingGame(Game):
                 "1 minute",
                 "30 seconds",
             ][i]
-            await self.message.edit(
-                content=f"Board Updated! You have {time} left!", embed=self.state
-            )
+            await self.message.edit(content=f"Board Updated! You have {time} left!", embed=self.state)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
@@ -318,9 +300,7 @@ class DiscordGame(Game):
         i = 0
         old = None
 
-        for user, words in sorted(
-            self.words.items(), key=lambda v: self.get_points(v[1]), reverse=True
-        ):
+        for user, words in sorted(self.words.items(), key=lambda v: self.get_points(v[1]), reverse=True):
             points = self.get_points(words)
 
             if points != old:
@@ -450,9 +430,7 @@ class ClassicGame(Game):
 
         if timed_out:
             await self.message.edit(content="Game Over!")
-            await self.message.reply(
-                "Game Over! you have 10 seconds to send in your words."
-            )
+            await self.message.reply("Game Over! you have 10 seconds to send in your words.")
             self.over = True
             await asyncio.sleep(10)
             self.filter_lists()
@@ -464,17 +442,11 @@ class FlipGame(ShuffflingGame, DiscordGame):
     footer = "Find words as fast as you can, rows will flip positions every 30 seconds."
 
     def shuffle(self):
-        rows = [
-            [self.board.columns[x][y] for x in range(self.board.size)]
-            for y in range(self.board.size)
-        ]
+        rows = [[self.board.columns[x][y] for x in range(self.board.size)] for y in range(self.board.size)]
         random.shuffle(rows)
         self.board = Board(
             size=self.board.size,
-            board=[
-                [rows[x][y] for x in range(self.board.size)]
-                for y in range(self.board.size)
-            ],
+            board=[[rows[x][y] for x in range(self.board.size)] for y in range(self.board.size)],
         )
 
 
@@ -483,17 +455,12 @@ class BoggleGame(ShuffflingGame, DiscordGame):
     footer = "Find words as fast as you can, letters will shuffle positions every 30 seconds."
 
     def shuffle(self):
-        letters = [
-            self.board.columns[y][x]
-            for x in range(self.board.size)
-            for y in range(self.board.size)
-        ]
+        letters = [self.board.columns[y][x] for x in range(self.board.size) for y in range(self.board.size)]
         random.shuffle(letters)
         self.board = Board(
             size=self.board.size,
             board=[
-                letters[x * self.board.size : x * self.board.size + self.board.size]
-                for x in range(self.board.size)
+                letters[x * self.board.size : x * self.board.size + self.board.size] for x in range(self.board.size)
             ],
         )
 
@@ -542,9 +509,7 @@ class Boggle(commands.Cog):
 
         # Raise if game already running
         if ctx.channel in self.games:
-            raise commands.CheckFailure(
-                "There is already a game running in this channel."
-            )
+            raise commands.CheckFailure("There is already a game running in this channel.")
 
         # Determine the game type
         game_type = self._get_game_type(ctx)

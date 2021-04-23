@@ -43,18 +43,10 @@ class SpamCheckerConfig:
         self.bot = bot
         self.__dict__.update(record)
 
-        self.content_bucket = CooldownByContent.from_cooldown(
-            15, 17.0, commands.BucketType.member
-        )
-        self.user_bucket = commands.CooldownMapping.from_cooldown(
-            10, 12.0, commands.BucketType.user
-        )
-        self.just_joined_bucket = commands.CooldownMapping.from_cooldown(
-            10, 12, commands.BucketType.channel
-        )
-        self.new_user_bucket = commands.CooldownMapping.from_cooldown(
-            30, 35.0, commands.BucketType.channel
-        )
+        self.content_bucket = CooldownByContent.from_cooldown(15, 17.0, commands.BucketType.member)
+        self.user_bucket = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
+        self.just_joined_bucket = commands.CooldownMapping.from_cooldown(10, 12, commands.BucketType.channel)
+        self.new_user_bucket = commands.CooldownMapping.from_cooldown(30, 35.0, commands.BucketType.channel)
 
     @cached_property
     def guild(self) -> discord.Guild:
@@ -70,12 +62,8 @@ class SpamCheckerConfig:
 
     @classmethod
     def user_is_new(cls, message: discord.Message) -> bool:
-        account_is_new = (
-            message.author.created_at > message.created_at - datetime.timedelta(days=50)
-        )
-        recently_joined_server = (
-            message.author.joined_at > message.created_at - datetime.timedelta(days=7)
-        )
+        account_is_new = message.author.created_at > message.created_at - datetime.timedelta(days=50)
+        recently_joined_server = message.author.joined_at > message.created_at - datetime.timedelta(days=7)
         return account_is_new and recently_joined_server
 
     def is_spamming(self, message) -> bool:
