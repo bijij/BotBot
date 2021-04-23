@@ -265,7 +265,7 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "32a12be0681ee5ab5b13277e1d4b80f768beffb6"
+resolved_reference = "eb4dc21fc435c07cb6b1ea09854bc2c8dd36cea7"
 
 [[package]]
 name = "donphan"

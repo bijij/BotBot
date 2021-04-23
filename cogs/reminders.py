@@ -60,6 +60,13 @@ class Reminders(Cog):
             return
 
         await Events.delete_where("event_type = 'reminder' AND data #>> '{args,0}' = $1", str(ctx.author.id))
+
+        if self.bot.next_scheduled_event is not None:
+            for reminder in reminders:
+                if self.bot.next_scheduled_event.id == reminder['id']:
+                    self.bot.restart_scheduler()
+                    break
+
         await ctx.send("Reminders cleared.")
 
     @reminder.command(name="cancel", aliases=["delete"])
@@ -71,6 +78,9 @@ class Reminders(Cog):
             raise commands.BadArgument(f"Reminder with ID: {id} not found.")
 
         await Events.delete_record(reminder)
+
+        if getattr(self.bot.next_scheduled_event, 'id', None) == id:
+            self.bot.restart_scheduler()
 
         await ctx.send("Reminder deleted.")
 
