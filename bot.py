@@ -15,10 +15,10 @@ except ImportError:
 
 
 class BotBase(BotBase):
-    whitelisted_users: set[int]
-
+    
     def __init__(self) -> None:
         status = get_status(datetime.datetime.now(datetime.timezone.utc))
+        self.whitelisted_users: set[int] = set()
 
         super().__init__(status=status)
 
