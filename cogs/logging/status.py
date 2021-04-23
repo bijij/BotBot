@@ -115,7 +115,7 @@ def base_image(width: int = IMAGE_SIZE, height: int = IMAGE_SIZE) -> tuple[Image
 
 
 def resample(image: Image.Image) -> Image.Image:
-    return image.resize((int(IMAGE_SIZE // DOWNSAMPLE),) * 2, resample=Image.LANCZOS)  # type: ignore
+    return image.resize((image.width // DOWNSAMPLE, image.height // DOWNSAMPLE), resample=Image.LANCZOS)  # type: ignore
 
 
 def as_bytes(image: Image.Image) -> BytesIO:
@@ -214,7 +214,10 @@ def draw_status_log(
 
     # Set consts
     day_width = IMAGE_SIZE / (60 * 60 * 24)
-    day_height = IMAGE_SIZE // (row_count if square else 31 + show_labels)
+    if square:
+        day_height = IMAGE_SIZE // row_count
+    else:
+        day_height = IMAGE_SIZE // 31 + show_labels
 
     image_height = round(day_height * row_count)
 
