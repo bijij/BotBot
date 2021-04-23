@@ -214,7 +214,9 @@ def draw_status_log(
 
     # Set consts
     day_width = IMAGE_SIZE / (60 * 60 * 24)
-    day_height = IMAGE_SIZE // (row_count if square else 30)
+    day_height = IMAGE_SIZE // (row_count if square else 31 + show_labels)
+
+    image_height = round(day_height * row_count)
 
     now = datetime.datetime.now(timezone)
     time_offset = now.utcoffset().total_seconds()  # type: ignore
@@ -238,7 +240,7 @@ def draw_status_log(
     # Reshape Image
     pixels = numpy.array(image)
     # pixels = pixels[:, IMAGE_SIZE:]
-    pixels = pixels.reshape(row_count, IMAGE_SIZE, 4)
+    pixels = pixels.reshape(row_count, image_height, 4)
     pixels = pixels.repeat(day_height, 0)
     image = Image.fromarray(pixels, "RGBA")
 
@@ -247,7 +249,7 @@ def draw_status_log(
         draw = ImageDraw.Draw(overlay)
 
         # Set offsets based on font size
-        font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * num_days))
+        font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * (num_days if square else 30)))
         text_width, text_height = draw.textsize("\N{FULL BLOCK}" * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
@@ -291,7 +293,7 @@ def draw_status_log(
             x_offset = ONE_HOUR * i
             colour = WHITE if not i % 6 else OPAQUE
             draw.line(
-                (x_offset, day_height, x_offset, IMAGE_SIZE),
+                (x_offset, day_height, x_offset, image_height),
                 fill=colour,
                 width=DOWNSAMPLE * 4,
             )
