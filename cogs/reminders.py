@@ -15,6 +15,7 @@ from ditto.utils.strings import ZWSP
 
 from ditto.utils.files import get_base_dir
 
+
 class Reminders(Cog):
     @staticmethod
     async def get_reminder(id: int) -> Optional[asyncpg.Record]:
@@ -65,7 +66,7 @@ class Reminders(Cog):
 
         if self.bot.next_scheduled_event is not None:
             for reminder in reminders:
-                if self.bot.next_scheduled_event.id == reminder['id']:
+                if self.bot.next_scheduled_event.id == reminder["id"]:
                     self.bot.restart_scheduler()
                     break
 
@@ -81,7 +82,7 @@ class Reminders(Cog):
 
         await Events.delete_record(reminder)
 
-        if getattr(self.bot.next_scheduled_event, 'id', None) == id:
+        if getattr(self.bot.next_scheduled_event, "id", None) == id:
             self.bot.restart_scheduler()
 
         await ctx.send("Reminder deleted.")

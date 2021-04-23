@@ -298,7 +298,7 @@ def draw_status_log(
         draw = ImageDraw.Draw(overlay)
 
         # Add date labels
-         x_offset = text_half_width
+        x_offset = text_half_width
         date = now - datetime.timedelta(seconds=total_duration)
         for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
 
