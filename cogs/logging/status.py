@@ -16,6 +16,7 @@ from discord.ext import commands
 
 from ditto import BotBase, Context
 from ditto.db import Time_Zones
+from ditto.types.converters import PosixFlags
 
 from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log
 
@@ -39,15 +40,16 @@ class LogEntry(NamedTuple):
     duration: datetime.timedelta
 
 
-class StatusPieOptions(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
+class StatusPieOptions(PosixFlags):
     show_totals: bool = commands.flag(aliases=["totals"], default=True)
     num_days: int = commands.flag(aliases=["days"], default=30)
 
 
-class StatusLogOptions(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
+class StatusLogOptions(PosixFlags):
     timezone: Optional[float] = commands.flag(aliases=["tz"])
     show_labels: bool = commands.flag(aliases=["labels"], default=True)
     num_days: int = commands.flag(aliases=["days"], default=30)
+    _square: bool = True
 
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
@@ -204,6 +206,7 @@ def draw_status_log(
     timezone: datetime.tzinfo = datetime.timezone.utc,
     show_labels: bool = False,
     num_days: int = 30,
+    square: bool = True,
 ) -> BytesIO:
 
     row_count = 1 + num_days + show_labels
@@ -211,7 +214,7 @@ def draw_status_log(
 
     # Set consts
     day_width = IMAGE_SIZE / (60 * 60 * 24)
-    day_height = IMAGE_SIZE // row_count
+    day_height = IMAGE_SIZE // (row_count if square else 30)
 
     now = datetime.datetime.now(timezone)
     time_offset = now.utcoffset().total_seconds()  # type: ignore
@@ -417,6 +420,7 @@ class StatusLogging(commands.Cog):
                 timezone=timezone,
                 show_labels=flags.show_labels,
                 num_days=days,
+                square=flags._square,
             )
             image = await self.bot.loop.run_in_executor(None, draw_call)
 
