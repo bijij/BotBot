@@ -260,6 +260,24 @@ def draw_status_log(
         x_offset = text_half_width
         y_offset = day_height
 
+        time = start_of_day(now)
+        date = now - datetime.timedelta(seconds=total_duration)
+
+        # Add weekend signifiers
+        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
+
+            if date.weekday() == 5:
+                draw.rectangle(
+                    (0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)),
+                    fill=TRANSLUCENT,
+                )
+
+            y_offset += day_height
+            date += datetime.timedelta(days=1)
+
+        y_offset = day_height
+        date = now - datetime.timedelta(seconds=total_duration)
+
         # Add timezone label
         draw.text(
             (x_offset, height_offset),
@@ -283,7 +301,6 @@ def draw_status_log(
         draw = ImageDraw.Draw(image)
 
         # Add time labels
-        time = start_of_day(now)
         for x_offset in (ONE_HOUR * 6, ONE_HOUR * 12, ONE_HOUR * 18):
             time += datetime.timedelta(hours=6)
             text_width, _ = draw.textsize(time.strftime("%H:00"), font=font)
@@ -295,21 +312,10 @@ def draw_status_log(
                 fill=WHITE,
             )
 
-        draw = ImageDraw.Draw(overlay)
-
         # Add date labels
         x_offset = text_half_width
-        date = now - datetime.timedelta(seconds=total_duration)
         for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
 
-            # if weekend draw signifier
-            if date.weekday() == 5:
-                draw.rectangle(
-                    (0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)),
-                    fill=TRANSLUCENT,
-                )
-
-            # Add date
             _, text_height = draw.textsize(date.strftime("%b. %d"), font=font)
             draw.text(
                 (x_offset, y_offset + height_offset),
