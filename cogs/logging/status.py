@@ -240,7 +240,7 @@ def draw_status_log(
     # Reshape Image
     pixels = numpy.array(image)
     # pixels = pixels[:, IMAGE_SIZE:]
-    pixels = pixels.reshape(row_count, image_height, 4)
+    pixels = pixels.reshape(row_count, IMAGE_SIZE, 4)
     pixels = pixels.repeat(day_height, 0)
     image = Image.fromarray(pixels, "RGBA")
 
