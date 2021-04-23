@@ -17,6 +17,7 @@ from discord.ext import commands
 from ditto import BotBase, Context
 from ditto.db import Time_Zones
 from ditto.types.converters import PosixFlags
+from ditto.utils.strings import utc_offset
 
 from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log
 
@@ -253,16 +254,16 @@ def draw_status_log(
 
         # Set offsets based on font size
         font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * (num_days if square else 30)))
-        text_width, text_height = draw.textsize("ｱ" * 2, font=font)
+        text_half_width, text_height = draw.textsize("ｱ" * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
-        x_offset = text_width
+        x_offset = text_half_width
         y_offset = day_height
 
         # Add timezone label
         draw.text(
             (x_offset, height_offset),
-            str(timezone),
+            utc_offset(timezone),
             font=font,
             align="left",
             fill="WHITE",
@@ -294,7 +295,10 @@ def draw_status_log(
                 fill=WHITE,
             )
 
+        draw = ImageDraw.Draw(overlay)
+
         # Add date labels
+         x_offset = text_half_width
         date = now - datetime.timedelta(seconds=total_duration)
         for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
 
