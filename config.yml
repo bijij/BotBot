@@ -3,6 +3,19 @@
 
     BOT: !Config
         PREFIX: "(bb)"
+        INTENTS:
+            guilds: yes
+            members: yes
+            bans: yes
+            emojis: yes
+            integrations: yes
+            webhooks: yes
+            invites: yes
+            voice_states: yes
+            presences: yes
+            messages: yes
+            reactions: yes
+            typing: yes
 
     DATABASE: !Config
         APPLICATION_NAME: 'BotBot'
