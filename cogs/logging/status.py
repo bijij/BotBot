@@ -253,34 +253,11 @@ def draw_status_log(
 
         # Set offsets based on font size
         font = ImageFont.truetype("res/roboto-bold.ttf", IMAGE_SIZE // int(1.66 * (num_days if square else 30)))
-        text_width, text_height = draw.textsize("\N{FULL BLOCK}" * 2, font=font)
+        text_width, text_height = draw.textsize("ｱ" * 2, font=font)
         height_offset = (day_height - text_height) // 2
 
         x_offset = text_width
         y_offset = day_height
-
-        # Add date labels
-        date = now - datetime.timedelta(seconds=total_duration)
-        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
-
-            # if weekend draw signifier
-            if date.weekday() == 5:
-                draw.rectangle(
-                    (0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)),
-                    fill=TRANSLUCENT,
-                )
-
-            # Add date
-            _, text_height = draw.textsize(date.strftime("%b. %d"), font=font)
-            draw.text(
-                (x_offset, y_offset + height_offset),
-                date.strftime("%b. %d"),
-                font=font,
-                align="left",
-                fill=WHITE,
-            )
-            y_offset += day_height
-            date += datetime.timedelta(days=1)
 
         # Add timezone label
         draw.text(
@@ -316,6 +293,29 @@ def draw_status_log(
                 align="left",
                 fill=WHITE,
             )
+
+        # Add date labels
+        date = now - datetime.timedelta(seconds=total_duration)
+        for _ in range(int(total_duration // ONE_DAY) + 2):  # 2 because of timezone offset woes
+
+            # if weekend draw signifier
+            if date.weekday() == 5:
+                draw.rectangle(
+                    (0, y_offset, IMAGE_SIZE, y_offset + (2 * day_height)),
+                    fill=TRANSLUCENT,
+                )
+
+            # Add date
+            _, text_height = draw.textsize(date.strftime("%b. %d"), font=font)
+            draw.text(
+                (x_offset, y_offset + height_offset),
+                date.strftime("%b. %d"),
+                font=font,
+                align="left",
+                fill=WHITE,
+            )
+            y_offset += day_height
+            date += datetime.timedelta(days=1)
 
     return as_bytes(resample(image))
 
