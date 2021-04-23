@@ -19,7 +19,7 @@ from ditto.utils.files import get_base_dir
 class Reminders(Cog):
     @staticmethod
     async def get_reminder(id: int) -> Optional[asyncpg.Record]:
-        return await Events.fetchrow_where("id = $1 AND event_type = 'reminder'", str(id))
+        return await Events.fetchrow_where("id = $1 AND event_type = 'reminder'", id)
 
     @staticmethod
     async def get_reminders(user: User) -> list[asyncpg.Record]:
