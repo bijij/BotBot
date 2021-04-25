@@ -156,6 +156,14 @@ class Minesweeper(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("Please select a difficult; easy or medium")
 
+    @ms_start.command(name="tiny")
+    async def ms_start_tiny(self, ctx):
+        """Starts a easy difficulty Minesweeper game"""
+        game = self._games[ctx.channel] = Game(5, 5)
+        game.last_state = await ctx.send(
+            f"Minesweeper Game Started!\n>>> {game}\n\nReveal cells with `{ctx.prefix}ms click`."
+        )
+
     @ms_start.command(name="easy")
     async def ms_start_easy(self, ctx):
         """Starts a easy difficulty Minesweeper game"""

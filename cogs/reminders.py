@@ -13,9 +13,6 @@ from ditto.utils.paginator import EmbedPaginator
 from ditto.utils.strings import ZWSP
 
 
-from ditto.utils.files import get_base_dir
-
-
 class Reminders(Cog):
     @staticmethod
     async def get_reminder(id: int) -> Optional[asyncpg.Record]:
@@ -118,17 +115,15 @@ class Reminders(Cog):
 
         jump_url = f"https://discord.com/channels/{guild_id}/{channel.id}/{message_id}"
 
-        embed = (
-            discord.Embed(colour=discord.Colour.blurple(), description=what)
-            .set_author(name=f"Reminder for {user}.", icon_url=user.avatar.url)
-            .add_field(name=ZWSP, value=f"[Jump!]({jump_url})")
-        )
+        embed = discord.Embed(colour=discord.Colour.blurple(), description=what)
+        embed.set_author(name=f"Reminder for {user}.", icon_url=user.avatar.url)
 
         if channel is not None:
             reference = discord.PartialMessage(channel=channel, id=message_id)
             await channel.send(embed=embed, reference=reference, mention_author=True)
             return
 
+        embed.add_field(name=ZWSP, value=f"[Jump!]({jump_url})")
         await user.send(user.mention, embed=embed, mention_author=True)
 
 
