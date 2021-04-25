@@ -1,5 +1,8 @@
 import asyncio
+import copy
 import random
+
+from typing import Optional
 
 import discord
 from discord.ext import commands, menus
@@ -309,7 +312,7 @@ class ConnectFour(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-    async def _get_opponent(self, ctx) -> discord.Member:
+    async def _get_opponent(self, ctx) -> Optional[discord.Member]:
         message = await ctx.channel.send(
             embed=discord.Embed(description=f"{ctx.author.mention} wants to play Connect Four.").set_footer(
                 text="react with \N{WHITE HEAVY CHECK MARK} to accept the challenge."
@@ -337,7 +340,7 @@ class ConnectFour(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     # @commands.max_concurrency(1, per=commands.BucketType.channel)
-    async def c4(self, ctx: Context, *, opponent: discord.Member = None):
+    async def c4(self, ctx: Context, *, opponent: Optional[discord.Member] = None):
         """Start a Connect Four game!
 
         `opponent`: Another member of the server to play against. If not is set an open challenge is started.
@@ -353,11 +356,11 @@ class ConnectFour(commands.Cog):
             if opponent == ctx.author:
                 raise commands.BadArgument("You cannot play against yourself.")
 
-            if not await ctx.confirm(
-                self.bot,
+            _ctx = copy.copy(ctx)
+            _ctx.author = opponent  # type: ignore
+
+            if not await _ctx.confirm(
                 f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",
-                opponent,
-                channel=ctx.channel,
             ):
                 opponent = None
 
@@ -369,7 +372,7 @@ class ConnectFour(commands.Cog):
 
     @c4.command(invoke_without_command=True, name="flip", aliases=["antigravity"])
     # @commands.max_concurrency(1, per=commands.BucketType.channel)
-    async def c4_flip(self, ctx: Context, *, opponent: discord.Member):
+    async def c4_flip(self, ctx: Context, *, opponent: Optional[discord.Member] = None):
         """"""
         if ctx.guild is None:
             raise commands.BadArgument("You must use this command in a guild.")
@@ -382,11 +385,11 @@ class ConnectFour(commands.Cog):
             if opponent == ctx.author:
                 raise commands.BadArgument("You cannot play against yourself.")
 
-            if not await ctx.confirm(
-                self.bot,
+            _ctx = copy.copy(ctx)
+            _ctx.author = opponent  # type: ignore
+
+            if not await _ctx.confirm(
                 f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",
-                opponent,
-                channel=ctx.channel,
             ):
                 opponent = None
 
@@ -397,7 +400,7 @@ class ConnectFour(commands.Cog):
         await AntiGravityGame().start(ctx, opponent, wait=True)
 
     @c4.command(name="ranking", aliases=["elo"])
-    async def c4_ranking(self, ctx: Context, *, player: discord.Member = None):
+    async def c4_ranking(self, ctx: Context, *, player: Optional[discord.Member] = None):
         """Get a player's ranking."""
 
         # Single player ranking

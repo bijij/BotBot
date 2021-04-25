@@ -125,7 +125,7 @@ class Game(boardgames.Board):
 
 def is_no_game(ctx: commands.Context):
     if ctx.channel in ctx.cog._games:
-        raise commands.CheckFailure("There is already a Connect Four game running.")
+        raise commands.CheckFailure("There is already a Minesweeper game running.")
     return True
 
 
