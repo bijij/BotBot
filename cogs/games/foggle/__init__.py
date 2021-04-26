@@ -535,7 +535,7 @@ class Foggle(Cog):
 
     @foggle.error
     @foggle_flip.error
-    @foggle_game.error
+    @foggle_foggle.error
     async def on_foggle_error(self, ctx, error):
         if not isinstance(error, commands.CheckFailure) and ctx.channel in self.games:
             del self.games[ctx.channel]
