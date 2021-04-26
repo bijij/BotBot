@@ -1,6 +1,7 @@
 import re
 
 from contextlib import suppress
+from typing import Any, Generic, Literal, Protocol, runtime_checkable
 
 import asyncpg
 from donphan import Column, enum, MaybeAcquire, Table, SQLType
@@ -8,7 +9,7 @@ from donphan import Column, enum, MaybeAcquire, Table, SQLType
 import discord
 from discord.ext import commands, tasks
 
-from ditto import BotBase, Context
+from ditto import BotBase, Cog, Context
 
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
@@ -126,8 +127,18 @@ class Opt_In_Status(Table, schema="logging"):  # type: ignore
             raise commands.BadArgument(f'User "{user}" has not made their logs public.')
 
 
-class Logging(commands.Cog):
-    def __init__(self, bot: BotBase):
+class LoggingBot(Protocol):
+    _logging: Literal[True]
+    _message_log: list[tuple[Any, ...]]
+    _message_delete_log: list[tuple[Any, ...]]
+    _message_attachment_log: list[tuple[Any, ...]]
+    _message_update_log: list[tuple[Any, ...]]
+    _status_log: list[tuple[Any, ...]]
+    _last_status: dict[int, str]
+
+
+class Logging(Cog):
+    def __init__(self, bot: LoggingBot):
         self.bot = bot
 
         self._opted_in: set[int] = set()
@@ -349,7 +360,7 @@ class Logging(commands.Cog):
         await Status_Log.insert_many(Status_Log._columns, *status_log)
 
 
-def setup(bot: BotBase):
+def setup(bot: LoggingBot):
     if not hasattr(bot, "_logging"):
         bot._logging = True
         bot._message_log = []

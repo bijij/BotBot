@@ -2,13 +2,14 @@ import asyncio
 import random
 import re
 
+from functools import wraps
 from collections import defaultdict
-from typing import NamedTuple, Optional
+from typing import Literal, NamedTuple
 
 import discord
 from discord.ext import commands, menus
 
-from ditto import BotBase, Context
+from ditto import BotBase, Cog, Context
 from ditto.utils.strings import ordinal
 
 from .parser import View
@@ -36,6 +37,8 @@ NUMBER_EMOJI = {
     "E": "\N{REGIONAL INDICATOR SYMBOL LETTER E}",
     "F": "\N{REGIONAL INDICATOR SYMBOL LETTER F}",
 }
+
+Bases = Literal[2, 10, 16]
 
 # fmt: off
 
@@ -233,7 +236,7 @@ class Board:
         # Check equation
         result = view.parse_full()
         if result is None:  # If equation is invalid discard
-            return None
+            return False
         elif result != self.number:
             return False
 
@@ -447,33 +450,55 @@ class FoggleGame(ShuffflingGame, DiscordGame):
         )
 
 
-class Foggle(commands.Cog):
+def check_size(ctx: Context) -> int:
+    prefix = ctx.prefix.upper()
+    if prefix.endswith("SUPER BIG "):
+        return SUPER_BIG
+    elif prefix.endswith("BIG "):
+        return BIG
+    elif prefix.endswith("SMALL ") or prefix.endswith("SMOL "):
+        return SMALL
+    return ORIGINAL
+
+
+def foggle_game(game_type: type[Game]):
+    def wrapper(signature):
+        @wraps(signature)
+        async def command(self: Foggle, ctx: Context, base: Bases = 10):
+            # Ignore if rules invoke
+            if ctx.invoked_subcommand is self.foggle_rules:
+                return
+
+            # Raise if game already running
+            if ctx.channel in self.games:
+                raise commands.CheckFailure("There is already a game running in this channel.")
+
+            # Start the game
+            self.games[ctx.channel] = game = game_type(size=check_size(ctx), base=base)
+            await game.start(ctx, wait=False)
+
+            # Wait for game to end
+            def check(channel):
+                return channel.id == ctx.channel.id
+
+            await self.bot.wait_for("foggle_game_complete", check=check, timeout=200)
+            if ctx.channel in self.games:
+                del self.games[ctx.channel]
+
+        return command
+
+    return wrapper
+
+
+class Foggle(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
         self.games = {}
 
-    def _get_game_type(self, ctx: Context) -> type[Game]:
-        if ctx.invoked_subcommand is None:
-            return DiscordGame
-        elif ctx.invoked_subcommand is self.foggle_flip:
-            return FlipGame
-        elif ctx.invoked_subcommand is self.foggle_foggle:
-            return FoggleGame
-        raise commands.BadArgument("Unknown foggle game type")
-
-    def _check_size(self, ctx: Context) -> int:
-        prefix = ctx.prefix.upper()
-        if prefix.endswith("SUPER BIG "):
-            return SUPER_BIG
-        elif prefix.endswith("BIG "):
-            return BIG
-        elif prefix.endswith("SMALL ") or prefix.endswith("SMOL "):
-            return SMALL
-        return ORIGINAL
-
-    @commands.group()
+    @commands.group(invoke_without_command=True)
+    @foggle_game(DiscordGame)
     # @commands.max_concurrency(1, per=commands.BucketType.channel)  # rip
-    async def foggle(self, ctx: Context, base: Optional[int] = 10):
+    async def foggle(self, ctx: Context, base: Bases = 10):
         """Start's a game of Foggle.
 
         The board size can be set by command prefix.
@@ -485,46 +510,10 @@ class Foggle(commands.Cog):
         Players have 3 minutes to find as many equation as they can, the first person to find
         an equation gets the points.
         """
-        # Ignore if rules invoke
-        if ctx.invoked_subcommand is self.foggle_rules:
-            return
-
-        # Raise if game already running
-        if ctx.channel in self.games:
-            raise commands.CheckFailure("There is already a game running in this channel.")
-
-        # Determine the game type
-        game_type = self._get_game_type(ctx)
-
-        # Determine base
-        if ctx.invoked_subcommand is not None:
-            base_str = ctx.message.content.rsplit(" ", 1)[-1]
-            if base_str.isdigit():
-                base = int(base_str)
-
-        if base not in {2, 10, 16}:
-            raise commands.BadArgument("Unsupported base")
-
-        # Start the game
-        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx), base=base)
-        await game.start(ctx, wait=False)
-
-        # Wait for game to end
-        def check(channel):
-            return channel.id == ctx.channel.id
-
-        await self.bot.wait_for("foggle_game_complete", check=check, timeout=200)
-        if ctx.channel in self.games:
-            del self.games[ctx.channel]
-
-    @foggle.error
-    async def on_foggle_error(self, ctx, error):
-        if not isinstance(error, commands.CheckFailure):
-            if ctx.channel in self.games:
-                del self.games[ctx.channel]
 
     @foggle.command(name="flip")
-    async def foggle_flip(self, ctx: Context, base: int = 10):
+    @foggle_game(FlipGame)
+    async def foggle_flip(self, ctx: Context, base: Bases = 10):
         """Starts a flip game of foggle.
 
         Rows will randomly shuffle every 30s.
@@ -533,13 +522,21 @@ class Foggle(commands.Cog):
         ...
 
     @foggle.command(name="foggle")
-    async def foggle_foggle(self, ctx: Context, base: int = 10):
+    @foggle_game(FoggleGame)
+    async def foggle_foggle(self, ctx: Context, base: Bases = 10):
         """Starts a boggling game of foggle.
 
         All letters will randomly shuffle flip every 30s.
         The first person to find an equation gets the points.
         """
         ...
+
+    @foggle.error
+    @foggle_flip.error
+    @foggle_game.error
+    async def on_foggle_error(self, ctx, error):
+        if not isinstance(error, commands.CheckFailure) and ctx.channel in self.games:
+            del self.games[ctx.channel]
 
     @foggle.command(name="rules", aliases=["help"])
     async def foggle_rules(self, ctx: Context, type: str = "discord"):

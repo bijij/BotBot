@@ -14,7 +14,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 import discord
 from discord.ext import commands
 
-from ditto import BotBase, Context
+from ditto import BotBase, Cog, Context
 from ditto.db import Time_Zones
 from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
@@ -346,7 +346,7 @@ def generate_status_calendar(status_log: list[LogEntry]) -> StringIO:
     return out
 
 
-class StatusLogging(commands.Cog):
+class StatusLogging(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 

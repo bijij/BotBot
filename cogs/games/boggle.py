@@ -1,8 +1,9 @@
 import asyncio
 import random
 
-from collections import defaultdict
+from functools import wraps
 from string import ascii_uppercase
+from collections import defaultdict
 from typing import NamedTuple
 
 import discord
@@ -465,34 +466,54 @@ class BoggleGame(ShuffflingGame, DiscordGame):
         )
 
 
+def check_size(ctx: Context) -> int:
+    prefix = ctx.prefix.upper()
+    if prefix.endswith("SUPER BIG "):
+        return SUPER_BIG
+    elif prefix.endswith("BIG "):
+        return BIG
+    elif prefix.endswith("SMALL ") or prefix.endswith("SMOL "):
+        return SMALL
+    return ORIGINAL
+
+
+def boggle_game(game_type: type[Game]):
+    def wrapper(signature):
+        @wraps(signature)
+        async def command(self: Boggle, ctx: Context):
+            # Ignore if rules invoke
+            if ctx.invoked_subcommand is self.boggle_rules:
+                return
+
+            # Raise if game already running
+            if ctx.channel in self.games:
+                raise commands.CheckFailure("There is already a game running in this channel.")
+
+            # Start the game
+            self.games[ctx.channel] = game = game_type(size=check_size(ctx))
+            await game.start(ctx, wait=False)
+
+            # Wait for game to end
+            def check(channel):
+                return channel.id == ctx.channel.id
+
+            await self.bot.wait_for("boggle_game_complete", check=check, timeout=200)
+            if ctx.channel in self.games:
+                del self.games[ctx.channel]
+
+        return command
+
+    return wrapper
+
+
 class Boggle(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
         self.games = {}
 
-    def _get_game_type(self, ctx: Context) -> type[Game]:
-        if ctx.invoked_subcommand is None:
-            return DiscordGame
-        elif ctx.invoked_subcommand is self.boggle_classic:
-            return ClassicGame
-        elif ctx.invoked_subcommand is self.boggle_flip:
-            return FlipGame
-        elif ctx.invoked_subcommand is self.boggle_boggle:
-            return BoggleGame
-        raise BadArgument("Unknown boggle game type")
-
-    def _check_size(self, ctx: Context) -> int:
-        prefix = ctx.prefix.upper()
-        if prefix.endswith("SUPER BIG "):
-            return SUPER_BIG
-        elif prefix.endswith("BIG "):
-            return BIG
-        elif prefix.endswith("SMALL ") or prefix.endswith("SMOL "):
-            return SMALL
-        return ORIGINAL
-
-    @commands.group()
+    @commands.group(invoke_witout_command=True)
     # @commands.max_concurrency(1, per=commands.BucketType.channel) # rip
+    @boggle_game(DiscordGame)
     async def boggle(self, ctx: Context):
         """Start's a game of Boggle.
 
@@ -503,36 +524,10 @@ class Boggle(commands.Cog):
         Players have 3 minutes to find as many words as they can, the first person to find
         a word gets the points.
         """
-        # Ignore if rules invoke
-        if ctx.invoked_subcommand is self.boggle_rules:
-            return
-
-        # Raise if game already running
-        if ctx.channel in self.games:
-            raise commands.CheckFailure("There is already a game running in this channel.")
-
-        # Determine the game type
-        game_type = self._get_game_type(ctx)
-
-        # Start the game
-        self.games[ctx.channel] = game = game_type(size=self._check_size(ctx))
-        await game.start(ctx, wait=False)
-
-        # Wait for game to end
-        def check(channel):
-            return channel.id == ctx.channel.id
-
-        await self.bot.wait_for("boggle_game_complete", check=check, timeout=200)
-        if ctx.channel in self.games:
-            del self.games[ctx.channel]
-
-    @boggle.error
-    async def on_boggle_error(self, ctx, error):
-        if not isinstance(error, commands.CheckFailure):
-            if ctx.channel in self.games:
-                del self.games[ctx.channel]
+        ...
 
     @boggle.command(name="classic")
+    @boggle_game(ClassicGame)
     async def boggle_classic(self, ctx: Context):
         """Starts a cassic game of boggle.
 
@@ -542,6 +537,7 @@ class Boggle(commands.Cog):
         ...
 
     @boggle.command(name="flip")
+    @boggle_game(FlipGame)
     async def boggle_flip(self, ctx: Context):
         """Starts a flip game of boggle.
 
@@ -551,6 +547,7 @@ class Boggle(commands.Cog):
         ...
 
     @boggle.command(name="boggle")
+    @boggle_game(BoggleGame)
     async def boggle_boggle(self, ctx: Context):
         """Starts a boggling game of boggle.
 
@@ -558,6 +555,14 @@ class Boggle(commands.Cog):
         The first person to finda word gets the points.
         """
         ...
+
+    @boggle.error
+    @boggle_classic.error
+    @boggle_flip.error
+    @boggle_boggle.error
+    async def on_boggle_error(self, ctx, error):
+        if not isinstance(error, commands.CheckFailure) and ctx.channel in self.games:
+            del self.games[ctx.channel]
 
     @boggle.command(name="rules", aliases=["help"])
     async def boggle_rules(self, ctx: Context, type: str = "discord"):

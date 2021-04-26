@@ -1,14 +1,15 @@
 import datetime
-
 from functools import partial
-from typing import Awaitable, Optional, Union
+
+from collections.abc import Awaitable
+from typing import cast, Optional, Union
 
 import rsmarkov
 
 import discord
 from discord.ext import commands
 
-from ditto import BotBase, Context, CONFIG
+from ditto import BotBase, Cog, Context, CONFIG
 from ditto.utils.collections import TimedLRUDict
 
 from cogs.logging.logging import Message_Log, Opt_In_Status
@@ -37,7 +38,7 @@ def make_code(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX
     return None
 
 
-class Markov(commands.Cog):
+class Markov(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
         self.model_cache: dict[tuple[Union[str, int], ...], rsmarkov.Markov] = TimedLRUDict(
@@ -87,7 +88,7 @@ class Markov(commands.Cog):
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
         """
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
             async with ctx.db as conn:
@@ -107,7 +108,7 @@ class Markov(commands.Cog):
 
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
         """
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
             async with ctx.db as conn:
@@ -128,7 +129,7 @@ class Markov(commands.Cog):
         `user`: The user who's messages should be used to generate the markov chain, defaults to you.
         `seed`: The string to attempt to seed the markov chain with.
         """
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
             async with ctx.db as conn:
@@ -212,7 +213,7 @@ class Markov(commands.Cog):
     @commands.command(name="code_user_markov", aliases=["cum"])
     async def code_user_markov(self, ctx: Context, user: Optional[discord.User] = None):
         """Generate a markov chain code block."""
-        user = user or ctx.author
+        user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
             async with ctx.db as conn:

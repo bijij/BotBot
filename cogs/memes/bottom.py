@@ -5,7 +5,7 @@ import bottom
 import discord
 from discord.ext import commands
 
-from ditto import Context, Cog
+from ditto import Cog, Context
 
 
 class Bottom(Cog):

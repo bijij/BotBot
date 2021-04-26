@@ -1,7 +1,5 @@
 import datetime
 
-from ampharos import setup_ampharos
-
 import discord
 from discord.ext import commands
 from ditto import BotBase, Context, CONFIG
@@ -30,10 +28,6 @@ class BotBase(BotBase):
 
         ctx = await self.get_context(message, cls=Context)
         await self.invoke(ctx)
-
-    async def setup_database(self) -> None:
-        await super().setup_database()
-        await setup_ampharos()
 
 
 class Bot(BotBase, commands.Bot):

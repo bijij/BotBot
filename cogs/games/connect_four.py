@@ -9,7 +9,7 @@ from discord.ext import commands, menus
 
 from donphan import Column, MaybeAcquire, SQLType, Table
 
-from ditto import BotBase, Context
+from ditto import BotBase, Cog, Context
 from ditto.utils.paginator import EmbedPaginator
 
 
@@ -308,11 +308,11 @@ class AntiGravityGame(Game):
                 return await self._end_game()
 
 
-class ConnectFour(commands.Cog):
+class ConnectFour(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 
-    async def _get_opponent(self, ctx) -> Optional[discord.Member]:
+    async def _get_opponent(self, ctx: Context) -> Optional[discord.Member]:
         message = await ctx.channel.send(
             embed=discord.Embed(description=f"{ctx.author.mention} wants to play Connect Four.").set_footer(
                 text="react with \N{WHITE HEAVY CHECK MARK} to accept the challenge."
@@ -373,7 +373,7 @@ class ConnectFour(commands.Cog):
     @c4.command(invoke_without_command=True, name="flip", aliases=["antigravity"])
     # @commands.max_concurrency(1, per=commands.BucketType.channel)
     async def c4_flip(self, ctx: Context, *, opponent: Optional[discord.Member] = None):
-        """"""
+        """ """
         if ctx.guild is None:
             raise commands.BadArgument("You must use this command in a guild.")
 

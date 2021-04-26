@@ -2,6 +2,8 @@ from random import sample
 
 from discord.ext import boardgames, commands
 
+from ditto import Cog, Context
+
 
 class Cell:
     def __init__(self, board, y: int, x: int):
@@ -137,7 +139,7 @@ def is_game(ctx: commands.context):
     raise commands.CheckFailure("No Connect Four game is running.")
 
 
-class Minesweeper(commands.Cog):
+class Minesweeper(Cog):
     """Simple minesweeper game"""
 
     def __init__(self, bot: commands.Bot):
@@ -188,7 +190,7 @@ class Minesweeper(commands.Cog):
 
     @minesweeper.command(name="click")
     @commands.check(is_game)
-    async def ms_click(self, ctx, cells: commands.Greedy[boardgames.Cell]):
+    async def ms_click(self, ctx: Context, cells: commands.Greedy[boardgames.Cell]):
         """Clicks a cell on the board.
 
         cells are referenced by column then row for example `A2`"""
@@ -219,7 +221,7 @@ class Minesweeper(commands.Cog):
 
     @minesweeper.command(name="flag", aliases=["guess"])
     @commands.check(is_game)
-    async def ms_flag(self, ctx, cells: commands.Greedy[boardgames.Cell]):
+    async def ms_flag(self, ctx: Context, cells: commands.Greedy[boardgames.Cell]):
         """Flags a cell on the board.
 
         cells are referenced by column then row for example `A2`"""

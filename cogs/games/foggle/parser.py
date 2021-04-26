@@ -2,7 +2,8 @@
 
 import re
 
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 OPS: dict[str, Callable[[int, int], Optional[int]]] = {
     "^": lambda x, y: x ** y,
@@ -44,17 +45,16 @@ class View:
         return n if got_digit else None
 
     def parse_base_expr(self) -> Optional[int]:
-        if self.peek() == "(":
-            self.idx += 1
-            self.strip_ws()
-            e = self.parse_expr()
-            if e is None or self.peek() != ")":
-                return None
-            self.idx += 1
-            self.strip_ws()
-            return e
-        else:
+        if self.peek() != "(":
             return self.parse_int()
+        self.idx += 1
+        self.strip_ws()
+        e = self.parse_expr()
+        if e is None or self.peek() != ")":
+            return None
+        self.idx += 1
+        self.strip_ws()
+        return e
 
     def parse_prec_lvl(self, ops: tuple[str, ...], below: Callable[[], Optional[int]]) -> Callable[[], Optional[int]]:
         def parser():
@@ -69,6 +69,8 @@ class View:
                 if next is None:
                     return None
                 e = op(e, next)
+                if e is None:
+                    return None
             return e
 
         return parser

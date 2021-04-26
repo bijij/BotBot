@@ -1,7 +1,7 @@
+import io
 import random
 
-from collections import namedtuple
-from io import BytesIO
+from typing import cast, NamedTuple, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -9,7 +9,10 @@ import discord
 from discord.ext import commands
 
 
-Timecard = namedtuple("Timecard", "filename colour shadow_colour")
+class Timecard(NamedTuple):
+    filename: str
+    colour: discord.Colour
+    shadow_colour: Optional[discord.Colour]
 
 
 IMAGES = "res/timecard/images"
@@ -21,31 +24,92 @@ TIMECARD_Y_OFFSET = 24
 TIMECARD_X_BOUND = 576
 TIMECARD_Y_BOUND = 432
 
-TIMECARD_SET = [
-    Timecard("0", (226, 255, 159), None),
-    Timecard("1", (235, 4, 210), (60, 255, 23)),
-    Timecard("2", (99, 250, 208), (1, 4, 0)),
-    Timecard("3", (248, 103, 1), (32, 127, 34)),
-    Timecard("4", (8, 2, 3), None),
-    Timecard("5", (30, 234, 239), None),
-    Timecard("6", (1, 180, 235), None),
-    Timecard("7", (91, 94, 2), None),
-    Timecard("8", (250, 240, 212), (37, 53, 60)),
-    Timecard("9", (9, 160, 212), (0, 11, 23)),
-    Timecard("10", (250, 236, 255), (28, 188, 234)),
-    Timecard("11", (254, 254, 254), None),
-    Timecard("12", (252, 231, 40), None),
-    Timecard("13", (254, 254, 254), None),
-    Timecard("14", (70, 109, 40), None),
-    Timecard("15", (216, 34, 148), (122, 70, 13)),
+TIMECARDS = [
+    Timecard(
+        "0",
+        discord.Colour.from_rgb(226, 255, 159),
+        None,
+    ),
+    Timecard(
+        "1",
+        discord.Colour.from_rgb(235, 4, 210),
+        discord.Colour.from_rgb(60, 255, 23),
+    ),
+    Timecard(
+        "2",
+        discord.Colour.from_rgb(99, 250, 208),
+        discord.Colour.from_rgb(1, 4, 0),
+    ),
+    Timecard(
+        "3",
+        discord.Colour.from_rgb(248, 103, 1),
+        discord.Colour.from_rgb(32, 127, 34),
+    ),
+    Timecard(
+        "4",
+        discord.Colour.from_rgb(8, 2, 3),
+        None,
+    ),
+    Timecard(
+        "5",
+        discord.Colour.from_rgb(30, 234, 239),
+        None,
+    ),
+    Timecard(
+        "6",
+        discord.Colour.from_rgb(1, 180, 235),
+        None,
+    ),
+    Timecard(
+        "7",
+        discord.Colour.from_rgb(91, 94, 2),
+        None,
+    ),
+    Timecard(
+        "8",
+        discord.Colour.from_rgb(250, 240, 212),
+        discord.Colour.from_rgb(37, 53, 60),
+    ),
+    Timecard(
+        "9",
+        discord.Colour.from_rgb(9, 160, 212),
+        discord.Colour.from_rgb(0, 11, 23),
+    ),
+    Timecard(
+        "10",
+        discord.Colour.from_rgb(250, 236, 255),
+        discord.Colour.from_rgb(28, 188, 234),
+    ),
+    Timecard(
+        "11",
+        discord.Colour.from_rgb(254, 254, 254),
+        None,
+    ),
+    Timecard(
+        "12",
+        discord.Colour.from_rgb(252, 231, 40),
+        None,
+    ),
+    Timecard(
+        "13",
+        discord.Colour.from_rgb(254, 254, 254),
+        None,
+    ),
+    Timecard(
+        "14",
+        discord.Colour.from_rgb(70, 109, 40),
+        None,
+    ),
+    Timecard(
+        "15",
+        discord.Colour.from_rgb(216, 34, 148),
+        discord.Colour.from_rgb(122, 70, 13),
+    ),
 ]
 
 
 class TimeCard(commands.Cog):
     """Spongebob Squarepants timecard."""
-
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
 
     @commands.command(name="timecard", aliases=["tc"])
     async def timecard(self, ctx, *, text: commands.clean_content(fix_channel_mentions=True)):  # type: ignore
@@ -54,7 +118,7 @@ class TimeCard(commands.Cog):
         `text`: The text to show on the timecard.
         """
         async with ctx.typing():
-            timecard: Timecard = random.choice(TIMECARD_SET)
+            timecard: Timecard = random.choice(TIMECARDS)
 
             # Load image
             image = Image.open(f"{IMAGES}/timecard_{timecard.filename}.png")
@@ -76,7 +140,8 @@ class TimeCard(commands.Cog):
             y_pos = TIMECARD_Y_OFFSET + (TIMECARD_Y_BOUND - text_size[1]) // 2
 
             # Draw text
-            for line in (lines := text.split("\n")) :
+            lines = text.split("\n")
+            for line in lines:
 
                 line_width, _ = draw.textsize(line, font=font)
                 x_pos = TIMECARD_X_OFFSET + (TIMECARD_X_BOUND - line_width) // 2

@@ -7,7 +7,7 @@ from discord.ext import commands, menus
 from ditto.types.types import User
 import humanize
 
-from ditto import BotBase, Context, Cog
+from ditto import BotBase, Cog, Context
 from ditto.db.scheduler import Events
 from ditto.utils.paginator import EmbedPaginator
 from ditto.utils.strings import ZWSP

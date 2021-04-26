@@ -9,7 +9,7 @@ from donphan import Column, SQLType, Table
 import discord
 from discord.ext import commands, tasks
 
-from ditto import BotBase, Context
+from ditto import BotBase, Cog, Context
 
 
 class Commands(Table, schema="core"):
@@ -38,7 +38,7 @@ CommandInvoke = namedtuple(
 )
 
 
-class CommandStats(commands.Cog):
+class CommandStats(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
 

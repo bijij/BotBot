@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from ditto import BotBase, Cog
+
 from donphan import Column, Table, SQLType
 
 
@@ -10,8 +12,8 @@ class Voice_Log_Configuration(Table, schema="logging"):  # type: ignore
     display_hidden_channels: SQLType.Boolean = Column(default=True)
 
 
-class VoiceLogging(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+class VoiceLogging(Cog):
+    def __init__(self, bot: BotBase):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -115,5 +117,5 @@ class VoiceLogging(commands.Cog):
         )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: BotBase):
     bot.add_cog(VoiceLogging(bot))

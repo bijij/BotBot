@@ -18,17 +18,6 @@ yarl = ">=1.0,<2.0"
 speedups = ["aiodns", "brotlipy", "cchardet"]
 
 [[package]]
-name = "ampharos"
-version = "2.0.0"
-description = "A Pokemon Database for Donphan"
-category = "main"
-optional = false
-python-versions = ">=3.7.2,<4.0.0"
-
-[package.dependencies]
-donphan = ">=3.4"
-
-[[package]]
 name = "appdirs"
 version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -103,11 +92,11 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "black"
-version = "20.8b1"
+version = "21.4b0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.6.2"
 
 [package.dependencies]
 appdirs = "*"
@@ -116,12 +105,11 @@ mypy-extensions = ">=0.4.3"
 pathspec = ">=0.6,<1"
 regex = ">=2020.1.8"
 toml = ">=0.10.1"
-typed-ast = ">=1.4.0"
-typing-extensions = ">=3.7.4"
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
+python2 = ["typed-ast (>=1.4.2)"]
 
 [[package]]
 name = "bottomify"
@@ -169,17 +157,17 @@ version = "2021.4.13"
 description = "A discord.py extension with additional and alternative features."
 category = "main"
 optional = false
-python-versions = ">=3.8"
+python-versions = "*"
 develop = false
 
 [package.dependencies]
-"discord.py" = ">=1.6"
+"discord.py" = ">=2.0.0a"
 
 [package.source]
 type = "git"
 url = "https://github.com/ext-creators/discord-ext-alternatives"
 reference = "discord.py@v2"
-resolved_reference = "cc03ce5a70d0356bdfb91b80c7b6f29502db4241"
+resolved_reference = "d906e71f18a5eabd1dab306e1da59c966b506211"
 
 [[package]]
 name = "discord-ext-boardgames"
@@ -212,7 +200,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3033+g91c473db"
+version = "2.0.0a3044+g3c267472"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -230,7 +218,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "91c473db573c30005597e424aee742e4b9050dcb"
+resolved_reference = "3c2674725a861a8db62d41d76941df68b95db9a0"
 
 [[package]]
 name = "ditto"
@@ -257,7 +245,7 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "eb4dc21fc435c07cb6b1ea09854bc2c8dd36cea7"
+resolved_reference = "90f610eedbe7d9f7086fcdee7d2a2d8271a70be6"
 
 [[package]]
 name = "donphan"
@@ -587,7 +575,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0b47c5f42d54aeeb9a7f5de9ea5914171a049b5bcb80d034304100734d56a2f0"
+content-hash = "f834c9f9dc062e94e651de383140a16a02b5fe635334a991be7baa4669af8904"
 
 [metadata.files]
 aiohttp = [
@@ -628,10 +616,6 @@ aiohttp = [
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win32.whl", hash = "sha256:932bb1ea39a54e9ea27fc9232163059a0b8855256f4052e776357ad9add6f1c9"},
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win_amd64.whl", hash = "sha256:02f46fc0e3c5ac58b80d4d56eb0a7c7d97fcef69ace9326289fb9f1955e65cfe"},
     {file = "aiohttp-3.7.4.post0.tar.gz", hash = "sha256:493d3299ebe5f5a7c66b9819eacdcfbbaaf1a8e84911ddffcdc48888497afecf"},
-]
-ampharos = [
-    {file = "Ampharos-2.0.0-py3-none-any.whl", hash = "sha256:391c5ab73fbeca5946dc0fedd323cee4736f7322a951cdee26bb3bc7df1113b2"},
-    {file = "Ampharos-2.0.0.tar.gz", hash = "sha256:7de23486eb85b6018d29c86b043916cc86f55f788ffc1d0b9d94d0bff0111d63"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
@@ -675,7 +659,8 @@ attrs = [
     {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
 black = [
-    {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
+    {file = "black-21.4b0-py3-none-any.whl", hash = "sha256:2db7040bbbbaa46247bfcc05c6efdebd7ebe50c1c3ca745ca6e0f6776438c96c"},
+    {file = "black-21.4b0.tar.gz", hash = "sha256:915d916c48646dbe8040d5265cff7111421a60a3dfe7f7e07273176a57c24a34"},
 ]
 bottomify = [
     {file = "bottomify-1.1.1-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:242895ded0f1a62b679828e3466491c0d04aa7e07b89d1b9de688e5ad1a14a87"},

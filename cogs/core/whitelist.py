@@ -3,7 +3,7 @@ from discord.ext import commands, menus
 
 from donphan import Column, SQLType, Table
 
-from ditto import Context
+from ditto import Cog, Context
 from ditto.utils.paginator import EmbedPaginator
 
 from bot import BotBase
@@ -39,7 +39,7 @@ def is_dpy_mod():
     return commands.check(predicate)
 
 
-class Whitelist(commands.Cog):
+class Whitelist(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
         bot.loop.create_task(self.add_users())
