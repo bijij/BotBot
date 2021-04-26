@@ -513,7 +513,7 @@ class Boggle(commands.Cog):
         self.bot = bot
         self.games = {}
 
-    @commands.group(invoke_witout_command=True)
+    @commands.group(invoke_without_command=True)
     # @commands.max_concurrency(1, per=commands.BucketType.channel) # rip
     @boggle_game(DiscordGame)
     async def boggle(self, ctx: Context):
