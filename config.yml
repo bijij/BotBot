@@ -26,7 +26,6 @@
     EXTENSIONS:
 
         # Core Extensions
-        cogs.core.command_stats: ~
         cogs.core.whitelist: ~
 
         # Logging extensions
