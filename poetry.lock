@@ -167,18 +167,25 @@ develop = false
 type = "git"
 url = "https://github.com/ext-creators/discord-ext-alternatives"
 reference = "discord.py@v2"
-resolved_reference = "d906e71f18a5eabd1dab306e1da59c966b506211"
+resolved_reference = "2987112c31de9bada4ee95cee9007a326e496e19"
 
 [[package]]
 name = "discord-ext-boardgames"
-version = "0.2.3"
-description = "Interactive board game session for discord.py"
+version = "2.0.0a"
+description = "Boardgame utility functions for discord.py"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = "^3.8.0"
+develop = false
 
 [package.dependencies]
-"discord.py" = ">=1.0"
+"discord.py" = "branch master"
+
+[package.source]
+type = "git"
+url = "https://github.com/bijij/discord-ext-boardgames"
+reference = "master"
+resolved_reference = "f396007dbefea9be6bf9ba1a73725796088e55d5"
 
 [[package]]
 name = "discord-ext-menus"
@@ -200,7 +207,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3044+g3c267472"
+version = "2.0.0a3049+g9f355192"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -218,7 +225,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "3c2674725a861a8db62d41d76941df68b95db9a0"
+resolved_reference = "9f3551926ad5176c0cbf23a1a127452a2749a135"
 
 [[package]]
 name = "ditto"
@@ -245,7 +252,7 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "1dc7cbb095738187cb46c1a42de9ed8b26673bf6"
+resolved_reference = "af3d0d000ac0b47e3d45a3c6f272b11a959b3015"
 
 [[package]]
 name = "donphan"
@@ -338,7 +345,7 @@ voice = ["discord.py[voice] (>=1.5.0)", "youtube-dl"]
 type = "git"
 url = "https://github.com/Gorialis/jishaku"
 reference = "master"
-resolved_reference = "f18b40d39c1700e1739b799450b8dc4532c273a5"
+resolved_reference = "9780de2217d1ed41e9c82936804bdc265b90357e"
 
 [[package]]
 name = "multidict"
@@ -575,7 +582,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "f834c9f9dc062e94e651de383140a16a02b5fe635334a991be7baa4669af8904"
+content-hash = "1f6a2d1ebe4a6486bde95a019e6876a2f207aa6af719c06e2f35f54dd1b1750a"
 
 [metadata.files]
 aiohttp = [
@@ -690,10 +697,7 @@ colorama = [
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 discord-ext-alternatives = []
-discord-ext-boardgames = [
-    {file = "discord-ext-boardgames-0.2.3.tar.gz", hash = "sha256:1eb457e4e05f7fa837b193afb3c101743a89d9136b35f2dd6af7e9d8c4674668"},
-    {file = "discord_ext_boardgames-0.2.3-py3-none-any.whl", hash = "sha256:02d81f535c8bab3fa9b1cc8c903ec69f24c53a785dac67267ead089f313346f4"},
-]
+discord-ext-boardgames = []
 discord-ext-menus = []
 "discord.py" = []
 ditto = []

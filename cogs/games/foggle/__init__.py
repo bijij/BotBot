@@ -6,6 +6,7 @@ import re
 
 from functools import wraps
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import Literal, NamedTuple
 
 import discord
@@ -249,7 +250,7 @@ class Board:
     def points(self, equation: str) -> int:
         return POINTS[len(self.get_chain(equation))] if self.is_legal(equation) else -1
 
-    def total_points(self, equations: list[str]) -> int:
+    def total_points(self, equations: Iterable[str]) -> int:
         return sum(self.points(equation) for equation in equations)
 
 
@@ -296,10 +297,10 @@ class Game(menus.Menu):
     async def finalize(self, timed_out):
         self.bot.dispatch("foggle_game_complete", self.message.channel)
 
-    def get_points(self, equations: list[str]) -> int:
+    def get_points(self, equations: Iterable[str]) -> int:
         return self.board.total_points(equations)
 
-    def get_correct(self, equations: list[str]):
+    def get_correct(self, equations: Iterable[str]):
         return sum(self.board.is_legal(equation) for equation in equations)
 
     def check_equation(self, equation: str) -> bool:

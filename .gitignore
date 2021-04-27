@@ -1,5 +1,16 @@
-config.ini
-__pycache__/
-cogs/secret/*
-res/backup/*
-!.gitkeep
+# Python compiled files
+__pycache__
+*.py[cod]
+
+# Dev env
+.venv
+venv
+
+# IDEs
+.vscode
+
+# Sphinx docs
+docs/_build
+
+# Test env
+tests/secrets.py

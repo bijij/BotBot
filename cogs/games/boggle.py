@@ -6,13 +6,14 @@ import random
 from functools import wraps
 from string import ascii_uppercase
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import NamedTuple
 
 import discord
 from discord.ext import commands, menus
-from discord.ext.commands.errors import BadArgument
 
 from ditto import BotBase, Context
+from ditto.types import User
 from ditto.utils.strings import ordinal
 
 SMALL = 3
@@ -191,7 +192,7 @@ class Board:
     def points(self, word: str) -> int:
         return POINTS[len(word)] if self.is_legal(word) else 0
 
-    def total_points(self, words: list[str]) -> int:
+    def total_points(self, words: Iterable[str]) -> int:
         return sum(self.points(word) for word in words)
 
 
@@ -230,7 +231,7 @@ class Game(menus.Menu):
     async def finalize(self, timed_out):
         self.bot.dispatch("boggle_game_complete", self.message.channel)
 
-    def get_points(self, words: list[str]) -> int:
+    def get_points(self, words: Iterable[str]) -> int:
         return self.board.total_points(words)
 
     def check_word(self, word: str) -> bool:
@@ -319,8 +320,8 @@ class DiscordGame(Game):
         return embed
 
     def setup(self):
-        self.all_words = set()
-        self.words = defaultdict(set)
+        self.all_words: set[str] = set()
+        self.words: dict[User, set[str]] = defaultdict(set)
 
     async def check_message(self, message: discord.Message):
         word = message.content
@@ -423,10 +424,10 @@ class ClassicGame(Game):
 
     def setup(self):
         self.over = False
-        self.used_words = set()
-        self.word_lists = dict()
-        self.words = defaultdict(set)
-        self.unique_words = defaultdict(set)
+        self.used_words: set[str] = set()
+        self.word_lists: dict[User, str] = dict()
+        self.words: dict[User, set[str]] = defaultdict(set)
+        self.unique_words: dict[User, set[str]] = defaultdict(set)
 
     async def finalize(self, timed_out: bool):
         await super().finalize(timed_out)

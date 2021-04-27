@@ -30,7 +30,7 @@ class Cell:
             return "🚩" if self.flagged else "⬜"
 
 
-class Game(boardgames.Board):
+class Game(boardgames.Board[Cell]):
     def __init__(self, size_x=10, size_y=7):
         super().__init__(size_x, size_y)
         self.record = None
@@ -125,13 +125,13 @@ class Game(boardgames.Board):
                                 self.clean()
 
 
-def is_no_game(ctx: commands.Context):
+def is_no_game(ctx: Context):
     if ctx.channel in ctx.cog._games:
         raise commands.CheckFailure("There is already a Minesweeper game running.")
     return True
 
 
-def is_game(ctx: commands.context):
+def is_game(ctx: Context):
     try:
         is_no_game(ctx)
     except commands.CheckFailure:

@@ -13,7 +13,7 @@ discord-ext-alternatives = {git = "https://github.com/ext-creators/discord-ext-a
 discord-ext-menus = {git = "https://github.com/rapptz/discord-ext-menus"}
 jishaku = {git = "https://github.com/Gorialis/jishaku"}
 # end - added to appease poetry
-discord-ext-boardgames = ">=0.2.3"
+discord-ext-boardgames = {git = "https://github.com/bijij/discord-ext-boardgames"}
 ditto = {git = "https://github.com/bijij/ditto"}
 numpy = ">=1.19.2"
 psutil = ">=5.7.2"
