@@ -29,7 +29,7 @@
         cogs.core.whitelist: ~
 
         # Logging extensions
-        cogs.logging.logging: ~
+        cogs.logging.commands: ~
         cogs.logging.status: ~
         cogs.logging.voice: ~    
 
@@ -37,7 +37,7 @@
         cogs.memes.bottom: ~        
         cogs.memes.markov: ~
         cogs.memes.timecard: ~
-        cogs.memes.status: ~
+        cogs.memes.bot_status: ~
 
         # Game Extensions
         cogs.games.connect_four: ~

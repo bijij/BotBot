@@ -5,7 +5,7 @@ import json
 import discord
 from discord.ext import commands, tasks
 
-from cogs.logging.logging import Status_Log
+from cogs.logging.db import Status_Log
 
 
 DEFAULT_STATUS = discord.Status.online

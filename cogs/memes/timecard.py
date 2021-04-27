@@ -159,7 +159,7 @@ class TimeCard(commands.Cog):
 
                 y_pos += text_size[1] // len(lines)
 
-            out_fp = BytesIO()
+            out_fp = io.BytesIO()
             image.save(out_fp, "PNG")
             out_fp.seek(0)
 

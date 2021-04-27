@@ -12,7 +12,7 @@ from discord.ext import commands
 from ditto import BotBase, Cog, Context, CONFIG
 from ditto.utils.collections import TimedLRUDict
 
-from cogs.logging.logging import Message_Log, Opt_In_Status
+from cogs.logging.db import Message_Log, Opt_In_Status
 
 
 MAX_TRIES = 32

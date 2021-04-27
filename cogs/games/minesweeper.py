@@ -1,4 +1,5 @@
 from random import sample
+import discord
 
 from discord.ext import boardgames, commands
 
@@ -143,7 +144,7 @@ class Minesweeper(Cog):
     """Simple minesweeper game"""
 
     def __init__(self, bot: commands.Bot):
-        self._games = {}
+        self._games: dict[discord.TextChannel, Game] = {}
 
     @commands.group(name="minesweeper", aliases=["ms"], invoke_without_command=True)
     async def minesweeper(self, ctx):

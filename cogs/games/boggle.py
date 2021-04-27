@@ -7,7 +7,7 @@ from functools import wraps
 from string import ascii_uppercase
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import discord
 from discord.ext import commands, menus
@@ -197,8 +197,8 @@ class Board:
 
 
 class Game(menus.Menu):
-    name = "Boggle"
-    footer = None
+    name: Optional[str] = "Boggle"
+    footer: Optional[str] = None
 
     def __init__(self, *, size=ORIGINAL, **kwargs):
         self.board = Board(size=size)
@@ -281,7 +281,7 @@ class ShuffflingGame(Game):
         await super().start(*args, **kwargs)
         self.bot.loop.create_task(self.shuffle_task())
 
-    def get_points(self, words: list[str]) -> int:
+    def get_points(self, words: Iterable[str]) -> int:
         points = 0
         for word in words:
             for board in self.boards:
@@ -512,7 +512,7 @@ def boggle_game(game_type: type[Game]):
 class Boggle(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.games = {}
+        self.games: dict[discord.TextChannel, Game] = {}
 
     @commands.group(invoke_without_command=True)
     # @commands.max_concurrency(1, per=commands.BucketType.channel) # rip

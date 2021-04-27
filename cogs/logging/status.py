@@ -19,7 +19,8 @@ from ditto.db import Time_Zones
 from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
 
-from cogs.logging.logging import COLOURS, Opt_In_Status, Status_Log
+from .core import COLOURS
+from .db import Opt_In_Status, Status_Log
 
 MIN_DAYS = 7
 
@@ -89,7 +90,7 @@ async def get_status_log(
     *,
     days: int = 30,
 ) -> list[LogEntry]:
-    status_log = []
+    status_log: list[LogEntry] = []
 
     # Fetch records from DB
     records = await get_status_records(user, conn, days=days)

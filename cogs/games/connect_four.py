@@ -34,14 +34,14 @@ DIRECTIONS = ((1, 0), (0, 1), (1, -1), (1, 1))
 K = 32  # Ranking K-factor
 
 
-class Games(Table, schema="connect_four"):
+class Games(Table, schema="connect_four"):  # type: ignore[call-arg]
     game_id: SQLType.Serial = Column(primary_key=True)
     players: list[SQLType.BigInt]
     winner: SQLType.SmallInt
     finished: SQLType.Boolean
 
 
-class Ranking(Table, schema="connect_four"):
+class Ranking(Table, schema="connect_four"):  # type: ignore[call-arg]
     user_id: SQLType.BigInt = Column(primary_key=True)
     ranking: SQLType.Integer = Column(default="1000")
     games: SQLType.Integer = Column(default="0")
@@ -57,8 +57,8 @@ class Board:
             (column, row), disc = move
             self.columns[column][row] = disc
 
-        self.winner = None
-        self.game_over = self.check_game_over()
+        self.winner: Optional[int] = None
+        self.game_over: bool = self.check_game_over()
 
     @property
     def state(self):
@@ -207,6 +207,8 @@ class Game(menus.Menu):
         return discord.Embed(description=self.board.state)
 
     async def _end_game(self, resignation: int = None):
+        winner: Optional[int]
+
         if resignation is not None:
             winner = not resignation
             content = f"Game cancelled by {self.players[resignation].mention} ({DISCS[resignation]})!"

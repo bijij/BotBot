@@ -7,7 +7,7 @@ import re
 from functools import wraps
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, Optional
 
 import discord
 from discord.ext import commands, menus
@@ -255,8 +255,8 @@ class Board:
 
 
 class Game(menus.Menu):
-    name = "Foggle"
-    footer = None
+    name: Optional[str] = "Foggle"
+    footer: Optional[str] = None
 
     def __init__(self, *, size: int = ORIGINAL, base: int = 10, **kwargs):
         self.board = Board(size=size, base=base)
@@ -350,10 +350,10 @@ class ShuffflingGame(Game):
         await super().start(*args, **kwargs)
         self.bot.loop.create_task(self.shuffle_task())
 
-    def get_points(self, equations: list[str]) -> int:
+    def get_points(self, equations: Iterable[str]) -> int:
         return sum(max(board.points(equation) for board in self.boards) for equation in equations)
 
-    def get_correct(self, equations: list[str]):
+    def get_correct(self, equations: Iterable[str]):
         return sum(max(board.is_legal(equation) for board in self.boards) for equation in equations)
 
 
@@ -496,7 +496,7 @@ def foggle_game(game_type: type[Game]):
 class Foggle(Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
-        self.games = {}
+        self.games: dict[str, Game] = {}
 
     @commands.group(invoke_without_command=True)
     @foggle_game(DiscordGame)
