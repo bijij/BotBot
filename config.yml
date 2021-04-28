@@ -29,7 +29,7 @@
         cogs.core.whitelist: ~
 
         # Logging extensions
-        cogs.logging.commands: ~
+        cogs.logging.core: ~
         cogs.logging.status: ~
         cogs.logging.voice: ~    
 
