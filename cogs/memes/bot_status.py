@@ -4,6 +4,8 @@ import json
 
 import discord
 from discord.ext import commands, tasks
+from donphan import MaybeAcquire
+from ditto import BotBase
 
 from cogs.logging.db import Status_Log
 
@@ -40,7 +42,7 @@ def get_status(time: datetime.datetime):
 
 
 class StatusMeme(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: BotBase):
         self.bot = bot
         self.status_task.start()
 
@@ -57,7 +59,9 @@ class StatusMeme(commands.Cog):
         else:
             await self.bot.change_presence(status=status)
             status = status.name
-        await Status_Log.insert(user_id=self.bot.user.id, timestamp=now, status=status)
+
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+            await Status_Log.insert(connection, user_id=self.bot.user.id, timestamp=now, status=status)
 
     @tasks.loop(seconds=SEGMENT_DURATION)
     async def status_task(self):

@@ -1,5 +1,8 @@
 import datetime
+
+from collections.abc import Iterable
 from typing import Optional
+
 import asyncpg
 
 import discord
@@ -15,12 +18,14 @@ from ditto.utils.strings import ZWSP
 
 class Reminders(Cog):
     @staticmethod
-    async def get_reminder(id: int) -> Optional[asyncpg.Record]:
-        return await Events.fetchrow_where("id = $1 AND event_type = 'reminder'", id)
+    async def get_reminder(connection: asyncpg.Connection, id: int) -> Optional[asyncpg.Record]:
+        return await Events.fetch_row(connection, id=id, event_type="reminder")
 
     @staticmethod
-    async def get_reminders(user: User) -> list[asyncpg.Record]:
-        return await Events.fetch_where("event_type = 'reminder' AND data #>> '{args,0}' = $1", str(user.id))
+    async def get_reminders(connection: asyncpg.Connection, user: User) -> Iterable[asyncpg.Record]:
+        return await Events.fetch_where(
+            connection, "event_type = 'reminder' AND data #>> '{args,0}' = $1", str(user.id)
+        )
 
     @commands.group(aliases=["remind"], invoke_without_command=True)
     async def reminder(self, ctx: Context, *, argument: tuple[datetime.datetime, str]) -> None:
@@ -50,16 +55,19 @@ class Reminders(Cog):
     @reminder.command(name="clear")
     async def reminder_clear(self, ctx: Context) -> None:
 
-        reminders = await self.get_reminders(ctx.author)
+        async with ctx.db as connection:
+            reminders = list(await self.get_reminders(connection, ctx.author))
 
-        if len(reminders) == 0:
-            raise commands.BadArgument("You do not have any reminders.")
+            if len(reminders) == 0:
+                raise commands.BadArgument("You do not have any reminders.")
 
-        if not await ctx.confirm("Are you sure you want to clear your reminders?"):
-            await ctx.send("Cancelled..")
-            return
+            if not await ctx.confirm("Are you sure you want to clear your reminders?"):
+                await ctx.send("Cancelled..")
+                return
 
-        await Events.delete_where("event_type = 'reminder' AND data #>> '{args,0}' = $1", str(ctx.author.id))
+            await Events.delete_where(
+                connection, "event_type = 'reminder' AND data #>> '{args,0}' = $1", str(ctx.author.id)
+            )
 
         if self.bot.next_scheduled_event is not None:
             for reminder in reminders:
@@ -72,12 +80,13 @@ class Reminders(Cog):
     @reminder.command(name="cancel", aliases=["delete"])
     async def reminder_cancel(self, ctx: Context, *, id: int) -> None:
 
-        reminder = await self.get_reminder(id)
+        async with ctx.db as connection:
+            reminder = await self.get_reminder(connection, id)
 
-        if reminder is None or reminder["data"]["args"][0] != ctx.author.id:
-            raise commands.BadArgument(f"Reminder with ID: {id} not found.")
+            if reminder is None or reminder["data"]["args"][0] != ctx.author.id:
+                raise commands.BadArgument(f"Reminder with ID: {id} not found.")
 
-        await Events.delete_record(reminder)
+            await Events.delete_record(connection, reminder)
 
         if getattr(self.bot.next_scheduled_event, "id", None) == id:
             self.bot.restart_scheduler()
@@ -87,7 +96,8 @@ class Reminders(Cog):
     @reminder.command(name="list")
     async def reminder_list(self, ctx: Context) -> None:
 
-        reminders = await self.get_reminders(ctx.author)
+        async with ctx.db as connection:
+            reminders = list(await self.get_reminders(connection, ctx.author))
 
         if len(reminders) == 0:
             raise commands.BadArgument("You do not have any reminders.")

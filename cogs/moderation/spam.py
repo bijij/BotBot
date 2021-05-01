@@ -6,7 +6,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from donphan import Column, SQLType, Table
+from donphan import Column, SQLType, Table, MaybeAcquire
 
 from bot import BotBase  # , Context
 
@@ -30,8 +30,8 @@ class GlobalCoolDown(commands.CooldownMapping):
 
 
 class Spam_Checker(Table, schema="moderation"):  # type: ignore
-    guild_id: SQLType.BigInt = Column(primary_key=True)
-    max_mentions: int
+    guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
+    max_mentions: Column[int]
 
 
 class SpamCheckerConfig:
@@ -130,10 +130,11 @@ class SpamChecker(commands.Cog):
     async def load_config(self):
         await self.bot.wait_until_ready()
 
-        for record in await Spam_Checker.fetchall():
-            config = SpamCheckerConfig(self.bot, record)
-            if config.guild is not None:
-                self.config[config.guild] = config
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+            for record in await Spam_Checker.fetch(connection):
+                config = SpamCheckerConfig(self.bot, record)
+                if config.guild is not None:
+                    self.config[config.guild] = config
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

@@ -92,7 +92,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "black"
-version = "21.4b1"
+version = "21.4b2"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -207,7 +207,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3052+ga2df6e81"
+version = "2.0.0a3070+g135a7e9e"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -225,7 +225,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "a2df6e81b883fa514266f1ceb4d0216f91cae4b7"
+resolved_reference = "135a7e9e5a41ee297b1e48e379adee6a536dc455"
 
 [[package]]
 name = "ditto"
@@ -240,7 +240,7 @@ develop = false
 discord-ext-alternatives = "branch discord.py@v2"
 discord-ext-menus = "branch master"
 "discord.py" = "branch master"
-donphan = ">=3.4"
+donphan = "==4.0.0rc7"
 humanize = ">=3.4.1"
 jishaku = "branch master"
 parsedatetime = ">=2.6"
@@ -253,22 +253,25 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "7914b4941517a5002539a5caec0d14cbe3e3f6bd"
+resolved_reference = "9a70dc7b4b45087ae07b21abfc60262469ca9278"
 
 [[package]]
 name = "donphan"
-version = "3.4.1"
-description = "Asyncronous Database ORM for Postgres"
+version = "4.0.0rc7"
+description = "Asynchronous Database ORM for Postgres"
 category = "main"
 optional = false
-python-versions = ">=3.7.2,<4.0.0"
+python-versions = ">=3.9,<4.0"
 
 [package.dependencies]
-asyncpg = ">=0.18.3"
+asyncpg = ">=0.22.0"
+
+[package.extras]
+docs = ["sphinx (>=3.5.3)", "sphinxcontrib_trio (>=1.1.2)", "sphinxcontrib-websupport (>=1.2.4)"]
 
 [[package]]
 name = "humanize"
-version = "3.4.1"
+version = "3.5.0"
 description = "Python humanize utilities"
 category = "main"
 optional = false
@@ -667,8 +670,8 @@ attrs = [
     {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
 black = [
-    {file = "black-21.4b1-py3-none-any.whl", hash = "sha256:c9601dc863779db2fb1bf18b345bbfa2bb868463123cde6a7eff44b59e4ef739"},
-    {file = "black-21.4b1.tar.gz", hash = "sha256:20d326de75d13be6290925a95c94a9f368aca2f71cb7b753a938a5ae20f34a37"},
+    {file = "black-21.4b2-py3-none-any.whl", hash = "sha256:bff7067d8bc25eb21dcfdbc8c72f2baafd9ec6de4663241a52fb904b304d391f"},
+    {file = "black-21.4b2.tar.gz", hash = "sha256:fc9bcf3b482b05c1f35f6a882c079dc01b9c7795827532f4cc43c0ec88067bbc"},
 ]
 bottomify = [
     {file = "bottomify-1.1.1-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:242895ded0f1a62b679828e3466491c0d04aa7e07b89d1b9de688e5ad1a14a87"},
@@ -703,16 +706,17 @@ discord-ext-menus = []
 "discord.py" = []
 ditto = []
 donphan = [
-    {file = "Donphan-3.4.1-py3-none-any.whl", hash = "sha256:bce280aa6f2f9aa78aa7453e6fd5ad522a80492cd530c2c5b8db8a8bfa15246d"},
-    {file = "Donphan-3.4.1.tar.gz", hash = "sha256:555291fdd2615b27b173ace190a3ccfa38a729ee1e7371be73d834bd9782eebd"},
+    {file = "Donphan-4.0.0rc7-py3-none-any.whl", hash = "sha256:0c87879a05ccf9d224e7b914749706f08116bd7670261ad77a9b86aac29e1c8d"},
+    {file = "Donphan-4.0.0rc7.tar.gz", hash = "sha256:cf12c90f2b65741334e265c5c74aea7bddd5b860a542e542cf9293d894704107"},
 ]
 humanize = [
-    {file = "humanize-3.4.1-py3-none-any.whl", hash = "sha256:c2ccaea7f8cbcd883ec420279d6e71ad20371bb36dbf5100b178d9756563289e"},
-    {file = "humanize-3.4.1.tar.gz", hash = "sha256:6e04cdd75d66074c34ff93c30a2ad6d19d91202a65c1bd400b2edeedae399bda"},
+    {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},
+    {file = "humanize-3.5.0.tar.gz", hash = "sha256:a0474226e1494923f9106758e11f0c3bb4dbe5e7d84388fa78f90eb7713b5d65"},
 ]
 ics = [
     {file = "ics-0.7-py2.py3-none-any.whl", hash = "sha256:bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac"},
     {file = "ics-0.7-py3.7.egg", hash = "sha256:3b606205b9582ad27dff77f9b227a30d02fdac532731927fe39df1f1ddf8673f"},
+    {file = "ics-0.7.tar.gz", hash = "sha256:81113a2bb3166c1afcd71cd450c968d40efc385601e9d8344733e00ad8f53429"},
 ]
 idna = [
     {file = "idna-3.1-py3-none-any.whl", hash = "sha256:5205d03e7bcbb919cc9c19885f9920d622ca52448306f2377daede5cf3faac16"},

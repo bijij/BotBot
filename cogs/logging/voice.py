@@ -4,12 +4,13 @@ from discord.ext import commands
 from ditto import BotBase, Cog
 
 from donphan import Column, Table, SQLType
+from donphan.connection import MaybeAcquire
 
 
 class Voice_Log_Configuration(Table, schema="logging"):  # type: ignore
-    guild_id: SQLType.BigInt = Column(primary_key=True)
-    log_channel_id: SQLType.BigInt
-    display_hidden_channels: SQLType.Boolean = Column(default=True)
+    guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
+    log_channel_id: Column[SQLType.BigInt]
+    display_hidden_channels: Column[bool] = Column(default=True)
 
 
 class VoiceLogging(Cog):
@@ -56,10 +57,12 @@ class VoiceLogging(Cog):
     @commands.Cog.listener()
     async def on_voice_state_join(self, member: discord.Member, after: discord.VoiceState):
 
-        # Fetch DB entry
-        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
-        if record is None:
-            return
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+
+            # Fetch DB entry
+            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            if record is None:
+                return
 
         channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:
@@ -80,10 +83,12 @@ class VoiceLogging(Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
-        # Fetch DB entry
-        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
-        if record is None:
-            return
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+
+            # Fetch DB entry
+            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            if record is None:
+                return
 
         channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:
@@ -99,10 +104,12 @@ class VoiceLogging(Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_leave(self, member: discord.Member, before: discord.VoiceState):
-        # Fetch DB entry
-        record = await Voice_Log_Configuration.fetchrow(guild_id=member.guild.id)
-        if record is None:
-            return
+
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+            # Fetch DB entry
+            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            if record is None:
+                return
 
         channel = self.bot.get_channel(record["log_channel_id"])
         if channel is None:

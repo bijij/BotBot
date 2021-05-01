@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, menus
 
-from donphan import Column, SQLType, Table
+from donphan import Column, SQLType, Table, MaybeAcquire
 
 from ditto import Cog, Context
 from ditto.utils.paginator import EmbedPaginator
@@ -10,7 +10,7 @@ from bot import BotBase
 
 
 class Voice_Woes_Whitelist(Table):
-    user_id: SQLType.BigInt = Column(primary_key=True)
+    user_id: Column[SQLType.BigInt] = Column(primary_key=True)
 
 
 DPY_ID = 336642139381301249
@@ -67,22 +67,25 @@ class Whitelist(Cog):
     @voice_woes_whitelist.command(name="add")
     async def voice_woes_whiitelist_add(self, ctx: Context, member: discord.User):
         """Add a user to the voice woes whitelist."""
-        await Voice_Woes_Whitelist.insert(user_id=member.id)
+        async with ctx.db as connection:
+            await Voice_Woes_Whitelist.insert(connection, user_id=member.id)
         self.bot.whitelisted_users.add(member.id)
         await ctx.tick()
 
     @voice_woes_whitelist.command(name="remove")
     async def voice_woes_whiitelist_remove(self, ctx: Context, member: discord.User):
         """Remove a user from the voice woes whitelist."""
-        await Voice_Woes_Whitelist.delete_where("user_id=$1", member.id)
+        async with ctx.db as connection:
+            await Voice_Woes_Whitelist.delete(connection, user_id=member.id)
         self.bot.whitelisted_users.remove(member.id)
         await ctx.tick()
 
     async def add_users(self):
         await self.bot.wait_until_ready()
 
-        for record in await Voice_Woes_Whitelist.fetchall():
-            self.bot.whitelisted_users.add(record["user_id"])
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
+            for record in await Voice_Woes_Whitelist.fetch(connection):
+                self.bot.whitelisted_users.add(record["user_id"])
 
 
 def setup(bot: BotBase):

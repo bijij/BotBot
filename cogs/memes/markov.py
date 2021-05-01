@@ -91,13 +91,13 @@ class Markov(Cog):
         user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("um", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                coro = Message_Log.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2)
@@ -111,13 +111,13 @@ class Markov(Cog):
         user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("lqum", is_nsfw, 1, user.id)
 
-                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                coro = Message_Log.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=1)
 
             await self.send_markov(ctx, model, 1)
@@ -132,13 +132,13 @@ class Markov(Cog):
         user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("um", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                coro = Message_Log.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, seed=seed.lower())
@@ -157,14 +157,14 @@ class Markov(Cog):
         coros = []
 
         async with ctx.typing():
-            async with ctx.db as conn:
+            async with ctx.db as connection:
                 for user in users:
                     if user == ctx.author:
-                        await Opt_In_Status.is_opted_in(ctx, connection=conn)
+                        await Opt_In_Status.is_opted_in(connection, ctx)
                     else:
-                        await Opt_In_Status.is_public(ctx, user, connection=conn)
+                        await Opt_In_Status.is_public(connection, ctx, user)
 
-                    coros.append(Message_Log.get_user_log(user, is_nsfw, connection=conn))
+                    coros.append(Message_Log.get_user_log(connection, user, is_nsfw))
 
                 query = ("mum", is_nsfw, 3) + tuple(user.id for user in users)
                 model = await self.get_model(query, *coros, order=3)
@@ -187,11 +187,11 @@ class Markov(Cog):
     async def guild_markov(self, ctx: Context):
         """Generate a markov chain based off messages in the server."""
         async with ctx.typing():
-            async with ctx.db as conn:
+            async with ctx.db as connection:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
+                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3)
@@ -201,11 +201,11 @@ class Markov(Cog):
     async def code_guild_markov(self, ctx: Context):
         """Generate a markov chain code block."""
         async with ctx.typing():
-            async with ctx.db as conn:
+            async with ctx.db as connection:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("cgm", is_nsfw, 2, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, connection=conn)
+                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
@@ -216,13 +216,13 @@ class Markov(Cog):
         user = cast(discord.User, user or ctx.author)
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("cum", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(user, is_nsfw, connection=conn)
+                coro = Message_Log.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
@@ -234,11 +234,11 @@ class Markov(Cog):
         `seed`: The string to attempt to seed the markov chain with.
         """
         async with ctx.typing():
-            async with ctx.db as conn:
+            async with ctx.db as connection:
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(ctx.guild, is_nsfw, False, connection=conn)
+                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw, False)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3, seed=seed.lower())

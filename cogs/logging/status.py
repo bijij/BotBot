@@ -1,6 +1,7 @@
 import datetime
 
 from collections import Counter
+from collections import Iterable
 from io import BytesIO, StringIO
 from functools import partial
 from typing import cast, NamedTuple, Optional
@@ -58,16 +59,19 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
     return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
 
 
-async def get_status_records(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> list[asyncpg.Record]:
+async def get_status_records(
+    connection: asyncpg.Connection, user: discord.User, *, days: int = 30
+) -> Iterable[asyncpg.Record]:
     return await Status_Log.fetch_where(
+        connection,
         f"user_id = $1 AND \"timestamp\" > CURRENT_DATE - INTERVAL '{days} days'",
         user.id,
-        order_by='"timestamp" ASC',
+        order_by=(Status_Log.timestamp, "ASC"),
     )
 
 
-async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, days: int = 30) -> Counter:
-    records = await get_status_records(user, conn, days=days)
+async def get_status_totals(connection: asyncpg.Connection, user: discord.User, *, days: int = 30) -> Counter:
+    records = list(await get_status_records(connection, user, days=days))
 
     if not records:
         return Counter()
@@ -85,15 +89,15 @@ async def get_status_totals(user: discord.User, conn: asyncpg.Connection, *, day
 
 
 async def get_status_log(
+    connection: asyncpg.Connection,
     user: discord.User,
-    conn: asyncpg.Connection,
     *,
     days: int = 30,
 ) -> list[LogEntry]:
     status_log: list[LogEntry] = []
 
     # Fetch records from DB
-    records = await get_status_records(user, conn, days=days)
+    records = list(await get_status_records(connection, user, days=days))
     if not records:
         return status_log
 
@@ -370,9 +374,9 @@ class StatusLogging(Cog):
             raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_totals(user, conn, days=flags.num_days)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
+                data = await get_status_totals(connection, user, days=flags.num_days)
 
                 if not data:
                     raise commands.BadArgument(
@@ -418,9 +422,9 @@ class StatusLogging(Cog):
             raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
         async with ctx.typing():
-            async with ctx.db as conn:
-                await Opt_In_Status.is_public(ctx, user, connection=conn)
-                data = await get_status_log(user, conn, days=flags.num_days)
+            async with ctx.db as connection:
+                await Opt_In_Status.is_public(connection, ctx, user)
+                data = await get_status_log(connection, user, days=flags.num_days)
 
                 if not data:
                     raise commands.BadArgument(
@@ -447,9 +451,9 @@ class StatusLogging(Cog):
         """Output an `ical` format status log"""
         user = cast(discord.User, user or ctx.author)
 
-        async with ctx.db as conn:
-            await Opt_In_Status.is_public(ctx, user, connection=conn)
-            data = await get_status_log(user, conn, days=30)
+        async with ctx.db as connection:
+            await Opt_In_Status.is_public(connection, ctx, user)
+            data = await get_status_log(connection, user, days=30)
 
             if not data:
                 raise commands.BadArgument(f'User "{user}" currently has no status log data, please try again later.')

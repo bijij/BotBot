@@ -57,9 +57,9 @@ class Logging(Cog):
     @logging.command(name="start")
     async def logging_start(self, ctx: Context):
         """Opt into logging."""
-        async with ctx.db as conn:
-            await Opt_In_Status.is_not_opted_in(ctx, connection=conn)
-            await Opt_In_Status.insert(connection=conn, user_id=ctx.author.id)
+        async with ctx.db as connection:
+            await Opt_In_Status.is_not_opted_in(connection, ctx)
+            await Opt_In_Status.insert(connection, user_id=ctx.author.id)
             self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
@@ -67,9 +67,9 @@ class Logging(Cog):
     @logging.command(name="stop")
     async def logging_stop(self, ctx: Context):
         """Opt out of logging."""
-        async with ctx.db as conn:
-            await Opt_In_Status.is_opted_in(ctx, connection=conn)
-            await Opt_In_Status.delete(connection=conn, user_id=ctx.author.id)
+        async with ctx.db as connection:
+            await Opt_In_Status.is_opted_in(connection, ctx)
+            await Opt_In_Status.delete(connection, user_id=ctx.author.id)
             self._opted_in.remove(ctx.author.id)
 
         await ctx.tick()
@@ -77,18 +77,18 @@ class Logging(Cog):
     @logging.command(name="public")
     async def logging_public(self, ctx: Context, public: bool):
         """Set your logging visibility preferences."""
-        async with ctx.db as conn:
-            await Opt_In_Status.is_opted_in(ctx, connection=conn)
-            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, public=public)
+        async with ctx.db as connection:
+            await Opt_In_Status.is_opted_in(connection, ctx)
+            await Opt_In_Status.update_where(connection, "user_id = $1", ctx.author.id, public=public)
 
         await ctx.tick()
 
     @logging.command(name="nsfw")
     async def logging_nsfw(self, ctx: Context, nsfw: bool):
         """Set your NSFW channel logging preferences."""
-        async with ctx.db as conn:
-            await Opt_In_Status.is_opted_in(ctx, connection=conn)
-            await Opt_In_Status.update_where("user_id = $1", ctx.author.id, connection=conn, nsfw=nsfw)
+        async with ctx.db as connection:
+            await Opt_In_Status.is_opted_in(connection, ctx)
+            await Opt_In_Status.update_where(connection, "user_id = $1", ctx.author.id, nsfw=nsfw)
             if nsfw:
                 self._log_nsfw.add(ctx.author.id)
             else:
@@ -191,17 +191,17 @@ class Logging(Cog):
 
     @tasks.loop(seconds=60)
     async def _logging_task(self):
-        async with MaybeAcquire() as conn:
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
             if self.bot._status_log:
-                await Status_Log.insert_many(Status_Log._columns, *self.bot._status_log, connection=conn)
+                await Status_Log.insert_many(connection, Status_Log._columns, *self.bot._status_log)
                 self.bot._status_log = []
 
             if self.bot._message_log:
-                await Message_Log.insert_many(Message_Log._columns, *self.bot._message_log, connection=conn)
+                await Message_Log.insert_many(connection, Message_Log._columns, *self.bot._message_log)
                 self.bot._message_log = []
 
             if self.bot._message_delete_log:
-                await conn.executemany(
+                await connection.executemany(
                     f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1",
                     self.bot._message_delete_log,
                 )
@@ -209,54 +209,56 @@ class Logging(Cog):
 
             if self.bot._message_attachment_log:
                 await Message_Attachments.insert_many(
+                    connection,
                     Message_Attachments._columns,
                     *self.bot._message_attachment_log,
-                    connection=conn,
                 )
                 self.bot._message_attachment_log = []
 
             if self.bot._message_update_log:
-                await conn.executemany(
+                await connection.executemany(
                     f"UPDATE {Message_Log._name} SET content = $2 WHERE message_id = $1",
                     ((entry[0], entry[2]) for entry in self.bot._message_update_log),
                 )
                 for entry in self.bot._message_update_log:
                     with suppress(asyncpg.exceptions.IntegrityConstraintViolationError):
-                        await Message_Edit_History.insert_many(Message_Edit_History._columns, entry, connection=conn)
+                        await Message_Edit_History.insert_many(connection, Message_Edit_History._columns, entry)
                 self.bot._message_update_log = []
 
     @_logging_task.before_loop
     async def _before_logging_task(self):
         await self.bot.wait_until_ready()
 
-        for record in await Opt_In_Status.fetchall():
-            self._opted_in.add(record["user_id"])
-            if record["nsfw"]:
-                self._log_nsfw.add(record["user_id"])
+        async with MaybeAcquire(pool=self.bot.pool) as connection:
 
-        # Fill with current status data
-        status_log = []
-        now = discord.utils.utcnow()
+            for record in await Opt_In_Status.fetchall(connection):
+                self._opted_in.add(record["user_id"])
+                if record["nsfw"]:
+                    self._log_nsfw.add(record["user_id"])
 
-        for user_id in self._opted_in:
-            for guild in self.bot.guilds:
-                member = guild.get_member(user_id)
-                if member is not None:
+            # Fill with current status data
+            status_log = []
+            now = discord.utils.utcnow()
 
-                    # Handle streaming edge case
-                    if discord.ActivityType.streaming in {a.type for a in member.activities}:
-                        status = "streaming"
-                    else:
-                        status = member.status.name
+            for user_id in self._opted_in:
+                for guild in self.bot.guilds:
+                    member = guild.get_member(user_id)
+                    if member is not None:
 
-                    if status not in COLOURS:
-                        return
+                        # Handle streaming edge case
+                        if discord.ActivityType.streaming in {a.type for a in member.activities}:
+                            status = "streaming"
+                        else:
+                            status = member.status.name
 
-                    status_log.append((user_id, now, status))
-                    self.bot._last_status[member.id] = status
-                    break
+                        if status not in COLOURS:
+                            return
 
-        await Status_Log.insert_many(Status_Log._columns, *status_log)
+                        status_log.append((user_id, now, status))
+                        self.bot._last_status[member.id] = status
+                        break
+
+            await Status_Log.insert_many(connection, Status_Log._columns, *status_log)
 
 
 def setup(bot: LoggingBot):

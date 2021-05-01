@@ -35,18 +35,18 @@ K = 32  # Ranking K-factor
 
 
 class Games(Table, schema="connect_four"):  # type: ignore[call-arg]
-    game_id: SQLType.Serial = Column(primary_key=True)
-    players: list[SQLType.BigInt]
-    winner: SQLType.SmallInt
-    finished: SQLType.Boolean
+    game_id: Column[SQLType.Serial] = Column(primary_key=True)
+    players: Column[list[SQLType.BigInt]]
+    winner: Column[SQLType.SmallInt]
+    finished: Column[SQLType.Boolean]
 
 
 class Ranking(Table, schema="connect_four"):  # type: ignore[call-arg]
-    user_id: SQLType.BigInt = Column(primary_key=True)
-    ranking: SQLType.Integer = Column(default="1000")
-    games: SQLType.Integer = Column(default="0")
-    wins: SQLType.Integer = Column(default="0")
-    losses: SQLType.Integer = Column(default="0")
+    user_id: Column[SQLType.BigInt] = Column(primary_key=True)
+    ranking: Column[SQLType.Integer] = Column(default="1000")
+    games: Column[SQLType.Integer] = Column(default="0")
+    wins: Column[SQLType.Integer] = Column(default="0")
+    losses: Column[SQLType.Integer] = Column(default="0")
 
 
 class Board:
@@ -173,8 +173,8 @@ class Game(menus.Menu):
             self.players = (opponent, ctx.author)
 
         for player in self.players:
-            async with MaybeAcquire() as connection:
-                await Ranking.insert(connection=connection, ignore_on_conflict=True, user_id=player.id)
+            async with ctx.db as connection:
+                await Ranking.insert(connection, ignore_on_conflict=True, user_id=player.id)
 
         self.board = Board()
         self.current_player = 0
@@ -226,7 +226,7 @@ class Game(menus.Menu):
             return
 
         # Calulate new ELO
-        async with MaybeAcquire() as connection:
+        async with self.ctx.db as connection:
 
             await Games.insert(
                 connection=connection,
@@ -235,8 +235,8 @@ class Game(menus.Menu):
                 finished=resignation is None,
             )
 
-            record_1 = await Ranking.fetchrow(connection=connection, user_id=self.players[0].id)
-            record_2 = await Ranking.fetchrow(connection=connection, user_id=self.players[1].id)
+            record_1 = await Ranking.fetch_row(connection, user_id=self.players[0].id)
+            record_2 = await Ranking.fetch_row(connection, user_id=self.players[1].id)
 
             R1 = 10 ** (record_1["ranking"] / 400)
             R2 = 10 ** (record_2["ranking"] / 400)
@@ -251,8 +251,8 @@ class Game(menus.Menu):
             r2 = record_2["ranking"] + K * (S2 - E2)
 
             await Ranking.update_record(
+                connection,
                 record_1,
-                connection=connection,
                 ranking=round(r1),
                 games=record_1["games"] + 1,
                 wins=record_1["wins"] + self.board.winner == 0,
@@ -260,8 +260,8 @@ class Game(menus.Menu):
             )
 
             await Ranking.update_record(
+                connection,
                 record_2,
-                connection=connection,
                 ranking=round(r2),
                 games=record_2["games"] + 1,
                 wins=record_2["wins"] + self.board.winner == 1,
@@ -405,33 +405,37 @@ class ConnectFour(Cog):
     async def c4_ranking(self, ctx: Context, *, player: Optional[discord.Member] = None):
         """Get a player's ranking."""
 
-        # Single player ranking
-        if player is not None:
-            record = await Ranking.fetchrow(user_id=player.id)
+        async with ctx.db as connection:
 
-            if record is None:
-                raise commands.BadArgument(f"{player.mention} does not have a ranking.")
+            # Single player ranking
+            if player is not None:
+                record = await Ranking.fetch_row(connection, user_id=player.id)
 
-            user_id, ranking, games, wins, losses = record
+                if record is None:
+                    raise commands.BadArgument(f"{player.mention} does not have a ranking.")
 
-            embed = (
-                discord.Embed(title=f"{player}'s Ranking:")
-                .add_field(name="Ranking", value=ranking)
-                .add_field(name="Games Played", value=f"**{games}**")
-                .add_field(name="Wins", value=f"**{wins}** ({wins/games:.0%})")
-                .add_field(name="Losses", value=f"**{losses}** ({losses/games:.0%})")
-            )
+                user_id, ranking, games, wins, losses = record
 
-            return await ctx.send(embed=embed)
+                embed = (
+                    discord.Embed(title=f"{player}'s Ranking:")
+                    .add_field(name="Ranking", value=ranking)
+                    .add_field(name="Games Played", value=f"**{games}**")
+                    .add_field(name="Wins", value=f"**{wins}** ({wins/games:.0%})")
+                    .add_field(name="Losses", value=f"**{losses}** ({losses/games:.0%})")
+                )
 
-        embed = EmbedPaginator(title="Connect 4 Ranking", colour=discord.Colour.blue())
+                return await ctx.send(embed=embed)
 
-        for user_id, ranking, games, wins, losses in await Ranking.fetch(order_by="Ranking DESC"):
-            user = self.bot.get_user(user_id) or "Unknown User"
-            embed.add_field(
-                name=f"{user} | {ranking}",
-                value=f"Games: **{games}** | Wins: **{wins}** | Losses: **{losses}**",
-            )
+            embed = EmbedPaginator(title="Connect 4 Ranking", colour=discord.Colour.blue())
+
+            for user_id, ranking, games, wins, losses in await Ranking.fetch(
+                connection, order_by=(Ranking.ranking, "DESC")
+            ):
+                user = self.bot.get_user(user_id) or "Unknown User"
+                embed.add_field(
+                    name=f"{user} | {ranking}",
+                    value=f"Games: **{games}** | Wins: **{wins}** | Losses: **{losses}**",
+                )
 
         await menus.MenuPages(embed).start(ctx)
 
