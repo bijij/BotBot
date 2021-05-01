@@ -21,7 +21,7 @@ from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
 
 from .core import COLOURS
-from .db import Opt_In_Status, Status_Log
+from .db import OptInStatus, StatusLog
 
 MIN_DAYS = 7
 
@@ -62,11 +62,11 @@ def start_of_day(dt: datetime.datetime) -> datetime.datetime:
 async def get_status_records(
     connection: asyncpg.Connection, user: discord.User, *, days: int = 30
 ) -> Iterable[asyncpg.Record]:
-    return await Status_Log.fetch_where(
+    return await StatusLog.fetch_where(
         connection,
         f"user_id = $1 AND \"timestamp\" > CURRENT_DATE - INTERVAL '{days} days'",
         user.id,
-        order_by=(Status_Log.timestamp, "ASC"),
+        order_by=(StatusLog.timestamp, "ASC"),
     )
 
 
@@ -375,7 +375,7 @@ class StatusLogging(Cog):
 
         async with ctx.typing():
             async with ctx.db as connection:
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
                 data = await get_status_totals(connection, user, days=flags.num_days)
 
                 if not data:
@@ -423,7 +423,7 @@ class StatusLogging(Cog):
                 raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
             async with ctx.typing():
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
                 data = await get_status_log(connection, user, days=flags.num_days)
 
                 if not data:
@@ -452,7 +452,7 @@ class StatusLogging(Cog):
         user = cast(discord.User, user or ctx.author)
 
         async with ctx.db as connection:
-            await Opt_In_Status.is_public(connection, ctx, user)
+            await OptInStatus.is_public(connection, ctx, user)
             data = await get_status_log(connection, user, days=30)
 
             if not data:

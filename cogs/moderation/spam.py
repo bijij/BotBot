@@ -29,7 +29,7 @@ class GlobalCoolDown(commands.CooldownMapping):
         return key in self._cache
 
 
-class Spam_Checker(Table, schema="moderation"):  # type: ignore
+class SpamChecker(Table, schema="moderation"):  # type: ignore
     guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
     max_mentions: Column[int]
 
@@ -120,7 +120,7 @@ class SpamCheckerConfig:
         return True
 
 
-class SpamChecker(commands.Cog):
+class _SpamChecker(commands.Cog):
     def __init__(self, bot: BotBase):
         self.bot = bot
         self.config: dict[discord.Guild, SpamCheckerConfig] = {}
@@ -131,7 +131,7 @@ class SpamChecker(commands.Cog):
         await self.bot.wait_until_ready()
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
-            for record in await Spam_Checker.fetch(connection):
+            for record in await SpamChecker.fetch(connection):
                 config = SpamCheckerConfig(self.bot, record)
                 if config.guild is not None:
                     self.config[config.guild] = config
@@ -171,4 +171,4 @@ class SpamChecker(commands.Cog):
 
 
 def setup(bot: BotBase):
-    bot.add_cog(SpamChecker(bot))
+    bot.add_cog(_SpamChecker(bot))

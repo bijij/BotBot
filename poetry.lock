@@ -207,7 +207,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3070+g135a7e9e"
+version = "2.0.0a3071+g83611edb"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -225,7 +225,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "135a7e9e5a41ee297b1e48e379adee6a536dc455"
+resolved_reference = "83611edb66c20d34f531ae4c9fbc052a0ecfe166"
 
 [[package]]
 name = "ditto"
@@ -253,7 +253,7 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "9a70dc7b4b45087ae07b21abfc60262469ca9278"
+resolved_reference = "2a5e79dccf6719b3badc1b06419288a202cdc8d1"
 
 [[package]]
 name = "donphan"

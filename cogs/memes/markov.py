@@ -12,7 +12,7 @@ from discord.ext import commands
 from ditto import BotBase, Cog, Context, CONFIG
 from ditto.utils.collections import TimedLRUDict
 
-from cogs.logging.db import Message_Log, Opt_In_Status
+from cogs.logging.db import MessageLog, OptInStatus
 
 
 MAX_TRIES = 32
@@ -92,12 +92,12 @@ class Markov(Cog):
 
         async with ctx.typing():
             async with ctx.db as connection:
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("um", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(connection, user, is_nsfw)
+                coro = MessageLog.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2)
@@ -112,12 +112,12 @@ class Markov(Cog):
 
         async with ctx.typing():
             async with ctx.db as connection:
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("lqum", is_nsfw, 1, user.id)
 
-                coro = Message_Log.get_user_log(connection, user, is_nsfw)
+                coro = MessageLog.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=1)
 
             await self.send_markov(ctx, model, 1)
@@ -133,12 +133,12 @@ class Markov(Cog):
 
         async with ctx.typing():
             async with ctx.db as connection:
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("um", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(connection, user, is_nsfw)
+                coro = MessageLog.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, seed=seed.lower())
@@ -160,11 +160,11 @@ class Markov(Cog):
             async with ctx.db as connection:
                 for user in users:
                     if user == ctx.author:
-                        await Opt_In_Status.is_opted_in(connection, ctx)
+                        await OptInStatus.is_opted_in(connection, ctx)
                     else:
-                        await Opt_In_Status.is_public(connection, ctx, user)
+                        await OptInStatus.is_public(connection, ctx, user)
 
-                    coros.append(Message_Log.get_user_log(connection, user, is_nsfw))
+                    coros.append(MessageLog.get_user_log(connection, user, is_nsfw))
 
                 query = ("mum", is_nsfw, 3) + tuple(user.id for user in users)
                 model = await self.get_model(query, *coros, order=3)
@@ -191,7 +191,7 @@ class Markov(Cog):
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw)
+                coro = MessageLog.get_guild_log(connection, ctx.guild, is_nsfw)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3)
@@ -205,7 +205,7 @@ class Markov(Cog):
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("cgm", is_nsfw, 2, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw)
+                coro = MessageLog.get_guild_log(connection, ctx.guild, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
@@ -217,12 +217,12 @@ class Markov(Cog):
 
         async with ctx.typing():
             async with ctx.db as connection:
-                await Opt_In_Status.is_public(connection, ctx, user)
+                await OptInStatus.is_public(connection, ctx, user)
 
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("cum", is_nsfw, 2, user.id)
 
-                coro = Message_Log.get_user_log(connection, user, is_nsfw)
+                coro = MessageLog.get_user_log(connection, user, is_nsfw)
                 model = await self.get_model(query, coro, order=2)
 
             await self.send_markov(ctx, model, 2, callable=make_code)
@@ -238,7 +238,7 @@ class Markov(Cog):
                 is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
                 query = ("gm", is_nsfw, 3, ctx.guild.id)
 
-                coro = Message_Log.get_guild_log(connection, ctx.guild, is_nsfw, False)
+                coro = MessageLog.get_guild_log(connection, ctx.guild, is_nsfw, False)
                 model = await self.get_model(query, coro, order=3)
 
             await self.send_markov(ctx, model, 3, seed=seed.lower())

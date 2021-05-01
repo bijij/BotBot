@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from donphan import MaybeAcquire
 from ditto import BotBase
 
-from cogs.logging.db import Status_Log
+from cogs.logging.db import StatusLog
 
 
 DEFAULT_STATUS = discord.Status.online
@@ -61,7 +61,7 @@ class StatusMeme(commands.Cog):
             status = status.name
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
-            await Status_Log.insert(connection, user_id=self.bot.user.id, timestamp=now, status=status)
+            await StatusLog.insert(connection, user_id=self.bot.user.id, timestamp=now, status=status)
 
     @tasks.loop(seconds=SEGMENT_DURATION)
     async def status_task(self):

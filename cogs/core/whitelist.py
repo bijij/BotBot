@@ -9,7 +9,7 @@ from ditto.utils.paginator import EmbedPaginator
 from bot import BotBase
 
 
-class Voice_Woes_Whitelist(Table):
+class VoiceWoesWhitelist(Table):
     user_id: Column[SQLType.BigInt] = Column(primary_key=True)
 
 
@@ -68,7 +68,7 @@ class Whitelist(Cog):
     async def voice_woes_whiitelist_add(self, ctx: Context, member: discord.User):
         """Add a user to the voice woes whitelist."""
         async with ctx.db as connection:
-            await Voice_Woes_Whitelist.insert(connection, user_id=member.id)
+            await VoiceWoesWhitelist.insert(connection, user_id=member.id)
         self.bot.whitelisted_users.add(member.id)
         await ctx.tick()
 
@@ -76,7 +76,7 @@ class Whitelist(Cog):
     async def voice_woes_whiitelist_remove(self, ctx: Context, member: discord.User):
         """Remove a user from the voice woes whitelist."""
         async with ctx.db as connection:
-            await Voice_Woes_Whitelist.delete(connection, user_id=member.id)
+            await VoiceWoesWhitelist.delete(connection, user_id=member.id)
         self.bot.whitelisted_users.remove(member.id)
         await ctx.tick()
 
@@ -84,7 +84,7 @@ class Whitelist(Cog):
         await self.bot.wait_until_ready()
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
-            for record in await Voice_Woes_Whitelist.fetch(connection):
+            for record in await VoiceWoesWhitelist.fetch(connection):
                 self.bot.whitelisted_users.add(record["user_id"])
 
 

@@ -7,7 +7,7 @@ from donphan import Column, Table, SQLType
 from donphan.connection import MaybeAcquire
 
 
-class Voice_Log_Configuration(Table, schema="logging"):  # type: ignore
+class VoiceLogConfiguration(Table, schema="logging"):  # type: ignore
     guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
     log_channel_id: Column[SQLType.BigInt]
     display_hidden_channels: Column[bool] = Column(default=True)
@@ -60,7 +60,7 @@ class VoiceLogging(Cog):
         async with MaybeAcquire(pool=self.bot.pool) as connection:
 
             # Fetch DB entry
-            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            record = await VoiceLogConfiguration.fetch_row(connection, guild_id=member.guild.id)
             if record is None:
                 return
 
@@ -86,7 +86,7 @@ class VoiceLogging(Cog):
         async with MaybeAcquire(pool=self.bot.pool) as connection:
 
             # Fetch DB entry
-            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            record = await VoiceLogConfiguration.fetch_row(connection, guild_id=member.guild.id)
             if record is None:
                 return
 
@@ -107,7 +107,7 @@ class VoiceLogging(Cog):
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
             # Fetch DB entry
-            record = await Voice_Log_Configuration.fetch_row(connection, guild_id=member.guild.id)
+            record = await VoiceLogConfiguration.fetch_row(connection, guild_id=member.guild.id)
             if record is None:
                 return
 

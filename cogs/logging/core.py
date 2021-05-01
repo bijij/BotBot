@@ -11,7 +11,7 @@ from discord.ext import commands, tasks
 
 from ditto import BotBase, Cog, Context
 
-from .db import Message_Log, Message_Attachments, Message_Edit_History, Opt_In_Status, Status_Log
+from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus, StatusLog
 
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
@@ -58,8 +58,8 @@ class Logging(Cog):
     async def logging_start(self, ctx: Context):
         """Opt into logging."""
         async with ctx.db as connection:
-            await Opt_In_Status.is_not_opted_in(connection, ctx)
-            await Opt_In_Status.insert(connection, user_id=ctx.author.id)
+            await OptInStatus.is_not_opted_in(connection, ctx)
+            await OptInStatus.insert(connection, user_id=ctx.author.id)
             self._opted_in.add(ctx.author.id)
 
         await ctx.tick()
@@ -68,8 +68,8 @@ class Logging(Cog):
     async def logging_stop(self, ctx: Context):
         """Opt out of logging."""
         async with ctx.db as connection:
-            await Opt_In_Status.is_opted_in(connection, ctx)
-            await Opt_In_Status.delete(connection, user_id=ctx.author.id)
+            await OptInStatus.is_opted_in(connection, ctx)
+            await OptInStatus.delete(connection, user_id=ctx.author.id)
             self._opted_in.remove(ctx.author.id)
 
         await ctx.tick()
@@ -78,8 +78,8 @@ class Logging(Cog):
     async def logging_public(self, ctx: Context, public: bool):
         """Set your logging visibility preferences."""
         async with ctx.db as connection:
-            await Opt_In_Status.is_opted_in(connection, ctx)
-            await Opt_In_Status.update_where(connection, "user_id = $1", ctx.author.id, public=public)
+            await OptInStatus.is_opted_in(connection, ctx)
+            await OptInStatus.update_where(connection, "user_id = $1", ctx.author.id, public=public)
 
         await ctx.tick()
 
@@ -87,8 +87,8 @@ class Logging(Cog):
     async def logging_nsfw(self, ctx: Context, nsfw: bool):
         """Set your NSFW channel logging preferences."""
         async with ctx.db as connection:
-            await Opt_In_Status.is_opted_in(connection, ctx)
-            await Opt_In_Status.update_where(connection, "user_id = $1", ctx.author.id, nsfw=nsfw)
+            await OptInStatus.is_opted_in(connection, ctx)
+            await OptInStatus.update_where(connection, "user_id = $1", ctx.author.id, nsfw=nsfw)
             if nsfw:
                 self._log_nsfw.add(ctx.author.id)
             else:
@@ -101,7 +101,7 @@ class Logging(Cog):
     async def logging_addbot(self, ctx: Context, *, bot: discord.Member):
         """Adds a bot to logging."""
         async with ctx.db as conn:
-            await Opt_In_Status.insert(connection=conn, user_id=bot.id, public=True, nsfw=True)
+            await OptInStatus.insert(connection=conn, user_id=bot.id, public=True, nsfw=True)
             self._opted_in.add(bot.id)
 
         await ctx.tick()
@@ -193,36 +193,36 @@ class Logging(Cog):
     async def _logging_task(self):
         async with MaybeAcquire(pool=self.bot.pool) as connection:
             if self.bot._status_log:
-                await Status_Log.insert_many(connection, Status_Log._columns, *self.bot._status_log)
+                await StatusLog.insert_many(connection, StatusLog._columns, *self.bot._status_log)
                 self.bot._status_log = []
 
             if self.bot._message_log:
-                await Message_Log.insert_many(connection, Message_Log._columns, *self.bot._message_log)
+                await MessageLog.insert_many(connection, MessageLog._columns, *self.bot._message_log)
                 self.bot._message_log = []
 
             if self.bot._message_delete_log:
                 await connection.executemany(
-                    f"UPDATE {Message_Log._name} SET deleted = TRUE WHERE message_id = $1",
+                    f"UPDATE {MessageLog._name} SET deleted = TRUE WHERE message_id = $1",
                     self.bot._message_delete_log,
                 )
                 self.bot._message_delete_log = []
 
             if self.bot._message_attachment_log:
-                await Message_Attachments.insert_many(
+                await MessageAttachments.insert_many(
                     connection,
-                    Message_Attachments._columns,
+                    MessageAttachments._columns,
                     *self.bot._message_attachment_log,
                 )
                 self.bot._message_attachment_log = []
 
             if self.bot._message_update_log:
                 await connection.executemany(
-                    f"UPDATE {Message_Log._name} SET content = $2 WHERE message_id = $1",
+                    f"UPDATE {MessageLog._name} SET content = $2 WHERE message_id = $1",
                     ((entry[0], entry[2]) for entry in self.bot._message_update_log),
                 )
                 for entry in self.bot._message_update_log:
                     with suppress(asyncpg.exceptions.IntegrityConstraintViolationError):
-                        await Message_Edit_History.insert_many(connection, Message_Edit_History._columns, entry)
+                        await MessageEditHistory.insert_many(connection, MessageEditHistory._columns, entry)
                 self.bot._message_update_log = []
 
     @_logging_task.before_loop
@@ -231,7 +231,7 @@ class Logging(Cog):
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
 
-            for record in await Opt_In_Status.fetchall(connection):
+            for record in await OptInStatus.fetch(connection):
                 self._opted_in.add(record["user_id"])
                 if record["nsfw"]:
                     self._log_nsfw.add(record["user_id"])
@@ -258,7 +258,7 @@ class Logging(Cog):
                         self.bot._last_status[member.id] = status
                         break
 
-            await Status_Log.insert_many(connection, Status_Log._columns, *status_log)
+            await StatusLog.insert_many(connection, StatusLog._columns, *status_log)
 
 
 def setup(bot: LoggingBot):
