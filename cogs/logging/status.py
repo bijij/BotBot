@@ -16,7 +16,7 @@ import discord
 from discord.ext import commands
 
 from ditto import BotBase, Cog, Context
-from ditto.db import Time_Zones
+from ditto.db import TimeZones
 from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
 
@@ -415,7 +415,7 @@ class StatusLogging(Cog):
 
         async with ctx.db as connection:
             if timezone_offset is None:
-                timezone = await Time_Zones.get_timezone(connection, user) or datetime.timezone.utc
+                timezone = await TimeZones.get_timezone(connection, user) or datetime.timezone.utc
             else:
                 timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
 
