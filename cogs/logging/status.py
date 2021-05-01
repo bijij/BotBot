@@ -413,16 +413,16 @@ class StatusLogging(Cog):
         if timezone_offset is not None and not -14 < timezone_offset < 14:
             raise commands.BadArgument("Invalid timezone offset passed.")
 
-        if timezone_offset is None:
-            timezone = await Time_Zones.get_timezone(user) or datetime.timezone.utc
-        else:
-            timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
+        async with ctx.db as connection:
+            if timezone_offset is None:
+                timezone = await Time_Zones.get_timezone(connection, user) or datetime.timezone.utc
+            else:
+                timezone = datetime.timezone(datetime.timedelta(hours=timezone_offset))
 
-        if flags.num_days < MIN_DAYS:
-            raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
+            if flags.num_days < MIN_DAYS:
+                raise commands.BadArgument(f"You must display at least {MIN_DAYS} days.")
 
-        async with ctx.typing():
-            async with ctx.db as connection:
+            async with ctx.typing():
                 await Opt_In_Status.is_public(connection, ctx, user)
                 data = await get_status_log(connection, user, days=flags.num_days)
 
