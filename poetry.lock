@@ -240,7 +240,7 @@ develop = false
 discord-ext-alternatives = "branch discord.py@v2"
 discord-ext-menus = "branch master"
 "discord.py" = "branch master"
-donphan = "==4.0.0rc8"
+donphan = ">=4.0.0"
 humanize = ">=3.4.1"
 jishaku = "branch master"
 parsedatetime = ">=2.6"
@@ -253,11 +253,11 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "b1c13c73fdd8ad89e1f15f3e026c5281936a93cc"
+resolved_reference = "c2250719bf2c27d5fbe652a38699fb8cea553fb3"
 
 [[package]]
 name = "donphan"
-version = "4.0.0rc8"
+version = "4.0.0"
 description = "Asynchronous Database ORM for Postgres"
 category = "main"
 optional = false
@@ -706,8 +706,8 @@ discord-ext-menus = []
 "discord.py" = []
 ditto = []
 donphan = [
-    {file = "Donphan-4.0.0rc8-py3-none-any.whl", hash = "sha256:7f6da0a4aa0929a9b213c1f3b6e799b2295425cedde4270f8c87b28b88fc238c"},
-    {file = "Donphan-4.0.0rc8.tar.gz", hash = "sha256:19b9980e5f877cfaeaedb762acbb42a0ec07235d6f2412f47e6a12c4f2a0fb64"},
+    {file = "Donphan-4.0.0-py3-none-any.whl", hash = "sha256:8bd4e943be6e9c7745338ec6df35a609c16d4675e6f1e0a16e0dac815dff0424"},
+    {file = "Donphan-4.0.0.tar.gz", hash = "sha256:e1c7af859923f0a3cc49f7af01a0f18c354d63d4ecfe69fd7440cce9e92324b8"},
 ]
 humanize = [
     {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},
@@ -716,7 +716,6 @@ humanize = [
 ics = [
     {file = "ics-0.7-py2.py3-none-any.whl", hash = "sha256:bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac"},
     {file = "ics-0.7-py3.7.egg", hash = "sha256:3b606205b9582ad27dff77f9b227a30d02fdac532731927fe39df1f1ddf8673f"},
-    {file = "ics-0.7.tar.gz", hash = "sha256:81113a2bb3166c1afcd71cd450c968d40efc385601e9d8344733e00ad8f53429"},
 ]
 idna = [
     {file = "idna-3.1-py3-none-any.whl", hash = "sha256:5205d03e7bcbb919cc9c19885f9920d622ca52448306f2377daede5cf3faac16"},

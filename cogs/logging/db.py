@@ -72,7 +72,7 @@ class Status(Enum):
     streaming = 5
 
 
-class _Status(EnumType[Status], name="status", schema="logging"):  # Hack from porting donphan v3 > v4
+class _Status(EnumType[Status], _name="status", schema="logging"):  # Hack from porting donphan v3 > v4
     ...
 
 class StatusLog(Table, schema="logging"):  # type: ignore
