@@ -5,6 +5,7 @@ from discord.ext import commands
 from donphan import Column, Enum, SQLType, Table
 
 from ditto import Context
+from donphan.types import EnumType
 
 
 class MessageLog(Table, schema="logging"):  # type: ignore
@@ -71,10 +72,13 @@ class Status(Enum):
     streaming = 5
 
 
+class _Status(EnumType[Status], name="status", schema="logging"):  # Hack from porting donphan v3 > v4
+    ...
+
 class StatusLog(Table, schema="logging"):  # type: ignore
     user_id: Column[SQLType.BigInt] = Column(primary_key=True, index=True)
     timestamp: Column[SQLType.Timestamp] = Column(primary_key=True)
-    status: Column[Status]
+    status: Column[_Status]
 
 
 class OptInStatus(Table, schema="logging"):  # type: ignore
