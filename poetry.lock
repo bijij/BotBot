@@ -207,7 +207,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3071+g83611edb"
+version = "2.0.0a3072+gb0ec2206"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -225,7 +225,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "83611edb66c20d34f531ae4c9fbc052a0ecfe166"
+resolved_reference = "b0ec22065e59d7fcce190333d2fa5b3de88b0e8b"
 
 [[package]]
 name = "ditto"
@@ -240,7 +240,7 @@ develop = false
 discord-ext-alternatives = "branch discord.py@v2"
 discord-ext-menus = "branch master"
 "discord.py" = "branch master"
-donphan = "==4.0.0rc7"
+donphan = "==4.0.0rc8"
 humanize = ">=3.4.1"
 jishaku = "branch master"
 parsedatetime = ">=2.6"
@@ -253,11 +253,11 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "2a5e79dccf6719b3badc1b06419288a202cdc8d1"
+resolved_reference = "b1c13c73fdd8ad89e1f15f3e026c5281936a93cc"
 
 [[package]]
 name = "donphan"
-version = "4.0.0rc7"
+version = "4.0.0rc8"
 description = "Asynchronous Database ORM for Postgres"
 category = "main"
 optional = false
@@ -557,7 +557,7 @@ python-versions = "*"
 
 [[package]]
 name = "typing-extensions"
-version = "3.7.4.3"
+version = "3.10.0.0"
 description = "Backported and Experimental Type Hints for Python 3.5+"
 category = "main"
 optional = false
@@ -706,8 +706,8 @@ discord-ext-menus = []
 "discord.py" = []
 ditto = []
 donphan = [
-    {file = "Donphan-4.0.0rc7-py3-none-any.whl", hash = "sha256:0c87879a05ccf9d224e7b914749706f08116bd7670261ad77a9b86aac29e1c8d"},
-    {file = "Donphan-4.0.0rc7.tar.gz", hash = "sha256:cf12c90f2b65741334e265c5c74aea7bddd5b860a542e542cf9293d894704107"},
+    {file = "Donphan-4.0.0rc8-py3-none-any.whl", hash = "sha256:7f6da0a4aa0929a9b213c1f3b6e799b2295425cedde4270f8c87b28b88fc238c"},
+    {file = "Donphan-4.0.0rc8.tar.gz", hash = "sha256:19b9980e5f877cfaeaedb762acbb42a0ec07235d6f2412f47e6a12c4f2a0fb64"},
 ]
 humanize = [
     {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},
@@ -1051,9 +1051,9 @@ typed-ast = [
     {file = "typed_ast-1.4.3.tar.gz", hash = "sha256:fb1bbeac803adea29cedd70781399c99138358c26d05fcbd23c13016b7f5ec65"},
 ]
 typing-extensions = [
-    {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
-    {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
-    {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
+    {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
+    {file = "typing_extensions-3.10.0.0-py3-none-any.whl", hash = "sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84"},
+    {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
 ]
 tzdata = [
     {file = "tzdata-2021.1-py2.py3-none-any.whl", hash = "sha256:9ad21eada54c97001e3e9858a674b3ee6bebe4a4fb2b58465930f2af0ba6c85d"},

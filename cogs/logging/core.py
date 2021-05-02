@@ -1,7 +1,7 @@
 import re
 
 from contextlib import suppress
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import asyncpg
 from donphan import MaybeAcquire
@@ -11,18 +11,18 @@ from discord.ext import commands, tasks
 
 from ditto import BotBase, Cog, Context
 
-from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus, StatusLog
+from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus, Status, StatusLog
 
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 
-COLOURS = {
-    None: (0, 0, 0, 0),
-    "online": (67, 181, 129, 255),
-    "offline": (116, 127, 141, 255),
-    "idle": (250, 166, 26, 255),
-    "dnd": (240, 71, 71, 255),
-    "streaming": (84, 51, 141, 255),
+COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
+    None: (0,0,0,0),
+    Status.online: (67, 181, 129, 255),
+    Status.offline: (116, 127, 141, 255),
+    Status.idle: (250, 166, 26, 255),
+    Status.dnd: (240, 71, 71, 255),
+    Status.streaming: (84, 51, 141, 255),
 }
 
 

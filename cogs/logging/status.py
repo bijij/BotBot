@@ -21,7 +21,7 @@ from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
 
 from .core import COLOURS
-from .db import OptInStatus, StatusLog
+from .db import OptInStatus, Status, StatusLog
 
 MIN_DAYS = 7
 
@@ -38,7 +38,7 @@ TRANSLUCENT = (255, 255, 255, 32)
 
 
 class LogEntry(NamedTuple):
-    status: Optional[str]
+    status: Optional[Status]
     start: datetime.datetime
     duration: datetime.timedelta
 
@@ -70,13 +70,13 @@ async def get_status_records(
     )
 
 
-async def get_status_totals(connection: asyncpg.Connection, user: discord.User, *, days: int = 30) -> Counter:
+async def get_status_totals(connection: asyncpg.Connection, user: discord.User, *, days: int = 30) -> Counter[Status]:
     records = list(await get_status_records(connection, user, days=days))
 
     if not records:
         return Counter()
 
-    status_totals = Counter()  # type: ignore
+    status_totals: Counter[Status] = Counter()
 
     total_duration = (records[-1]["timestamp"] - records[0]["timestamp"]).total_seconds()
 
