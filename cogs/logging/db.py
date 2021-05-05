@@ -8,7 +8,7 @@ from ditto import Context
 from donphan.types import EnumType
 
 
-class MessageLog(Table, schema="logging"):  # type: ignore
+class MessageLog(Table, schema="logging"):
     channel_id: Column[SQLType.BigInt] = Column(primary_key=True)
     message_id: Column[SQLType.BigInt] = Column(primary_key=True, unique=True)
     guild_id: Column[SQLType.BigInt] = Column(index=True)
@@ -52,13 +52,13 @@ class MessageLog(Table, schema="logging"):  # type: ignore
         return [record["content"].lower() if flatten_case else record["content"] for record in data]
 
 
-class MessageAttachments(Table, schema="logging"):  # type: ignore
+class MessageAttachments(Table, schema="logging"):
     message_id: Column[SQLType.BigInt] = Column(primary_key=True, references=MessageLog.message_id)
     attachment_id: Column[SQLType.BigInt]
     content: Column[str]
 
 
-class MessageEditHistory(Table, schema="logging"):  # type: ignore
+class MessageEditHistory(Table, schema="logging"):
     message_id: Column[SQLType.BigInt] = Column(primary_key=True, references=MessageLog.message_id)
     created_at: Column[SQLType.Timestamp] = Column(primary_key=True)
     content: Column[str]
@@ -72,17 +72,17 @@ class Status(Enum):
     streaming = 5
 
 
-class _Status(EnumType[Status], _name="status", schema="logging"):  # Hack from porting donphan v3 > v4
+class _Status(EnumType[Status], _name="status", schema="logging"):
     ...
 
 
-class StatusLog(Table, schema="logging"):  # type: ignore
+class StatusLog(Table, schema="logging"):
     user_id: Column[SQLType.BigInt] = Column(primary_key=True, index=True)
     timestamp: Column[SQLType.Timestamp] = Column(primary_key=True)
     status: Column[_Status]
 
 
-class OptInStatus(Table, schema="logging"):  # type: ignore
+class OptInStatus(Table, schema="logging"):
     user_id: Column[SQLType.BigInt] = Column(primary_key=True, index=True)
     public: Column[bool] = Column(default=False)
     nsfw: Column[bool] = Column(default=False)

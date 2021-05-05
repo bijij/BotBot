@@ -149,15 +149,15 @@ class Markov(Cog):
 
         `users`: The list of users who's messages should be used to generate the markov chain.
         """
-        users = set(users)  # type: ignore
-        if len(users) < 2:
+        if len(set(users)) < 2:
             raise commands.BadArgument("You need to specify at least two users.")
 
         is_nsfw = ctx.channel.is_nsfw() if ctx.guild is not None else False
-        coros = []
 
         async with ctx.typing():
             async with ctx.db as connection:
+
+                coros = []
                 for user in users:
                     if user == ctx.author:
                         await OptInStatus.is_opted_in(connection, ctx)

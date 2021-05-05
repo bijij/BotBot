@@ -7,7 +7,7 @@ from donphan import Column, Table, SQLType
 from donphan.connection import MaybeAcquire
 
 
-class VoiceLogConfiguration(Table, schema="logging"):  # type: ignore
+class VoiceLogConfiguration(Table, schema="logging"):
     guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
     log_channel_id: Column[SQLType.BigInt]
     display_hidden_channels: Column[bool] = Column(default=True)

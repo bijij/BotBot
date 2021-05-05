@@ -3,7 +3,9 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-from bot import BotBase, Context
+from ditto import Context
+
+from bot import BotBase
 
 
 class ModerationTools(commands.Cog):

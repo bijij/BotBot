@@ -29,7 +29,7 @@ class GlobalCoolDown(commands.CooldownMapping):
         return key in self._cache
 
 
-class SpamChecker(Table, schema="moderation"):  # type: ignore
+class SpamChecker(Table, schema="moderation"):
     guild_id: Column[SQLType.BigInt] = Column(primary_key=True)
     max_mentions: Column[int]
 

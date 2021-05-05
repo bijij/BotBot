@@ -1,10 +1,10 @@
 import datetime
 
 from collections import Counter
-from collections import Iterable
+from collections.abc import Iterable
 from io import BytesIO, StringIO
 from functools import partial
-from typing import cast, NamedTuple, Optional
+from typing import Iterator, cast, NamedTuple, Optional
 
 import asyncpg
 import numpy
@@ -117,11 +117,11 @@ def base_image(width: int = IMAGE_SIZE, height: int = IMAGE_SIZE) -> tuple[Image
     image = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(image)
 
-    return image, draw  # type: ignore
+    return image, draw
 
 
 def resample(image: Image.Image) -> Image.Image:
-    return image.resize((image.width // DOWNSAMPLE, image.height // DOWNSAMPLE), resample=Image.LANCZOS)  # type: ignore
+    return image.resize((image.width // DOWNSAMPLE, image.height // DOWNSAMPLE), resample=Image.LANCZOS)
 
 
 def as_bytes(image: Image.Image) -> BytesIO:
@@ -132,8 +132,8 @@ def as_bytes(image: Image.Image) -> BytesIO:
     return image_fp
 
 
-def add(*tuples: tuple[int, ...]) -> tuple[int, ...]:
-    return tuple(map(sum, zip(*tuples)))  # type: ignore
+def add(*tuples: Iterable[int]) -> tuple[int, ...]:
+    return tuple(sum(items) for items in zip(*tuples))
 
 
 def draw_status_pie(status_totals: Counter, avatar_fp: Optional[BytesIO], *, show_totals: bool = True) -> BytesIO:
@@ -228,7 +228,7 @@ def draw_status_log(
     image_height = round(day_height * row_count)
 
     now = datetime.datetime.now(timezone)
-    time_offset = now.utcoffset().total_seconds()  # type: ignore
+    time_offset = now.utcoffset().total_seconds()
     total_duration = 0.0
 
     if show_labels:

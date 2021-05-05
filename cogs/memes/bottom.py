@@ -25,7 +25,7 @@ class Bottom(Cog):
                 message = None
 
         if isinstance(message, discord.Message):
-            message = message.content
+            message = message.content  # type: ignore
 
         if message is None:
             await ctx.send("No message to encode.")
@@ -43,7 +43,7 @@ class Bottom(Cog):
                 message = None
 
         if isinstance(message, discord.Message):
-            message = message.content
+            message = message.content  # type: ignore
 
         if message is None:
             return await ctx.send("No message to decode.")

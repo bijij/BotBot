@@ -1,7 +1,7 @@
 import re
 
 from contextlib import suppress
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 import asyncpg
 from donphan import MaybeAcquire
@@ -16,7 +16,7 @@ from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus,
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 
-COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
+COLOURS: dict[Optional[Union[int, Status]], tuple[int, int, int, int]] = {
     None: (0, 0, 0, 0),
     Status.online: (67, 181, 129, 255),
     Status.offline: (116, 127, 141, 255),

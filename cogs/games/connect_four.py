@@ -34,14 +34,14 @@ DIRECTIONS = ((1, 0), (0, 1), (1, -1), (1, 1))
 K = 32  # Ranking K-factor
 
 
-class Games(Table, schema="connect_four"):  # type: ignore[call-arg]
+class Games(Table, schema="connect_four"):
     game_id: Column[SQLType.Serial] = Column(primary_key=True)
     players: Column[list[SQLType.BigInt]]
     winner: Column[SQLType.SmallInt]
     finished: Column[SQLType.Boolean]
 
 
-class Ranking(Table, schema="connect_four"):  # type: ignore[call-arg]
+class Ranking(Table, schema="connect_four"):
     user_id: Column[SQLType.BigInt] = Column(primary_key=True)
     ranking: Column[SQLType.Integer] = Column(default="1000")
     games: Column[SQLType.Integer] = Column(default="0")
@@ -359,7 +359,7 @@ class ConnectFour(Cog):
                 raise commands.BadArgument("You cannot play against yourself.")
 
             _ctx = copy.copy(ctx)
-            _ctx.author = opponent  # type: ignore
+            _ctx.author = opponent
 
             if not await _ctx.confirm(
                 f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",
@@ -388,7 +388,7 @@ class ConnectFour(Cog):
                 raise commands.BadArgument("You cannot play against yourself.")
 
             _ctx = copy.copy(ctx)
-            _ctx.author = opponent  # type: ignore
+            _ctx.author = opponent
 
             if not await _ctx.confirm(
                 f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",

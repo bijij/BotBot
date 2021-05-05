@@ -24,7 +24,6 @@ bottomify = ">=1.1.1"
 
 [tool.poetry.dev-dependencies]
 black = ">=20.8b1"
-mypy = ">=0.800"
 pytest = ">=6.2.3"
 
 [build-system]
@@ -44,3 +43,7 @@ exclude = '''
   | res
 )/
 '''
+
+[tool.pyright]
+reportInvalidStringEscapeSequence = false
+reportMissingImports = false
