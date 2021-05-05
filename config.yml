@@ -1,6 +1,8 @@
 # BotBot Configuration override file
 !Config
 
+    APP_NAME: 'BotBot'
+
     BOT: !Config
         PREFIX: "(bb)"
         INTENTS:
@@ -21,7 +23,8 @@
         APPLICATION_NAME: 'BotBot'
 
     LOGGING: !Config
-        LOG_LEVEL: "WARNING"
+        LOG_LEVEL: "INFO"
+        LOG_LEVEL_GLOBAL: "WARNING"
 
     EXTENSIONS:
 
@@ -31,7 +34,8 @@
         # Logging extensions
         cogs.logging.core: ~
         cogs.logging.status: ~
-        cogs.logging.voice: ~    
+        cogs.logging.voice: ~
+        cogs.logging.tags: ~
 
         # Meme extensions
         cogs.memes.bottom: ~        
@@ -58,3 +62,4 @@
     # Consts
     DPY_VOICE_GENERAL: !Channel 336642139381301249 741656304359178271
     DISCORD_PY: !Guild 336642139381301249
+    R_DANNY: !User 80528701850124288

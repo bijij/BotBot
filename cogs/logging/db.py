@@ -75,6 +75,7 @@ class Status(Enum):
 class _Status(EnumType[Status], _name="status", schema="logging"):  # Hack from porting donphan v3 > v4
     ...
 
+
 class StatusLog(Table, schema="logging"):  # type: ignore
     user_id: Column[SQLType.BigInt] = Column(primary_key=True, index=True)
     timestamp: Column[SQLType.Timestamp] = Column(primary_key=True)

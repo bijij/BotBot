@@ -17,7 +17,7 @@ TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 
 COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
-    None: (0,0,0,0),
+    None: (0, 0, 0, 0),
     Status.online: (67, 181, 129, 255),
     Status.offline: (116, 127, 141, 255),
     Status.idle: (250, 166, 26, 255),
