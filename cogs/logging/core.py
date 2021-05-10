@@ -1,9 +1,11 @@
+import datetime
 import re
 
 from contextlib import suppress
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, NamedTuple, Optional
 
 import asyncpg
+from discord import message
 from donphan import MaybeAcquire
 
 import discord
@@ -16,7 +18,7 @@ from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus,
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 
-COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
+COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {  # type: ignore
     None: (0, 0, 0, 0),
     Status.online: (55, 165, 92, 255),
     Status.offline: (116, 127, 141, 255),
@@ -26,13 +28,45 @@ COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
 }
 
 
+class MessageLogEntry(NamedTuple):
+    channel_id: int
+    message_id: int
+    guild_id: int
+    user_id: int
+    content: str
+    is_nsfw: bool
+    is_deleted: bool = False   
+
+
+class MessageDeleteLogEntry(NamedTuple):
+    message_id: int
+
+
+class MessageAttachmentLogEntry(NamedTuple):
+    message_id: int
+    attachment_id: int
+    content: str
+
+
+class MessageUpdateLogEntry(NamedTuple):
+    message_id: int 
+    timestamp: datetime.datetime
+    content: str
+
+
+class StatusLogEntry(NamedTuple):
+    user_id: int
+    timestamp: datetime.datetime
+    status: Status
+
+
 class LoggingBot(BotBase):
     _logging: Literal[True]
-    _message_log: list[tuple[Any, ...]]
-    _message_delete_log: list[tuple[Any, ...]]
-    _message_attachment_log: list[tuple[Any, ...]]
-    _message_update_log: list[tuple[Any, ...]]
-    _status_log: list[tuple[Any, ...]]
+    _message_log: list[MessageLogEntry]
+    _message_delete_log: list[MessageDeleteLogEntry]
+    _message_attachment_log: list[MessageAttachmentLogEntry]
+    _message_update_log: list[MessageUpdateLogEntry]
+    _status_log: list[StatusLogEntry]
     _last_status: dict[int, Status]
 
 
@@ -120,7 +154,7 @@ class Logging(Cog):
         if message.author.id not in self._opted_in:
             return
 
-        if message.guild is None:
+        if not isinstance(message.channel, discord.abc.GuildChannel):
             return
 
         if message.channel.is_nsfw() and message.author.id not in self._log_nsfw:
@@ -140,29 +174,28 @@ class Logging(Cog):
                 except (LookupError, UnicodeDecodeError, discord.HTTPException):
                     continue
 
-                self.bot._message_attachment_log.append((message.id, i, content))
+                self.bot._message_attachment_log.append(MessageAttachmentLogEntry(message.id, i, content))
 
         self.bot._message_log.append(
-            (
+            MessageLogEntry(
                 message.channel.id,
                 message.id,
                 message.guild.id,
                 message.author.id,
                 message.content,
-                message.channel.is_nsfw(),
-                False,
+                message.channel.is_nsfw(),  # type: ignore
             )
         )
-        self.bot._message_update_log.append((message.id, discord.utils.utcnow(), message.content))
+        self.bot._message_update_log.append(MessageUpdateLogEntry(message.id, discord.utils.utcnow(), message.content))
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
-        self.bot._message_delete_log.append((payload.message_id,))
+        self.bot._message_delete_log.append(MessageDeleteLogEntry(payload.message_id,))
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if payload.data.get("content"):
-            self.bot._message_update_log.append((payload.message_id, discord.utils.utcnow(), payload.data["content"]))
+            self.bot._message_update_log.append(MessageUpdateLogEntry(payload.message_id, discord.utils.utcnow(), payload.data["content"]))
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -186,8 +219,8 @@ class Logging(Cog):
         if status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, discord.utils.utcnow(), status))
-        self.bot._last_status[after.id] = status
+        self.bot._status_log.append(StatusLogEntry(after.id, discord.utils.utcnow(), status))
+        self.bot._last_status[after.id] = status  # type: ignore
 
     @tasks.loop(seconds=60)
     async def _logging_task(self):
@@ -254,8 +287,8 @@ class Logging(Cog):
                         if status not in COLOURS:
                             return
 
-                        status_log.append((user_id, now, status))
-                        self.bot._last_status[member.id] = status
+                        status_log.append(StatusLogEntry(user_id, now, status))
+                        self.bot._last_status[member.id] = status  # type: ignore
                         break
 
             await StatusLog.insert_many(connection, StatusLog._columns, *status_log)

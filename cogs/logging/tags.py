@@ -3,7 +3,7 @@ import io
 import re
 
 from collections import defaultdict
-from typing import NameTuple
+from typing import NamedTuple
 
 import discord
 from discord.ext import commands
@@ -12,7 +12,7 @@ from ditto import BotBase, Cog, Context, CONFIG
 from ditto.types.converters import PosixFlags
 
 
-class Tag(NameTuple):
+class Tag(NamedTuple):
     tag: str
     owner_id: int
     uses: int
