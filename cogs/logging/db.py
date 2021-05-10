@@ -65,11 +65,11 @@ class MessageEditHistory(Table, schema="logging"):
 
 
 class Status(Enum):
-    online = 1
-    offline = 2
-    idle = 3
-    dnd = 4
-    streaming = 5
+    online = "online"
+    offline = "offline"
+    idle = "idle"
+    dnd = "dnd"
+    streaming = "streaming"
 
 
 class _Status(EnumType[Status], _name="status", schema="logging"):

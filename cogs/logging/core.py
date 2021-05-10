@@ -186,7 +186,7 @@ class Logging(Cog):
         if status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, discord.utils.utcnow(), status))
+        self.bot._status_log.append((after.id, discord.utils.utcnow(), Status.try_value(status)))
         self.bot._last_status[after.id] = status
 
     @tasks.loop(seconds=60)
