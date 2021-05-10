@@ -18,11 +18,11 @@ TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 COLOURS: dict[Optional[Union[int, Status]], tuple[int, int, int, int]] = {
     None: (0, 0, 0, 0),
-    Status.online: (67, 181, 129, 255),
+    Status.online: (55, 165, 92, 255),
     Status.offline: (116, 127, 141, 255),
     Status.idle: (250, 166, 26, 255),
-    Status.dnd: (240, 71, 71, 255),
-    Status.streaming: (84, 51, 141, 255),
+    Status.dnd: (237, 66, 69, 255),
+    Status.streaming: (89, 54, 149, 255),
 }
 
 
