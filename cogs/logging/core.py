@@ -16,7 +16,7 @@ from .db import MessageLog, MessageAttachments, MessageEditHistory, OptInStatus,
 TEXT_FILE_REGEX = re.compile(r"^.*; charset=.*$")
 
 
-COLOURS: dict[Optional[Union[int, Status]], tuple[int, int, int, int]] = {
+COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {
     None: (0, 0, 0, 0),
     Status.online: (55, 165, 92, 255),
     Status.offline: (116, 127, 141, 255),
@@ -33,7 +33,7 @@ class LoggingBot(BotBase):
     _message_attachment_log: list[tuple[Any, ...]]
     _message_update_log: list[tuple[Any, ...]]
     _status_log: list[tuple[Any, ...]]
-    _last_status: dict[int, str]
+    _last_status: dict[int, Status]
 
 
 class Logging(Cog):
@@ -176,9 +176,9 @@ class Logging(Cog):
 
         # Handle streaming edge case
         if discord.ActivityType.streaming in {a.type for a in after.activities}:
-            status = "streaming"
+            status = Status.streaming
         else:
-            status = after.status.name
+            status = Status.try_value(after.status.name)
 
         if status not in COLOURS:
             return
@@ -186,7 +186,7 @@ class Logging(Cog):
         if status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append((after.id, discord.utils.utcnow(), Status.try_value(status)))
+        self.bot._status_log.append((after.id, discord.utils.utcnow(), status))
         self.bot._last_status[after.id] = status
 
     @tasks.loop(seconds=60)
@@ -247,9 +247,9 @@ class Logging(Cog):
 
                         # Handle streaming edge case
                         if discord.ActivityType.streaming in {a.type for a in member.activities}:
-                            status = "streaming"
+                            status = Status.streaming
                         else:
-                            status = member.status.name
+                            status = Status.try_value(member.status.name)
 
                         if status not in COLOURS:
                             return
