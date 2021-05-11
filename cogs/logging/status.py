@@ -406,7 +406,7 @@ class StatusLogging(Cog):
         `--timezone`: The timezone offset to use in hours, defaults to the users set timezone or UTC+0.
         `--days`: The number of days to fetch status log data for. Defaults to 30.
         """
-        if not flags._square and not commands.is_owner().predicate(ctx):
+        if not flags._square and not await commands.is_owner().predicate(ctx):
             raise commands.BadArgument('Only the bot owner can set this flag.')
 
         user = cast(discord.User, user or ctx.author)
