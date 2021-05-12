@@ -55,15 +55,15 @@ class ModerationTools(commands.Cog):
         await ctx.send(f"Kicked {user} from the server.", delete_after=5)
 
     @commands.command()
-    async def cleanup(self, ctx: Context, limit: int = 50):
+    async def cleanup(self, ctx: Context, limit: int = 25):
         """Deletes messages related to bot commands from the channel.
 
         `limit`: the number of messages to process, can be a maximum of 100 messages.
         """
         if ctx.author == bot.owner or ctx.channel.permissions_for(ctx.author).manage_messages:
-            limit = 100
+            max = 100
         else:
-            limit = 25
+            max = 25
 
         if not 0 < limit <= max:
             raise commands.BadArgument(f"You can only delete between 1 and {limit} messages.")
