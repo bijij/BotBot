@@ -80,10 +80,12 @@ class Imagine(commands.Cog):
             if "\n" in byline:
                 raise commands.BadArgument("Too many lines in input.")
 
-            title = f"IMAGINE\n{title}"
+            title = f"IMAGINE\n{title.strip()}"
+            byline = byline.strip()
 
             draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, -96)
-            draw_text(draw, byline, BYLINE_FONT, WHITE, BYLINE_BOUND, BYLINE_OFFSET, 100)
+            if byline:
+                draw_text(draw, byline, BYLINE_FONT, WHITE, BYLINE_BOUND, BYLINE_OFFSET, 100)
 
             out_fp = io.BytesIO()
             image.save(out_fp, "PNG")
