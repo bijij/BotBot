@@ -1,7 +1,7 @@
 import io
 import random
 
-from typing import cast, NamedTuple, Optional
+from typing import NamedTuple, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 

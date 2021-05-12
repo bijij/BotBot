@@ -1,4 +1,5 @@
 import io
+from typing import cast
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -6,6 +7,7 @@ from ditto import CONFIG as BOT_CONFIG
 
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 from ditto.config import CONFIG
 
 
@@ -18,18 +20,50 @@ BYLINE_FONT = CONFIG.BYLINE_FONT
 IMAGE_WIDTH = 2048
 IMAGE_HEIGHT = 1024
 
-TEXT_X_OFFSET = 128
-TEXT_Y_OFFSET = 192
+TITLE_OFFSET = (128, 192)
+TITLE_BOUND = (IMAGE_WIDTH - (TITLE_OFFSET[0] * 2), IMAGE_HEIGHT - 224 - TITLE_OFFSET[1])
 
-TEXT_X_BOUND = IMAGE_WIDTH - (TEXT_X_OFFSET * 2)
-TEXT_Y_BOUND = IMAGE_HEIGHT - 224 - TEXT_Y_OFFSET
-
-BYLINE_Y_OFFSET = TEXT_Y_OFFSET + TEXT_Y_BOUND
-
-BYLINE_X_BOUND = IMAGE_WIDTH - (TEXT_X_OFFSET * 4)
-BYLINE_Y_BOUND = 192
+BYLINE_OFFSET = (TITLE_OFFSET[0] * 2, TITLE_OFFSET[1] + TITLE_BOUND[1])
+BYLINE_BOUND = (IMAGE_WIDTH - (BYLINE_OFFSET[0] * 2), 192)
 
 WHITE = (255, 255, 255)
+
+
+def draw_text(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    font_name: str,
+    colour: tuple[int, int, int],
+    bounds: tuple[int, int],
+    offsets: tuple[int, int],
+    max_font_size: int,
+    max_spacing: int = MISSING,
+) -> None:
+    font_size = max_font_size
+    spacing = max_spacing or 0
+
+    # Calculate font size
+    while True:
+        font = ImageFont.truetype(font_name, font_size)
+        text_size = cast(tuple[int, int], draw.textsize(text, font=font, spacing=spacing))
+        if text_size[0] < bounds[0] and text_size[1] < bounds[1]:
+            break
+
+        font_size -= 1
+        if max_spacing is not MISSING:
+            sign = (-1, 1)[max_spacing < 0]
+            spacing = int(sign * font_size * (abs(max_spacing) / max_font_size))
+
+    # Calculate Starting Y position
+    y_pos = offsets[1] + (bounds[1] - text_size[1]) // 2
+
+    # Draw text
+    lines = text.split("\n")
+    for line in lines:
+        line_width, _ = draw.textsize(line, font=font)  # type: ignore
+        x_pos = offsets[0] + (bounds[0] - line_width) // 2
+        draw.text((x_pos, y_pos), line, colour, font=font)
+        y_pos += text_size[1] // len(lines)
 
 
 class Imagine(commands.Cog):
@@ -39,7 +73,7 @@ class Imagine(commands.Cog):
         async with ctx.typing():
             # Load image
             image = Image.open(IMAGE)
-            draw = ImageDraw.Draw(image)
+            draw = cast(ImageDraw.ImageDraw, ImageDraw.Draw(image))
 
             title, _, byline = str(text).upper().partition("\n")
 
@@ -48,56 +82,8 @@ class Imagine(commands.Cog):
 
             title = f"IMAGINE\n{title}"
 
-            # Draw title
-
-            # Setup font
-            font_size = 300
-            spacing = -96
-            font = ImageFont.truetype(TITLE_FONT, font_size)
-
-            # Calculate font-size
-            while (text_size := draw.textsize(title, font=font, spacing=spacing)) > (
-                TEXT_X_BOUND,
-                TEXT_Y_BOUND,
-            ):
-                font_size -= 1
-                spacing = int(-font_size * (96 / 300))
-                font = ImageFont.truetype(TITLE_FONT, font_size)
-
-            # Calculate Starting Y position
-            y_pos = TEXT_Y_OFFSET + (TEXT_Y_BOUND - text_size[1]) // 2
-
-            # Draw text
-            lines = title.split("\n")
-            for line in lines:
-                line_width, _ = draw.textsize(line, font=font)
-                x_pos = TEXT_X_OFFSET + (TEXT_X_BOUND - line_width) // 2
-                draw.text((x_pos, y_pos), line, WHITE, font=font)
-                y_pos += text_size[1] // len(lines)
-
-            # Draw byline
-
-            font_size = 100
-            font = ImageFont.truetype(BYLINE_FONT, font_size)
-
-            # Calculate font-size
-            while (text_size := draw.textsize(byline, font=font)) > (
-                BYLINE_X_BOUND,
-                BYLINE_Y_BOUND,
-            ):
-                font_size -= 1
-                font = ImageFont.truetype(BYLINE_FONT, font_size)
-
-            # Calculate Starting Y position
-            y_pos = BYLINE_Y_OFFSET + (BYLINE_Y_BOUND - text_size[1]) // 2
-
-            # Draw text
-            lines = byline.split("\n")
-            for line in lines:
-                line_width, _ = draw.textsize(line, font=font)
-                x_pos = TEXT_X_OFFSET + (TEXT_X_BOUND - line_width) // 2
-                draw.text((x_pos, y_pos), line, WHITE, font=font)
-                y_pos += text_size[1] // len(lines)
+            draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, -96)
+            draw_text(draw, byline, BYLINE_FONT, WHITE, BYLINE_BOUND, BYLINE_OFFSET, 100)
 
             out_fp = io.BytesIO()
             image.save(out_fp, "PNG")
