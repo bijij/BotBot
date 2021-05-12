@@ -42,6 +42,9 @@
         cogs.memes.markov: ~
         cogs.memes.timecard: ~
         cogs.memes.bot_status: ~
+        cogs.memes.imagine: !Config
+            TITLE_FONT: 'res/secret/ginto_nord_bold.otf'
+            BYLINE_FONT: 'res/secret/ginto_normal_medium.otf'
 
         # Game Extensions
         cogs.games.connect_four: ~

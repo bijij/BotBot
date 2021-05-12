@@ -35,7 +35,7 @@ class MessageLogEntry(NamedTuple):
     user_id: int
     content: str
     is_nsfw: bool
-    is_deleted: bool = False   
+    is_deleted: bool = False
 
 
 class MessageDeleteLogEntry(NamedTuple):
@@ -49,7 +49,7 @@ class MessageAttachmentLogEntry(NamedTuple):
 
 
 class MessageUpdateLogEntry(NamedTuple):
-    message_id: int 
+    message_id: int
     timestamp: datetime.datetime
     content: str
 
@@ -190,12 +190,18 @@ class Logging(Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
-        self.bot._message_delete_log.append(MessageDeleteLogEntry(payload.message_id,))
+        self.bot._message_delete_log.append(
+            MessageDeleteLogEntry(
+                payload.message_id,
+            )
+        )
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if payload.data.get("content"):
-            self.bot._message_update_log.append(MessageUpdateLogEntry(payload.message_id, discord.utils.utcnow(), payload.data["content"]))
+            self.bot._message_update_log.append(
+                MessageUpdateLogEntry(payload.message_id, discord.utils.utcnow(), payload.data["content"])
+            )
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):

@@ -16,4 +16,5 @@ docs/_build
 tests/secrets.py
 
 cogs/secret/*
+res/secret/*
 !.gitkeep
