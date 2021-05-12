@@ -225,7 +225,7 @@ class Logging(Cog):
         if status == self.bot._last_status.get(after.id):
             return
 
-        self.bot._status_log.append(StatusLogEntry(after.id, discord.utils.utcnow(), status))
+        self.bot._status_log.append(StatusLogEntry(after.id, discord.utils.utcnow(), status))  # type: ignore
         self.bot._last_status[after.id] = status  # type: ignore
 
     @tasks.loop(seconds=60)
@@ -293,7 +293,7 @@ class Logging(Cog):
                         if status not in COLOURS:
                             return
 
-                        status_log.append(StatusLogEntry(user_id, now, status))
+                        status_log.append(StatusLogEntry(user_id, now, status))  # type: ignore
                         self.bot._last_status[member.id] = status  # type: ignore
                         break
 
