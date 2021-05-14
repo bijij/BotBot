@@ -60,7 +60,7 @@ class ModerationTools(commands.Cog):
 
         `limit`: the number of messages to process, can be a maximum of 100 messages.
         """
-        if ctx.author == bot.owner or ctx.channel.permissions_for(ctx.author).manage_messages:
+        if ctx.author == self.bot.owner or ctx.channel.permissions_for(ctx.author).manage_messages:
             max = 100
         else:
             max = 25
