@@ -2,10 +2,9 @@ import datetime
 import re
 
 from contextlib import suppress
-from typing import Any, Literal, NamedTuple, Optional
+from typing import Literal, NamedTuple, Optional
 
 import asyncpg
-from discord import message
 from donphan import MaybeAcquire
 
 import discord
@@ -23,6 +22,13 @@ COLOURS: dict[Optional[Status], tuple[int, int, int, int]] = {  # type: ignore
     Status.online: (55, 165, 92, 255),
     Status.offline: (116, 127, 141, 255),
     Status.idle: (250, 166, 26, 255),
+    Status.dnd: (237, 66, 69, 255),
+    Status.streaming: (89, 54, 149, 255),
+}
+
+
+COLOURS_OLD: dict[Optional[Status], tuple[int, int, int, int]] = {  # type: ignore
+    Status.online: (67, 181, 129, 255),
     Status.dnd: (237, 66, 69, 255),
     Status.streaming: (89, 54, 149, 255),
 }

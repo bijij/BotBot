@@ -7,6 +7,7 @@ from functools import partial
 from typing import Iterator, cast, NamedTuple, Optional
 
 import asyncpg
+from discord.utils import get
 import numpy
 
 from ics import Calendar, Event
@@ -20,8 +21,11 @@ from ditto.db import TimeZones
 from ditto.types.converters import PosixFlags
 from ditto.utils.strings import utc_offset
 
-from .core import COLOURS
+from .core import COLOURS, COLOURS_OLD
 from .db import OptInStatus, Status, StatusLog
+
+
+DISCORD_REBRAND_EPOCH = datetime.datetime(2021, 5, 13, 15, tzinfo=datetime.timezone.utc)
 
 MIN_DAYS = 7
 
@@ -57,6 +61,12 @@ class StatusLogOptions(PosixFlags):
 
 def start_of_day(dt: datetime.datetime) -> datetime.datetime:
     return datetime.datetime.combine(dt, datetime.time()).astimezone(datetime.timezone.utc)
+
+
+def get_colour(status: Optional[Status], time: datetime.datetime) -> tuple[int, int, int, int]:
+    if time < DISCORD_REBRAND_EPOCH:
+        return COLOURS_OLD.get(status) or COLOURS[status]
+    return COLOURS[status]
 
 
 async def get_status_records(
@@ -235,14 +245,14 @@ def draw_status_log(
         time_offset += 60 * 60 * 24
 
     # Draw status log entries
-    for status, _, timespan in status_log:
+    for status, timestamp, timespan in status_log:
         duration: float = timespan.total_seconds()
         total_duration += duration
         new_time_offset = time_offset + duration
 
         start_x = round(time_offset * day_width)
         end_x = round(new_time_offset * day_width)
-        draw.rectangle(((start_x, 0), (end_x, 1)), fill=COLOURS[status])
+        draw.rectangle(((start_x, 0), (end_x, 1)), fill=get_colour(status, timestamp))
 
         time_offset = new_time_offset
 
