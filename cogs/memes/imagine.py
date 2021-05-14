@@ -37,33 +37,34 @@ def draw_text(
     bounds: tuple[int, int],
     offsets: tuple[int, int],
     max_font_size: int,
-    max_spacing: int = MISSING,
+    line_height: float = 1,
 ) -> None:
     font_size = max_font_size
-    spacing = max_spacing or 0
 
+    lines = text.split("\n")
+    while not lines[-1]:
+        lines.pop(-1)
     # Calculate font size
     while True:
         font = ImageFont.truetype(font_name, font_size)
-        text_size = cast(tuple[int, int], draw.textsize(text, font=font, spacing=spacing))
-        if text_size[0] < bounds[0] and text_size[1] < bounds[1]:
+        text_width, _ = cast(tuple[int, int], draw.textsize(text, font=font))
+        _, _line_height = cast(tuple[int, int], draw.textsize('\N{FULL BLOCK}', font=font))
+        text_height = int(_line_height * line_height * len(lines))
+
+        if text_width < bounds[0] and text_height < bounds[1]:
             break
 
         font_size -= 1
-        if max_spacing is not MISSING:
-            sign = (-1, 1)[max_spacing < 0]
-            spacing = int(sign * font_size * (abs(max_spacing) / max_font_size))
 
     # Calculate Starting Y position
-    y_pos = offsets[1] + (bounds[1] - text_size[1]) // 2
+    y_pos = offsets[1] + (bounds[1] - text_height) // 2
 
     # Draw text
-    lines = text.split("\n")
     for line in lines:
         line_width, _ = draw.textsize(line, font=font)  # type: ignore
         x_pos = offsets[0] + (bounds[0] - line_width) // 2
         draw.text((x_pos, y_pos), line, colour, font=font)
-        y_pos += text_size[1] // len(lines)
+        y_pos += int(_line_height * line_height)
 
 
 class Imagine(commands.Cog):
@@ -83,7 +84,7 @@ class Imagine(commands.Cog):
             title = f"IMAGINE\n{title.strip()}"
             byline = byline.strip()
 
-            draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, -96)
+            draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, 0.8)
             if byline:
                 draw_text(draw, byline, BYLINE_FONT, WHITE, BYLINE_BOUND, BYLINE_OFFSET, 100)
 
