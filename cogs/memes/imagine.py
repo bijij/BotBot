@@ -84,7 +84,7 @@ class Imagine(commands.Cog):
             title = f"IMAGINE\n{title.strip()}"
             byline = byline.strip()
 
-            draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, 0.8)
+            draw_text(draw, title, TITLE_FONT, WHITE, TITLE_BOUND, TITLE_OFFSET, 300, 0.95)
             if byline:
                 draw_text(draw, byline, BYLINE_FONT, WHITE, BYLINE_BOUND, BYLINE_OFFSET, 100)
 
