@@ -210,7 +210,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3103+g9b4e820b"
+version = "2.0.0a3109+g5ad88dec"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -228,12 +228,12 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "9b4e820bbe432081b59936975202853455c938a4"
+resolved_reference = "5ad88dec72b5bef063bc9a01646082b95ca53cf1"
 
 [[package]]
 name = "ditto"
-version = "0.0.1a"
-description = "A Discord bot template for Discord.py version 1.7+"
+version = "0.1.0a"
+description = "A Discord bot template for Discord.py version 2+"
 category = "main"
 optional = false
 python-versions = "^3.9"
@@ -256,11 +256,11 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "bf9ee4f5cdf46660e8016f7ca3100baed2d30c09"
+resolved_reference = "80449290e40cc53f2bda2aeee58b92a7079b64a6"
 
 [[package]]
 name = "donphan"
-version = "4.0.0"
+version = "4.0.2"
 description = "Asynchronous Database ORM for Postgres"
 category = "main"
 optional = false
@@ -685,8 +685,8 @@ discord-ext-menus = []
 "discord.py" = []
 ditto = []
 donphan = [
-    {file = "Donphan-4.0.0-py3-none-any.whl", hash = "sha256:8bd4e943be6e9c7745338ec6df35a609c16d4675e6f1e0a16e0dac815dff0424"},
-    {file = "Donphan-4.0.0.tar.gz", hash = "sha256:e1c7af859923f0a3cc49f7af01a0f18c354d63d4ecfe69fd7440cce9e92324b8"},
+    {file = "Donphan-4.0.2-py3-none-any.whl", hash = "sha256:52cf8e9480205c55643aefd48a88f41e1da7faeda0570bf641dfb0ec599dbd75"},
+    {file = "Donphan-4.0.2.tar.gz", hash = "sha256:7ffc7684e863802c39be4326e7d537a51d2f84adcf99a531c8468afe2236f349"},
 ]
 humanize = [
     {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},
