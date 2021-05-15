@@ -2,11 +2,8 @@ import asyncpg
 import discord
 
 from discord.ext import commands
-from donphan import Column, Enum, SQLType, Table
-
+from donphan import Column, Enum, EnumType, SQLType, Table
 from ditto import Context
-from donphan.types import EnumType
-
 
 class MessageLog(Table, schema="logging"):
     channel_id: Column[SQLType.BigInt] = Column(primary_key=True)
