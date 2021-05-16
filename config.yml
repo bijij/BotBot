@@ -25,6 +25,7 @@
     LOGGING: !Config
         LOG_LEVEL: "INFO"
         GLOBAL_LOG_LEVEL: "WARNING"
+        LOG_TO_FILE: yes
 
     EXTENSIONS:
 
