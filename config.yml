@@ -3,6 +3,9 @@
 
     APP_NAME: 'BotBot'
 
+    SOURCE: !Config
+        CUSTOM: 'bijij/botbot'
+
     BOT: !Config
         PREFIX: "(bb)"
         INTENTS:
