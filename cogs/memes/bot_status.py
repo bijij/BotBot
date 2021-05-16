@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from donphan import MaybeAcquire
 from ditto import BotBase
 
-from cogs.logging.db import StatusLog
+from cogs.logging.db import Status, StatusLog
 
 
 DEFAULT_STATUS = discord.Status.online
@@ -55,10 +55,10 @@ class StatusMeme(commands.Cog):
                 status=discord.Status.online,
                 activity=discord.Streaming(name="...", url="https://twitch.tv/monstercat"),
             )
-            status = "streaming"
+            status = Status.streaming
         else:
             await self.bot.change_presence(status=status)
-            status = status.name
+            status = Status.try_value(status)
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
             await StatusLog.insert(connection, user_id=self.bot.user.id, timestamp=now, status=status)
