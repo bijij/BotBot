@@ -256,11 +256,11 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "ddbf036d73e432c9fef3d2db0fa655d3d7db15be"
+resolved_reference = "6e0833fcf09c30da1d3079e3cb0b85858d73b167"
 
 [[package]]
 name = "donphan"
-version = "4.1.0"
+version = "4.1.1"
 description = "Asynchronous Database ORM for Postgres"
 category = "main"
 optional = false
@@ -685,8 +685,8 @@ discord-ext-menus = []
 "discord.py" = []
 ditto = []
 donphan = [
-    {file = "Donphan-4.1.0-py3-none-any.whl", hash = "sha256:22771a0c416c754afb14f2be5d818bea9a4e14db6f9c3350684145c1bf3527df"},
-    {file = "Donphan-4.1.0.tar.gz", hash = "sha256:e4548931ee9cb9e58562e518d3a540c7f300a59f99af6342f71bd4ffb7520ae4"},
+    {file = "Donphan-4.1.1-py3-none-any.whl", hash = "sha256:830291ef8c8f882791619a9b1581bfa8a9814bf2a71099345e36cd4a010933d6"},
+    {file = "Donphan-4.1.1.tar.gz", hash = "sha256:963ae2d2257bb5e6581eab2ff18b41615f1209fd44c940420c65b9c84072e855"},
 ]
 humanize = [
     {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},

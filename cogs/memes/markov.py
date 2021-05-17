@@ -15,7 +15,7 @@ from ditto.utils.collections import TimedLRUDict
 from cogs.logging.db import MessageLog, OptInStatus
 
 
-MAX_TRIES = 32
+MAX_TRIES = 256
 
 
 def make_sentence(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:

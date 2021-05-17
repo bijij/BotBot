@@ -54,6 +54,9 @@ class Whitelist(Cog):
         """Channel whitelist commands."""
         channel = channel or ctx.channel
 
+        if channel.id not in self.bot.whitelisted_users:
+            raise commands.BadArgument('This channel does not have a whitelist.')
+
         if ctx.invoked_subcommand is not None:
             return
 
@@ -64,7 +67,7 @@ class Whitelist(Cog):
         )
         paginator.set_footer(text="use (bb)whitelist add, and (bb)whitelist remove to manage the whitelist.")
 
-        for user_id in self.bot.whitelisted_users:
+        for user_id in self.bot.whitelisted_users[channel.id]:
             paginator.add_line(f"<@{user_id}>")
 
         menu = menus.MenuPages(paginator)
