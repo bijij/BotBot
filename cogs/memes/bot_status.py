@@ -31,7 +31,7 @@ with open(TEST_FILE, "r") as f:
     SEGMENT_DURATION = SECONDS_PER_DAY // len(STATUS_MAP[0])
 
 
-def get_status(time: datetime.datetime):
+def get_status(time: datetime.datetime) -> discord.Status:
     delta = time - START_TIME
 
     # If outside map

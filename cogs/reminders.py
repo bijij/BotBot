@@ -11,7 +11,7 @@ from ditto.types.types import User
 import humanize
 
 from ditto import BotBase, Cog, Context
-from ditto.db.scheduler import Events
+from ditto.db.tables import Events
 from ditto.utils.paginator import EmbedPaginator
 from ditto.utils.strings import ZWSP
 
