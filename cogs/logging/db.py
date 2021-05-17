@@ -5,6 +5,7 @@ from discord.ext import commands
 from donphan import Column, Enum, EnumType, SQLType, Table
 from ditto import Context
 
+
 class MessageLog(Table, schema="logging"):
     channel_id: Column[SQLType.BigInt] = Column(primary_key=True)
     message_id: Column[SQLType.BigInt] = Column(primary_key=True, unique=True)

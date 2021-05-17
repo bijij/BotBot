@@ -1,5 +1,7 @@
+from typing import Optional
 import discord
 from discord.ext import commands, menus
+from ditto.config import CONFIG
 
 from donphan import Column, SQLType, Table, MaybeAcquire
 
@@ -9,7 +11,8 @@ from ditto.utils.paginator import EmbedPaginator
 from bot import BotBase
 
 
-class VoiceWoesWhitelist(Table):
+class ChannelWhitelist(Table):
+    channel_id: Column[SQLType.BigInt] = Column(primary_key=True)
     user_id: Column[SQLType.BigInt] = Column(primary_key=True)
 
 
@@ -44,10 +47,13 @@ class Whitelist(Cog):
         self.bot = bot
         bot.loop.create_task(self.add_users())
 
-    @commands.group(aliases=["vww"])
+    @commands.group()
+    @commands.guild_only()
     @commands.check_any(commands.is_owner(), is_dpy_mod())
-    async def voice_woes_whitelist(self, ctx: Context):
-        """Voice woes whitelist management commands."""
+    async def whitelist(self, ctx: Context, *, channel: Optional[discord.TextChannel] = None):
+        """Channel whitelist commands."""
+        channel = channel or ctx.channel
+
         if ctx.invoked_subcommand is not None:
             return
 
@@ -64,28 +70,57 @@ class Whitelist(Cog):
         menu = menus.MenuPages(paginator)
         await menu.start(ctx)
 
-    @voice_woes_whitelist.command(name="add")
-    async def voice_woes_whiitelist_add(self, ctx: Context, member: discord.User):
-        """Add a user to the voice woes whitelist."""
+    @whitelist.command(name="add")
+    async def whitelist_add(
+        self, ctx: Context, member: discord.User, *, channel: Optional[discord.TextChannel] = None
+    ):
+        """Add a user to the channel whitelist"""
+        channel = channel or ctx.channel
         async with ctx.db as connection:
-            await VoiceWoesWhitelist.insert(connection, user_id=member.id)
-        self.bot.whitelisted_users.add(member.id)
+            await ChannelWhitelist.insert(connection, channel_id=channel.id, user_id=member.id)
+
+        if channel.id not in self.bot.whitelisted_users:
+            self.bot.whitelisted_users[channel.id] = set()
+
+        self.bot.whitelisted_users[channel.id].add(member.id)
         await ctx.tick()
 
-    @voice_woes_whitelist.command(name="remove")
-    async def voice_woes_whiitelist_remove(self, ctx: Context, member: discord.User):
-        """Remove a user from the voice woes whitelist."""
+    @whitelist.command(name="remove")
+    async def whitelist_remove(
+        self, ctx: Context, member: discord.User, *, channel: Optional[discord.TextChannel] = None
+    ):
+        """Remove a user from the channel whitelist"""
+        channel = channel or ctx.channel
         async with ctx.db as connection:
-            await VoiceWoesWhitelist.delete(connection, user_id=member.id)
-        self.bot.whitelisted_users.remove(member.id)
+            await ChannelWhitelist.delete(connection, channel_id=channel.id, user_id=member.id)
+        self.bot.whitelisted_users[channel.id].remove(member.id)
         await ctx.tick()
+
+    @commands.group(aliases=["vww"])
+    @commands.guild_only()
+    @commands.check_any(commands.is_owner(), is_dpy_mod())
+    async def voice_woes_whitelist(self, ctx: Context):
+        """Voice woes whitelist management commands."""
+        await ctx.invoke(self.whitelist, channel=CONFIG.DPY_VOICE_GENERAL)
+
+    @voice_woes_whitelist.command(name="add")
+    async def voice_woes_whitelist_add(self, ctx: Context, member: discord.User):
+        """Add a user to the voice woes whitelist."""
+        await ctx.invoke(self.whitelist_add, member, channel=CONFIG.DPY_VOICE_GENERAL)
+
+    @voice_woes_whitelist.command(name="remove")
+    async def voice_woes_whitelist_remove(self, ctx: Context, member: discord.User):
+        """Remove a user from the voice woes whitelist."""
+        await ctx.invoke(self.whitelist_remove, member, channel=CONFIG.DPY_VOICE_GENERAL)
 
     async def add_users(self):
         await self.bot.wait_until_ready()
 
         async with MaybeAcquire(pool=self.bot.pool) as connection:
-            for record in await VoiceWoesWhitelist.fetch(connection):
-                self.bot.whitelisted_users.add(record["user_id"])
+            for record in await ChannelWhitelist.fetch(connection):
+                if record["channel_id"] not in self.bot.whitelisted_users:
+                    self.bot.whitelisted_users[record["channel_id"]] = set()
+                self.bot.whitelisted_users[record["channel_id"]].add(record["user_id"])
 
 
 def setup(bot: BotBase):

@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 
 import discord
 from discord.ext import commands
@@ -15,7 +16,7 @@ except ImportError:
 class BotBase(DittoBase):
     def __init__(self) -> None:
         status = get_status(datetime.datetime.now(datetime.timezone.utc))
-        self.whitelisted_users: set[int] = set()
+        self.whitelisted_users: dict[int, set[int]] = {}
 
         super().__init__(status=status)
 
@@ -23,8 +24,9 @@ class BotBase(DittoBase):
         if message.author.bot:
             return
 
-        if message.channel == CONFIG.DPY_VOICE_GENERAL and message.author.id not in self.whitelisted_users:
-            return
+        if message.channel.id in self.whitelisted_users:
+            if message.author.id not in self.whitelisted_users[message.channel.id]:
+                return
 
         ctx = await self.get_context(message, cls=Context)
         await self.invoke(ctx)
