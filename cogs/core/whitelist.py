@@ -59,10 +59,10 @@ class Whitelist(Cog):
 
         paginator = EmbedPaginator(
             colour=discord.Colour.orange(),
-            title="Voice Woes Whitelist",
+            title="Channel Whitelist",
             max_description=512,
         )
-        paginator.set_footer(text="user (bb)vww add, and (bb)vww remove to manage the whitelist.")
+        paginator.set_footer(text="use (bb)whitelist add, and (bb)whitelist remove to manage the whitelist.")
 
         for user_id in self.bot.whitelisted_users:
             paginator.add_line(f"<@{user_id}>")
