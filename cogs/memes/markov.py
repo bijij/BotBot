@@ -11,6 +11,7 @@ from discord.ext import commands
 
 from ditto import BotBase, Cog, Context, CONFIG
 from ditto.utils.collections import TimedLRUDict
+from ditto.utils.strings import truncate
 
 from cogs.logging.db import MessageLog, OptInStatus
 
@@ -80,7 +81,7 @@ class Markov(Cog):
         else:
             allowed_mentions = discord.AllowedMentions(users=True)
 
-        await ctx.send(markov, allowed_mentions=allowed_mentions)
+        await ctx.send(f"{truncate(markov):2000}", allowed_mentions=allowed_mentions)
 
     @commands.command(name="user_markov", aliases=["um"])
     async def user_markov(self, ctx: Context, *, user: Optional[discord.User] = None):
