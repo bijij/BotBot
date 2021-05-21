@@ -15,7 +15,7 @@ from ditto.utils.collections import TimedLRUDict
 from cogs.logging.db import MessageLog, OptInStatus
 
 
-MAX_TRIES = 256
+MAX_TRIES = 64
 
 
 def make_sentence(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES) -> Optional[str]:
@@ -32,7 +32,7 @@ def make_sentence(model: rsmarkov.Markov, order: int, *, seed: str = None, tries
 def make_code(model: rsmarkov.Markov, order: int, *, seed: str = None, tries=MAX_TRIES * 8) -> Optional[str]:
     if tries > 0:
         sentence = model.generate()
-        if "```" in sentence and len(sentence.split()) >= order * 8:
+        if "```" in sentence and len(sentence.split()) >= order * 4:
             return sentence
         return make_code(model, order, tries=tries - 1)
     return None
