@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import copy
-from functools import cache, cached_property, partial
 import random
 from collections.abc import Iterator
+from functools import cache, cached_property, partial
 from typing import Literal, Optional, TypeVar, Union, overload
 
 import discord
@@ -72,10 +72,6 @@ class Board:
         self.winner: Optional[bool] = MISSING
 
     @property
-    def display(self):
-        ...
-
-    @property
     def legal_moves(self) -> Iterator[int]:
         for c in range(COLS):
             for r in range(ROWS):
@@ -83,8 +79,12 @@ class Board:
                     yield c
                     break
 
-    def move(self, column: int, cls: type[B] = MISSING, *, flipped: bool = False) -> B:
-        if column not in self.legal_moves:
+    @cached_property
+    def hash(self) -> int:
+        return hash((self.state, self.__class__.__name__))
+
+    def move(self, col: int, cls: type[B] = MISSING, *, flipped: bool = False) -> B:
+        if col not in self.legal_moves:
             raise ValueError("Illegal Move")
 
         new_state = [[self.state[r][c] for c in range(COLS)] for r in range(ROWS)]
@@ -93,15 +93,15 @@ class Board:
         if not flipped:
             iterator = reversed(iterator)
 
-        for r in iterator:
-            if new_state[r][column] is None:
-                new_state[r][column] = self.current_player
+        for row in iterator:
+            if self.state[row][col] is None:
+                new_state[row][col] = self.current_player
                 break
 
         if cls is MISSING:
             cls = self.__class__  # type: ignore
 
-        return cls(new_state, not self.current_player, (r, column))  # type: ignore
+        return cls(new_state, not self.current_player, (row, col))  # type: ignore
 
     @cache
     def in_a_row(self, n: int, position: tuple[int, int]) -> bool:
@@ -213,100 +213,101 @@ class Flipped(AntiGravity):
 
 
 class AI:
-    def __init__(self, player: bool, depth: int) -> None:
+    def __init__(self, player: bool) -> None:
         self.player = player
-        self.max_depth = depth
 
-    def heuristic(self, game: Board, depth: int) -> float:
+    def move(self, game: Board) -> Board:
+        column = random.choice(tuple(game.legal_moves))
+        return game.move(column)
+
+
+class NegamaxAI(AI):
+    def __init__(self, player: bool, depth: int = MAX_DEPTH) -> None:
+        self.max_depth = depth
+        super().__init__(player)
+
+    def heuristic(self, game: Board, sign: int) -> float:
+        if sign == -1:
+            player = not self.player
+        else:
+            player = self.player
+
         if game.over:
             if game.winner is None:
                 return 0
-            elif game.winner == self.player:
-                return 100 / depth
-            else:
-                return -100 / depth
+            if game.winner == player:
+                return 1_000_000
+            return -1_000_000
+
+        return random.randint(-10, 10)
 
         score = 0
+        return score
         for r in range(ROWS):
             for c in range(COLS):
                 token = game.state[r][c]
                 if token != None:
                     if game.in_a_row(3, (r, c)):
                         if token == self.player:
-                            score += 2.5 / depth
+                            score += 2.5
                         else:
-                            score -= 2.5 / depth
-
-        return score
+                            score -= 2.5
+        return score / depth
 
     @overload
-    def minimax(
+    def negamax(
         self,
         game: Board,
         depth: Literal[0] = ...,
         alpha: float = ...,
         beta: float = ...,
-        is_maximising: bool = ...,
+        sign: int = ...,
     ) -> int:
         ...
 
     @overload
-    def minimax(
+    def negamax(
         self,
         game: Board,
         depth: int = ...,
         alpha: float = ...,
         beta: float = ...,
-        is_maximising: bool = ...,
+        sign: int = ...,
     ) -> float:
         ...
 
-    def minimax(
+    def negamax(
         self,
         game: Board,
         depth: int = 0,
         alpha: float = float("-inf"),
         beta: float = float("inf"),
-        is_maximising: bool = True,
+        sign: int = 1,
     ) -> Union[float, int]:
         if depth == self.max_depth or game.over:
-            return self.heuristic(game, depth)
+            return sign * self.heuristic(game, sign)
 
-        moves = []
-        scores = {}
+        move = MISSING
 
-        if is_maximising:
-            score = float("-inf")
+        score = float("-inf")
+        for c in game.legal_moves:
+            move_score = -self.negamax(game.move(c), depth + 1, -beta, -alpha, -sign)
 
-            for c in game.legal_moves:
-                move_score = self.minimax(game.move(c), depth + 1, alpha, beta, False)
+            if move_score > score:
+                score = move_score
+                move = c
 
-                scores[c] = move_score
-                if move_score > score:
-                    score = move_score
-                    moves = [c]
-                elif move_score == score:
-                    moves.append(c)
-
-                alpha = max(alpha, score)
-                if alpha >= beta:
-                    break
-        else:
-            score = float("inf")
-            for c in game.legal_moves:
-                score = min(score, self.minimax(game.move(c), depth + 1, alpha, beta, True))
-
-                beta = min(beta, score)
-                if alpha >= beta:
-                    break
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break
 
         if depth == 0:
-            return random.choice(moves)
+            return move
         else:
             return score
 
     def move(self, game: B) -> B:
-        return game.move(self.minimax(game))
+        return game.move(self.negamax(game))
 
 
 class Game(menus.Menu):
@@ -369,7 +370,7 @@ class Game(menus.Menu):
     async def _ai_turn(self):
         delta = MAX_DEPTH - MIN_DEPTH
         depth = self.players[self.board.current_player].id % delta + MAX_DEPTH + 1
-        ai = AI(self.board.current_player, depth)
+        ai = NegamaxAI(self.board.current_player, depth)
         move_call = partial(ai.move, self.board)
         self.board = await self.bot.loop.run_in_executor(None, move_call)
 
