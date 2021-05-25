@@ -151,11 +151,11 @@ class TimeCard(commands.Cog):
                     draw.text(
                         (x_pos - shadow_offset, y_pos - shadow_offset),
                         line,
-                        timecard.shadow_colour,
+                        timecard.shadow_colour.to_rgb(),
                         font=font,
                     )
 
-                draw.text((x_pos, y_pos), line, timecard.colour, font=font)
+                draw.text((x_pos, y_pos), line, timecard.colour.to_rgb(), font=font)
 
                 y_pos += text_size[1] // len(lines)
 

@@ -55,7 +55,7 @@ class Whitelist(Cog):
         channel = channel or ctx.channel
 
         if channel.id not in self.bot.whitelisted_users:
-            raise commands.BadArgument('This channel does not have a whitelist.')
+            raise commands.BadArgument("This channel does not have a whitelist.")
 
         if ctx.invoked_subcommand is not None:
             return

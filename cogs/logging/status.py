@@ -4,10 +4,9 @@ from collections import Counter
 from collections.abc import Iterable
 from io import BytesIO, StringIO
 from functools import partial
-from typing import Iterator, cast, NamedTuple, Optional
+from typing import cast, NamedTuple, Optional
 
 import asyncpg
-from discord.utils import get
 import numpy
 
 from ics import Calendar, Event
