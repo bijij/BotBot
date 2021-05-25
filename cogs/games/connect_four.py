@@ -170,7 +170,7 @@ class Board:
                     counts[token] += 1
 
         # Handle weird case where multiple draws occur
-        if counts:
+        if sum(counts):
             if counts[0] > counts[1]:
                 self.winner = False
             elif counts[0] < counts[1]:
