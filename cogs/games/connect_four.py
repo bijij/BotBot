@@ -149,9 +149,6 @@ class Board:
     @cached_property
     def over(self) -> bool:
 
-        if self.last_move is None:
-            return False
-
         if self.winner is not MISSING:
             return True
 
@@ -161,6 +158,8 @@ class Board:
             self.winner = None
             return True
 
+        counts = [0, 0]
+
         for c in range(COLS):
             for r in range(ROWS):
                 token = self.state[r][c]
@@ -168,8 +167,18 @@ class Board:
                     continue
 
                 if self.in_a_row(4, (r, c)):
-                    self.winner = token
-                    return True
+                    counts[token] += 1
+
+        # Handle weird case where multiple draws occur
+        if counts:
+            if counts[0] > counts[1]:
+                self.winner = False
+            elif counts[0] < counts[1]:
+                self.winner = True
+            else:
+                self.winner = None
+
+            return True
 
         return False
 
@@ -496,7 +505,7 @@ class ConnectFour(Cog):
             return True
 
         try:
-            _, opponent = await self.bot.wait_for("reaction_add", check=check)
+            _, opponent = await self.bot.wait_for("reaction_add", check=check, timeout=60)
             return opponent
         except asyncio.TimeoutError:
             pass
