@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import copy
+from itertools import starmap
 import random
 from collections.abc import Iterator
 from functools import cache, cached_property, partial
-from typing import Literal, Optional, TypeVar, Union, overload
+from typing import Any, Literal, Optional, TypeVar, Union, overload
 
 import discord
 from discord.ext import commands, menus
@@ -36,7 +37,6 @@ DISCS = ("\N{LARGE RED CIRCLE}", "\N{LARGE YELLOW CIRCLE}")
 K = 32  # Ranking K-factor
 
 B = TypeVar("B", bound="Board")
-AG = TypeVar("AG", bound="AntiGravity")
 
 BoardState = list[list[Optional[bool]]]
 
@@ -50,10 +50,10 @@ class Games(Table, schema="connect_four"):
 
 class Ranking(Table, schema="connect_four"):
     user_id: Column[SQLType.BigInt] = Column(primary_key=True)
-    ranking: Column[SQLType.Integer] = Column(default="1000")
-    games: Column[SQLType.Integer] = Column(default="0")
-    wins: Column[SQLType.Integer] = Column(default="0")
-    losses: Column[SQLType.Integer] = Column(default="0")
+    ranking: Column[SQLType.Integer] = Column(default=1000)
+    games: Column[SQLType.Integer] = Column(default=0)
+    wins: Column[SQLType.Integer] = Column(default=0)
+    losses: Column[SQLType.Integer] = Column(default=0)
 
 
 class Board:
@@ -175,28 +175,41 @@ class Board:
 
     @classmethod
     def new_game(cls: type[B]) -> B:
-        state = [[None for _ in range(COLS)] for _ in range(ROWS)]
-        return cls(state, False)  # type: ignore
+        state: list[list[Optional[bool]]] = [[None for _ in range(COLS)] for _ in range(ROWS)]
+        return cls(state, False)
 
 
-class AntiGravity(Board):
-    def flip(self: AG) -> AG:
+class Flip(Board):
+    def __init__(self, *args: Any, flipped: bool = False, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.flipped = flipped
 
-        state = [[None for _ in range(COLS)] for _ in range(ROWS)]
+    def flip(self) -> Board:
+
+        state: list[list[Optional[bool]]] = [[None for _ in range(COLS)] for _ in range(ROWS)]
 
         for c in range(COLS):
-            for r in range(ROWS):
-                state[-r - 1][c] = self.state[r][c]  # type: ignore
+            o = 0
+            if not self.flipped:
+                for o in range(ROWS):
+                    if self.state[o][c] is not None:
+                        break
 
-        if isinstance(self, Flipped):
-            cls = AntiGravity
-        else:
-            cls = Flipped
+                for r in range(ROWS - o):
+                    state[r][c] = self.state[r + o][c]
 
-        return cls(state, self.current_player)  # type: ignore
+            else:
+                for o in range(ROWS):
+                    if self.state[ROWS - 1 - o][c] is not None:
+                        break
 
-    def move(self, column: int, *, cls: type[AG] = MISSING, flipped: bool = False) -> AG:
-        board = super().move(column, cls=cls, flipped=flipped)
+                for r in range(ROWS - o):
+                    state[r + o][c] = self.state[r][c]
+
+        return Flip(state, self.current_player, flipped=not self.flipped)
+
+    def move(self, column: int, *, cls=MISSING) -> Board:
+        board = super().move(column, cls=cls, flipped=self.flipped)
 
         if board.over:
             return board
@@ -204,12 +217,7 @@ class AntiGravity(Board):
         if self.current_player:
             board = board.flip()
 
-        return board
-
-
-class Flipped(AntiGravity):
-    def move(self, column: int, *, cls: type[AG] = MISSING, flipped: bool = True) -> AG:
-        return super().move(column, cls=cls, flipped=flipped)
+        return board  # type: ignore
 
 
 class AI:
@@ -392,10 +400,10 @@ class Game(menus.Menu):
         winner: Optional[int]
 
         if resignation is not None:
-            winner = not resignation
+            winner = int(not resignation)
             content = f"Game cancelled by {self.players[resignation].mention} ({DISCS[resignation]})!"
         elif self.board.winner is not None:
-            winner = self.board.winner
+            winner = int(self.board.winner)
             content = f"{self.players[self.board.winner].mention} ({DISCS[self.board.winner]})  Wins!"
         else:
             winner = None
@@ -426,8 +434,8 @@ class Game(menus.Menu):
             E1 = R1 / (R1 + R2)
             E2 = R2 / (R1 + R2)
 
-            S1 = (self.board.winner == 0) if self.board.winner is not None else 0.5
-            S2 = (self.board.winner == 1) if self.board.winner is not None else 0.5
+            S1 = (winner == 0) if winner is not None else 0.5
+            S2 = (winner == 1) if winner is not None else 0.5
 
             r1 = record_1["ranking"] + K * (S1 - E1)
             r2 = record_2["ranking"] + K * (S2 - E2)
@@ -437,8 +445,8 @@ class Game(menus.Menu):
                 record_1,
                 ranking=round(r1),
                 games=record_1["games"] + 1,
-                wins=record_1["wins"] + self.board.winner == 0,
-                losses=record_1["losses"] + self.board.winner != 0,
+                wins=record_1["wins"] + (winner == 0),
+                losses=record_1["losses"] + (winner == 1),
             )
 
             await Ranking.update_record(
@@ -446,8 +454,8 @@ class Game(menus.Menu):
                 record_2,
                 ranking=round(r2),
                 games=record_2["games"] + 1,
-                wins=record_2["wins"] + self.board.winner == 1,
-                losses=record_2["losses"] + self.board.winner != 1,
+                wins=record_2["wins"] + (winner == 1),
+                losses=record_2["losses"] + (winner == 0),
             )
 
     async def place(self, payload):
@@ -550,9 +558,9 @@ class ConnectFour(Cog):
         if opponent is None:
             raise commands.BadArgument("Challenge cancelled.")
 
-        await Game().start(ctx, opponent, wait=True, ranked=False, cls=AntiGravity)
+        await Game().start(ctx, opponent, wait=True, ranked=False, cls=Flip)
 
-    @c4.command(name="ranking", aliases=["elo"])
+    @c4.command(name="ranking", aliases=["elo", "leaderboard", "rankings"])
     async def c4_ranking(self, ctx: Context, *, player: Optional[discord.Member] = None):
         """Get a player's ranking."""
 
