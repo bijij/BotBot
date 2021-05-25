@@ -214,6 +214,9 @@ class Flip(Board):
         if board.over:
             return board
 
+        if self.flipped:
+            board.flipped = True
+
         if self.current_player:
             board = board.flip()
 
