@@ -4,7 +4,7 @@ from discord.ext import commands
 from ditto import BotBase, Cog
 
 from donphan import Column, Table, SQLType
-from donphan.connection import MaybeAcquire
+from donphan import MaybeAcquire
 
 
 class VoiceLogConfiguration(Table, schema="logging"):
