@@ -102,8 +102,18 @@ class UIButton(discord.ui.Button["GameBoyView"]):
         super().__init__(style=BUTTON_COLOR[self.button], label=BUTTON_TEXT[self.button], group=group)
 
     async def callback(self, interaction: discord.Interaction):
-        async with self.view.lock:
-            await self.view.press(self.button)
+        await self.view.input_queue.put(self.button)
+
+        if self.view.game_lock.locked():
+            await interaction.response.defer()
+            return
+
+        async with self.view.game_lock:
+
+            while not self.view.input_queue.empty():
+                button = await self.view.input_queue.get()
+                await self.view.press(button)
+
             await self.view.tick()
 
             image_url = await self.view.render()
@@ -132,7 +142,10 @@ class PowerButton(UIButton):
         for button in self.view.children:
             button.disabled = True
 
-        del self.view.cog.games[self.view.user.id]
+        try:
+            del self.view.cog.games[self.view.user.id]
+        except KeyError:
+            pass
 
         await interaction.response.edit_message(content="Game Over!", view=self.view)
 
@@ -148,7 +161,8 @@ class GameBoyView(discord.ui.View):
     def __init__(self, cog: GameBoy, game: str, user: User):
         self.cog = cog
         self.user = user
-        self.lock = asyncio.Lock()
+        self.game_lock = asyncio.Lock()
+        self.input_queue = asyncio.Queue()
 
         self.prev_message = None
 
@@ -185,12 +199,9 @@ class GameBoyView(discord.ui.View):
         )
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.lock.locked():
-            await interaction.response.send_message("Input disabled", ephemeral=True)
-            return False
-
         if interaction.user != self.user:
             await interaction.response.send_message("This is not your game", ephemeral=True)
+            return False
 
         return True
 
@@ -198,6 +209,7 @@ class GameBoyView(discord.ui.View):
         self.game.send_input(button.value)
         await self.tick(HOLD_DURATION)
         self.game.send_input(INVERSE_BUTTON.get(button, pyboy.WindowEvent.PASS))
+        await self.tick(HOLD_DURATION)
 
     async def tick(self, n: int = TICKS):
         def run_game():
