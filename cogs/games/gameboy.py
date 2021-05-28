@@ -120,9 +120,7 @@ class SaveButton(UIButton):
 class LoadButton(UIButton):
     async def callback(self, interaction: discord.Interaction):
         try:
-            with open(
-                f"res/secret/gb_states/{self.view.game.cartridge_title()}/{self.view.user.id}.state", "rb"
-            ) as fp:
+            with open(self.view.save_dir / f"{self.view.user.id}.state", "wb") as fp:
                 self.view.game.load_state(fp)
         except FileNotFoundError:
             await interaction.response.send_message("You do not have a save-state.", ephemeral=True)
