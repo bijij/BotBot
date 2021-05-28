@@ -55,6 +55,7 @@
         cogs.games.boggle: ~
         cogs.games.foggle: ~
         cogs.games.minesweeper: ~
+        cogs.games.tic_tac_toe: ~
 
         # General Extensions
         cogs.reminders: ~

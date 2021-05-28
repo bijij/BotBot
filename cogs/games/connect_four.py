@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import copy
-from itertools import starmap
 import random
 from collections.abc import Iterator
 from functools import cache, cached_property, partial
+from itertools import starmap
 from typing import Any, Literal, Optional, TypeVar, Union, overload
 
 import discord
 from discord.ext import commands, menus
 from discord.utils import MISSING
 from ditto import BotBase, Cog, Context
+from ditto.utils.message import confirm
 from ditto.utils.paginator import EmbedPaginator
 from donphan import Column, SQLType, Table
 
@@ -149,15 +150,6 @@ class Board:
     @cached_property
     def over(self) -> bool:
 
-        if self.winner is not MISSING:
-            return True
-
-        for _ in self.legal_moves:
-            break
-        else:
-            self.winner = None
-            return True
-
         counts = [0, 0]
 
         for c in range(COLS):
@@ -169,7 +161,7 @@ class Board:
                 if self.in_a_row(4, (r, c)):
                     counts[token] += 1
 
-        # Handle weird case where multiple draws occur
+        # Handle weird case where multiple wins occur
         if sum(counts):
             if counts[0] > counts[1]:
                 self.winner = False
@@ -180,11 +172,18 @@ class Board:
 
             return True
 
+        # Check if board is empty
+        for _ in self.legal_moves:
+            break
+        else:
+            self.winner = None
+            return True
+
         return False
 
     @classmethod
     def new_game(cls: type[B]) -> B:
-        state: list[list[Optional[bool]]] = [[None for _ in range(COLS)] for _ in range(ROWS)]
+        state: BoardState = [[None for _ in range(COLS)] for _ in range(ROWS)]
         return cls(state, False)
 
 
@@ -195,7 +194,7 @@ class Flip(Board):
 
     def flip(self) -> Board:
 
-        state: list[list[Optional[bool]]] = [[None for _ in range(COLS)] for _ in range(ROWS)]
+        state: BoardState = [[None for _ in range(COLS)] for _ in range(ROWS)]
 
         for c in range(COLS):
             o = 0
@@ -530,10 +529,10 @@ class ConnectFour(Cog):
                 raise commands.BadArgument("You cannot play against yourself.")
 
             if not opponent.bot:
-                _ctx = copy.copy(ctx)
-                _ctx.author = opponent
-
-                if not await _ctx.confirm(
+                if not confirm(
+                    self.bot,
+                    ctx.channel,
+                    opponent,
                     f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",
                 ):
                     opponent = None
@@ -558,10 +557,10 @@ class ConnectFour(Cog):
                 raise commands.BadArgument("You cannot play against yourself.")
 
             if not opponent.bot:
-                _ctx = copy.copy(ctx)
-                _ctx.author = opponent
-
-                if not await _ctx.confirm(
+                if not await confirm(
+                    self.bot,
+                    ctx.channel,
+                    opponent,
                     f"{opponent.mention}, {ctx.author} has challenged you to Connect 4! do you accept?",
                 ):
                     opponent = None
