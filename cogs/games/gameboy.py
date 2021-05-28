@@ -134,7 +134,7 @@ class PowerButton(UIButton):
         for button in self.view.children:
             button.disabled = True
 
-        self.view.cog.game = None
+        del self.view.cog.games[self.view.user.id]
 
         await interaction.response.edit_message(content="Game Over!", view=self.view)
 
@@ -224,11 +224,11 @@ class GameBoyView(discord.ui.View):
 class GameBoy(Cog):
     def __init__(self, bot: BotBase) -> None:
         super().__init__(bot)
-        self.game = None
+        self.games: dict[int, GameBoyView] = {}
 
     @commands.command(aliases=["gb", "pokemon", "pkmn"])
     async def gameboy(self, ctx: Context, *, game_name: str = "red") -> None:  # type: ignore
-        if self.game is not None:
+        if ctx.author.id in self.games:
             raise commands.BadArgument("You are already playing!")
 
         game = ROOT_DIR / f"{game_name}.gb"
@@ -238,9 +238,9 @@ class GameBoy(Cog):
                 raise commands.BadArgument(f"{game_name} is not a game!")
 
         async with ctx.typing():
-            self.game = GameBoyView(self, str(game), ctx.author)
-            image_url = await self.game.render()
-            await ctx.send(embed=self.game.embed.set_image(url=image_url), view=self.game)  # type: ignore
+            self.games[ctx.author.id] = game = GameBoyView(self, str(game), ctx.author)
+            image_url = await game.render()
+            await ctx.send(embed=game.embed.set_image(url=image_url), view=game)  # type: ignore
 
 
 def setup(bot: BotBase) -> None:
