@@ -57,7 +57,7 @@
         cogs.games.minesweeper: ~
         cogs.games.tic_tac_toe: ~
 
-        cogs.games.pokemon: !Config
+        cogs.games.gameboy: !Config
             RENDER_CHANNEL: !Channel 551765961070608384 847779308793233428
 
         # General Extensions
