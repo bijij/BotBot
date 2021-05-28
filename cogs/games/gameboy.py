@@ -31,8 +31,8 @@ SAVE_DIR = ROOT_DIR / "states"
 
 
 class Button(Enum):
-    SAVE = pyboy.WindowEvent.STATE_SAVE
-    LOAD = pyboy.WindowEvent.STATE_LOAD
+    SAVE = -1
+    LOAD = -2
     REFRESH = pyboy.WindowEvent.PASS
     POWER = pyboy.WindowEvent.QUIT
     A = pyboy.WindowEvent.PRESS_BUTTON_A
@@ -69,7 +69,7 @@ BUTTON_TEXT: dict[Button, str] = {
     Button.LEFT: "←",
     Button.RIGHT: "→",
     Button.START: "Start",
-    Button.SELECT: "Select",
+    Button.SELECT: "Sel.",
 }
 
 BUTTON_COLOR: dict[Button, discord.ButtonStyle] = {
