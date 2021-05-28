@@ -237,7 +237,7 @@ class Game(discord.ui.View):
         self.players = list(players)
         random.shuffle(self.players)
 
-        super().__init__()
+        super().__init__(timeout=None)
         self.board = Board.new_game()
 
         for r in range(3):
@@ -253,9 +253,11 @@ class Game(discord.ui.View):
                     break
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.user != self.current_player:
-            await interaction.response.send_message('Sorry, you are not playing', ephemeral=True)
+        if interaction.user not in self.players:
+            await interaction.response.send_message("Sorry, you are not playing", ephemeral=True)
             return False
+        elif interaction.user != self.current_player:
+            await interaction.response.send_message("Sorry, it is not your turn!", ephemeral=True)
         return True
 
     def make_ai_move(self) -> tuple[int, int]:

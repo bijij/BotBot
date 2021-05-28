@@ -26,7 +26,13 @@ class Cell:
 
     def __str__(self):
         if self.clicked:
-            return "💥" if self.mine else boardgames.keycap_digit(self.number)
+
+            if self.number == 0:
+                number = "\u200b"
+            else:
+                number = boardgames.keycap_digit(self.number)
+
+            return "💥" if self.mine else number
         else:
             return "🚩" if self.flagged else "⬜"
 
@@ -44,7 +50,7 @@ class Game(boardgames.Board[Cell]):
         cells = [(i // self.size_x, i % self.size_x) for i in range(self.size_x * self.size_y)]
         cells.remove((click_y, click_x))
 
-        for y, x in sample(cells, int((self.size_y * self.size_x) // (6 + 2 / 4))):
+        for y, x in sample(cells, max(int((self.size_y * self.size_x) // (6 + 2 / 4)), 5)):
             self[x, y].mine = True
 
     @property
@@ -126,6 +132,70 @@ class Game(boardgames.Board[Cell]):
                                 self.clean()
 
 
+class Button(discord.ui.Button["GameUI"]):
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+        super().__init__(style=discord.ButtonStyle.blurple, label="\u200b", group=y)
+
+    @property
+    def cell(self):
+        return self.view.board[self.x, self.y]
+
+    def reveal(self):
+        self.disabled = True
+        self.style = discord.ButtonStyle.secondary
+        self.label = str(self.cell)
+
+        if self.cell.mine:
+            self.style = discord.ButtonStyle.danger
+        elif self.cell.flagged:
+            self.style = discord.ButtonStyle.success
+        elif self.cell.clicked:
+            self.label = str(self.cell.number or "\u200b")
+
+    def click(self):
+        self.view.board.click(self.y, self.x)
+        self.view.board.clean()
+
+        for child in self.view.children:
+            if child.cell.clicked:  # type: ignore
+                child.reveal()  # type: ignore
+
+    async def callback(self, interaction: discord.Interaction):
+        self.click()
+
+        content = "Minesweeper!"
+
+        if self.view.board.lost or self.view.board.solved:
+            if self.view.board.lost:
+                content = "💥"
+            elif self.view.board.solved:
+                content = "<:_:739613733474795520>"
+
+            for child in self.view.children:
+                child.disabled = True  # type: ignore
+
+        await interaction.response.edit_message(content=content, view=self.view)
+
+
+class GameUI(discord.ui.View):
+    def __init__(self, player):
+        self.player = player
+        super().__init__(timeout=None)
+        self.board = Game(5, 5)
+
+        for r in range(5):
+            for c in range(5):
+                self.add_item(Button(r, c))
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user != self.player:
+            await interaction.response.send_message("Sorry, you are not playing", ephemeral=True)
+            return False
+        return True
+
+
 def is_no_game(ctx: Context):
     if ctx.channel in ctx.cog._games:
         raise commands.CheckFailure("There is already a Minesweeper game running.")
@@ -157,7 +227,8 @@ class Minesweeper(Cog):
     async def ms_start(self, ctx):
         """Starts a Minesweeper game"""
         if ctx.invoked_subcommand is None:
-            await ctx.send("Please select a difficult; easy or medium")
+            game = GameUI(ctx.author)
+            await ctx.send("Minesweeper!", view=game)  # type: ignore
 
     @ms_start.command(name="tiny")
     async def ms_start_tiny(self, ctx):
