@@ -25,6 +25,7 @@ COG_CONFIG = CONFIG.EXTENSIONS[__name__]
 
 HOLD_DURATION = 10
 TICKS = 120
+RENDER_EVERY = 3
 
 ROOT_DIR = pathlib.Path("./res/secret/gb")
 SAVE_DIR = ROOT_DIR / "states"
@@ -216,7 +217,7 @@ class GameBoyView(discord.ui.View):
         def run_game():
             for i in range(n):
                 self.game.tick()
-                if not i % 2:
+                if not i % RENDER_EVERY:
                     self.frames.append(self.screen.screen_image().resize((160 * 4, 144 * 4), resample=Image.BILINEAR))  # type: ignore
 
         await self.cog.bot.loop.run_in_executor(None, run_game)
