@@ -257,6 +257,7 @@ class GameBoy(Cog):
 
         async with ctx.typing():
             self.games[ctx.author.id] = game = GameBoyView(self, str(game), ctx.author)
+            await game.tick()  # load some frames to render
             image_url = await game.render()
             await ctx.send(embed=game.embed.set_image(url=image_url), view=game)  # type: ignore
 
