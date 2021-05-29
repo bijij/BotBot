@@ -24,7 +24,7 @@ COG_CONFIG = CONFIG.EXTENSIONS[__name__]
 
 
 HOLD_DURATION = 10
-TICKS = 300
+TICKS = 120
 
 ROOT_DIR = pathlib.Path("./res/secret/gb")
 SAVE_DIR = ROOT_DIR / "states"
