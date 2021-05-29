@@ -159,8 +159,8 @@ class Button(discord.ui.Button["GameUI"]):
         self.view.board.clean()
 
         for child in self.view.children:
-            if child.cell.clicked:  # type: ignore
-                child.reveal()  # type: ignore
+            if child.cell.clicked:
+                child.reveal()
 
     async def callback(self, interaction: discord.Interaction):
         self.click()
@@ -174,12 +174,16 @@ class Button(discord.ui.Button["GameUI"]):
                 content = "<:_:739613733474795520>"
 
             for child in self.view.children:
-                child.disabled = True  # type: ignore
+                child.disabled = True
+
+            self.view.stop()
 
         await interaction.response.edit_message(content=content, view=self.view)
 
 
 class GameUI(discord.ui.View):
+    children: list[Button]
+
     def __init__(self, player):
         self.player = player
         super().__init__(timeout=None)

@@ -16,8 +16,8 @@ BoardState = list[list[Optional[bool]]]
 
 
 STATES = (
-    "\N{REGIONAL INDICATOR SYMBOL LETTER O}",
     "\N{REGIONAL INDICATOR SYMBOL LETTER X}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER O}",
 )
 
 
@@ -26,11 +26,9 @@ class Board:
         self,
         state: BoardState,
         current_player: bool = False,
-        last_move: Optional[tuple[int, int]] = None,
     ) -> None:
         self.state = state
         self.current_player = current_player
-        self.last_move = last_move
         self.winner: Optional[bool] = MISSING
 
     @property
@@ -91,7 +89,7 @@ class Board:
         new_state = [[self.state[r][c] for c in range(3)] for r in range(3)]
         new_state[r][c] = self.current_player
 
-        return Board(new_state, not self.current_player, (r, c))
+        return Board(new_state, not self.current_player)
 
     @classmethod
     def new_game(cls) -> Board:
@@ -189,50 +187,45 @@ class Button(discord.ui.Button["Game"]):
         self.r = r
         self.c = c
 
-    def click(self):
-        if self.view.board.current_player:
-            self.style = discord.ButtonStyle.danger
-            self.label = "X"
-        else:
+    def update(self):
+        cell = self.view.board.state[self.r][self.c]
+
+        if cell is not None or self.view.board.over:
+            self.disabled = True
+
+        if cell == True:
             self.style = discord.ButtonStyle.success
             self.label = "O"
-
-        self.disabled = True
-
-        self.view.board = self.view.board.move(self.r, self.c)
-
-    async def move(self, interaction: discord.Interaction):
-        self.click()
-        content = f"{self.view.current_player.mention}'s' ({STATES[self.view.board.current_player]}) turn!"
-
-        if self.view.board.over:
-            if self.view.board.winner is not None:
-                content = (
-                    f"{self.view.players[self.view.board.winner].mention} ({STATES[self.view.board.winner]}) wins!"
-                )
-            else:
-                content = "Draw!"
-
-            for child in self.view.children:
-                child.disabled = True  # type: ignore
-
-            self.view.stop()
-
-        if not self.view.board.over and self.view.current_player.bot:
-            r, c = self.view.make_ai_move()
-
-            for child in self.view.children:
-                if child.r == r and child.c == c:  # type: ignore
-                    await child.move(interaction)  # type: ignore
-                    break
-        else:
-            await interaction.response.edit_message(content=content, view=self.view)
+        if cell == False:
+            self.style = discord.ButtonStyle.danger
+            self.label = "X"
 
     async def callback(self, interaction: discord.Interaction):
-        await self.move(interaction)
+
+        self.view.board = self.view.board.move(self.r, self.c)
+        self.view.update()
+
+        if self.view.board.over:
+            await self.view.game_over(interaction)
+            return
+
+        if self.view.current_player.bot:
+            self.view.make_ai_move()
+            self.view.update()
+
+        if self.view.board.over:
+            await self.view.game_over(interaction)
+            return
+
+        await interaction.response.edit_message(
+            content=f"{self.view.current_player.mention}'s' ({STATES[self.view.board.current_player]}) turn!",
+            view=self.view,
+        )
 
 
 class Game(discord.ui.View):
+    children: list[Button]
+
     def __init__(self, players: tuple[User, User]):
         self.players = list(players)
         random.shuffle(self.players)
@@ -240,17 +233,30 @@ class Game(discord.ui.View):
         super().__init__(timeout=None)
         self.board = Board.new_game()
 
+        if self.current_player.bot:
+            self.make_ai_move()
+
         for r in range(3):
             for c in range(3):
                 self.add_item(Button(r, c))
 
-        if self.current_player.bot:
-            r, c = self.make_ai_move()
+        self.update()
 
-            for child in self.children:
-                if child.r == r and child.c == c:  # type: ignore
-                    child.click()  # type: ignore
-                    break
+    def update(self):
+        for child in self.children:
+            child.update()
+
+    async def game_over(self, interaction: discord.Interaction):
+        if self.board.winner is not None:
+            content = f"{self.players[self.board.winner].mention} ({STATES[self.board.winner]}) wins!"
+        else:
+            content = "Draw!"
+
+        for child in self.children:
+            child.disabled = True  # type: ignore
+
+        self.stop()
+        return await interaction.response.edit_message(content=content, view=self)
 
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user not in self.players:
@@ -260,9 +266,9 @@ class Game(discord.ui.View):
             await interaction.response.send_message("Sorry, it is not your turn!", ephemeral=True)
         return True
 
-    def make_ai_move(self) -> tuple[int, int]:
+    def make_ai_move(self):
         ai = NegamaxAI(self.board.current_player)
-        return ai.move(self.board).last_move  # type: ignore
+        self.board = ai.move(self.board)
 
     @property
     def current_player(self) -> User:
