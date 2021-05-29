@@ -57,7 +57,7 @@ INVERSE_BUTTON: dict[Button, int] = {
 }
 
 
-BUTTON_TEXT: dict[Button, str] = {
+BUTTON_TEXT: dict[Button, str] = {  # type: ignore
     Button.SAVE: "Save",
     Button.LOAD: "Load",
     Button.REFRESH: "⟳",
@@ -72,7 +72,7 @@ BUTTON_TEXT: dict[Button, str] = {
     Button.SELECT: "Sel.",
 }
 
-BUTTON_COLOR: dict[Button, discord.ButtonStyle] = {
+BUTTON_COLOR: dict[Button, discord.ButtonStyle] = {  # type: ignore
     Button.SAVE: discord.ButtonStyle.success,
     Button.LOAD: discord.ButtonStyle.danger,
     Button.REFRESH: discord.ButtonStyle.primary,
@@ -87,7 +87,7 @@ BUTTON_COLOR: dict[Button, discord.ButtonStyle] = {
     Button.SELECT: discord.ButtonStyle.secondary,
 }
 
-BUTTON_MAP: list[list[Optional[Button]]] = [
+BUTTON_MAP: list[list[Optional[Button]]] = [  # type: ignore
     [Button.SAVE, Button.LOAD, None, Button.REFRESH, Button.POWER],
     [None, Button.UP, None, None, None],
     [Button.LEFT, None, Button.RIGHT, None, Button.A],
@@ -163,8 +163,8 @@ class GameBoyView(discord.ui.View):
         self.user = user
         self.game_lock = asyncio.Lock()
         self.input_queue = asyncio.Queue()
-
-        self.prev_message = None
+        self.frames: list[Image.Image] = list()
+        self.prev_message: Optional[discord.Message] = None
 
         super().__init__(timeout=None)
 
@@ -173,6 +173,7 @@ class GameBoyView(discord.ui.View):
             window_type="headless",
         )
         self.game.set_emulation_speed(0)
+        self.screen = self.game.botsupport_manager().screen()
 
         self.save_dir: pathlib.Path = SAVE_DIR / self.game.cartridge_title()
         self.save_dir.mkdir(exist_ok=True)
@@ -213,8 +214,10 @@ class GameBoyView(discord.ui.View):
 
     async def tick(self, n: int = TICKS):
         def run_game():
-            for _ in range(n):
+            for i in range(n):
                 self.game.tick()
+                if not i % 2:
+                    self.frames.append(self.screen.screen_image().resize((160 * 4, 144 * 4), resample=Image.BILINEAR))  # type: ignore
 
         await self.cog.bot.loop.run_in_executor(None, run_game)
 
@@ -222,12 +225,17 @@ class GameBoyView(discord.ui.View):
         if self.prev_message is not None:
             await self.prev_message.delete()
 
-        frame = io.BytesIO()
-        screen = self.game.botsupport_manager().screen()
-        screen.screen_image().resize((160 * 4, 144 * 4), resample=Image.LANCZOS).save(frame, "PNG")
-        frame.seek(0)
+        animation = io.BytesIO()
 
-        self.prev_message = await COG_CONFIG.RENDER_CHANNEL.send(file=discord.File(frame, "frame.png"))
+        def render():
+            im = self.frames.pop(0)
+            im.save(animation, save_all=True, append_images=self.frames, format="gif")
+            self.frames.clear()
+
+        await self.cog.bot.loop.run_in_executor(None, render)
+
+        animation.seek(0)
+        self.prev_message = await COG_CONFIG.RENDER_CHANNEL.send(file=discord.File(animation, "animation.gif"))
         return self.prev_message.attachments[0].url
 
 
