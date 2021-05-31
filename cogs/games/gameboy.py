@@ -9,9 +9,9 @@ from typing import Optional
 import discord
 import pyboy
 from discord.ext import commands
+from discord.enums import Enum
 from ditto import CONFIG, BotBase, Cog, Context
 from ditto.types import User
-from donphan import Column, Enum, MaybeAcquire, SQLType, Table
 from PIL import Image
 
 # Ignore RTC Warnings
@@ -42,12 +42,6 @@ class Button(Enum):
     RIGHT = pyboy.WindowEvent.PRESS_ARROW_RIGHT
     START = pyboy.WindowEvent.PRESS_BUTTON_START
     SELECT = pyboy.WindowEvent.PRESS_BUTTON_SELECT
-
-
-class Clicks(Table, schema="tcpp"):
-    user_id: Column[SQLType.BigInt] = Column(primary_key=True)
-    timestamp: Column[SQLType.Timestamp] = Column(primary_key=True, default="NOW()")
-    click: Column[Button]
 
 
 INVERSE_BUTTON: dict[Button, int] = {
@@ -110,9 +104,6 @@ class UIButton(discord.ui.Button["GameBoyView"]):
         await self.view.input_queue.put(self.button)
 
         await interaction.response.defer()
-
-        async with MaybeAcquire(pool=self.view.cog.bot.pool) as conn:
-            await Clicks.insert(conn, user_id=interaction.user.id, button=self.button)
 
         if self.view.game_lock.locked():
             return
