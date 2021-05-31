@@ -19,7 +19,7 @@ class Button(discord.ui.Button["Game"]):
         super().__init__(style=discord.ButtonStyle.success, label="\u200b", row=row)
 
     async def callback(self, interaction: discord.Interaction):
-        square = self.view.game[self.col, self.row]
+        square = self.view.game[self.row, self.col]
         square.flip()
 
         self.disabled = True
