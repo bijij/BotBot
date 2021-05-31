@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 
 import io
 from typing import Optional
@@ -68,39 +69,42 @@ class Button(discord.ui.Button["Game"]):
         return self.view.game[self.row, self.col]
 
     async def callback(self, interaction: discord.Interaction):
-        if self.view.mode is None:
-            self.square.flip()
-        else:
-            if self.square.flipped:
-                return await interaction.response.send_message("You can not mark a flipped square.", ephemeral=True)
-
-            self.square.note(self.view.mode)
-
-        if self.square.flipped:
-            self.disabled = True
-
-            if self.square.value == 0:
-                self.label = "💥"
-                self.style = discord.ButtonStyle.danger
+        async with self.view.lock:
+            if self.view.mode is None:
+                self.square.flip()
             else:
-                self.label = str(self.square.value)
-                self.style = discord.ButtonStyle.secondary
+                if self.square.flipped:
+                    return await interaction.response.send_message(
+                        "You can not mark a flipped square.", ephemeral=True
+                    )
 
-        if self.view.game.over:
-            for button in self.view.children:
-                button.disabled = True
-                if not button.square.flipped:
-                    button.square.flip()
+                self.square.note(self.view.mode)
 
-            self.view.stop()
-            await self.view.mode_switcher.message.edit(view=self.view.mode_switcher)
-            content = "Game over!"
-        else:
-            content = None
+            if self.square.flipped:
+                self.disabled = True
 
-        embed = self.view.embed.set_image(url=await self.view.render())
+                if self.square.value == 0:
+                    self.label = "💥"
+                    self.style = discord.ButtonStyle.danger
+                else:
+                    self.label = str(self.square.value)
+                    self.style = discord.ButtonStyle.secondary
 
-        await interaction.response.edit_message(content=content, embeds=[embed], view=self.view)
+            if self.view.game.over:
+                for button in self.view.children:
+                    button.disabled = True
+                    if not button.square.flipped:
+                        button.square.flip()
+
+                self.view.stop()
+                await self.view.mode_switcher.message.edit(view=self.view.mode_switcher)
+                content = "Game over!"
+            else:
+                content = None
+
+            embed = self.view.embed.set_image(url=await self.view.render())
+
+            await interaction.response.edit_message(content=content, embeds=[embed], view=self.view)
 
 
 class Game(discord.ui.View):
@@ -111,6 +115,7 @@ class Game(discord.ui.View):
         self.game = vflip.Board(level)  # type: ignore
         self.last_messsage = None
         self.mode_switcher = Mode(self)
+        self.lock = asyncio.Lock()
 
         super().__init__(timeout=None)
 
