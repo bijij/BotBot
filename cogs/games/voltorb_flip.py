@@ -71,7 +71,7 @@ class Game(discord.ui.View):
         fp = io.BytesIO()
 
         image = self.game._render()
-        image.resize((image.width * 2, image.height * 2), Image.BILINEAR).save(fp, format="png")
+        image.resize((image.width * 2, image.height * 2), Image.NEAREST).save(fp, format="png")
         fp.seek(0)
 
         self.last_messsage = await COG_CONFIG.RENDER_CHANNEL.send(file=discord.File(fp, "voltorb.png"))
