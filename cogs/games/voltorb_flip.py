@@ -68,9 +68,9 @@ class Button(discord.ui.Button["Game"]):
         else:
             self.square.note(self.view.mode)
 
-        self.disabled = True
-
         if self.square.flipped:
+            self.disabled = True
+
             if self.square.value == 0:
                 self.label = "💥"
                 self.style = discord.ButtonStyle.danger
