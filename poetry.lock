@@ -585,7 +585,7 @@ python-versions = ">=2"
 
 [[package]]
 name = "vflip"
-version = "1.0.0"
+version = "1.0.1"
 description = "Voltorb Flip engine and renderer"
 category = "main"
 optional = false
@@ -599,7 +599,7 @@ Pillow = "^8.0.0"
 type = "git"
 url = "https://github.com/bijij/vflip"
 reference = "master"
-resolved_reference = "70a1438b0082e3dc3290dda2f1bef42a7324af20"
+resolved_reference = "b0ba6f5a578f6508d3dd41c8feb4fc874cc851d9"
 
 [[package]]
 name = "yarl"
