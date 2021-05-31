@@ -7,6 +7,7 @@ from PIL import Image
 import discord
 import vflip
 from discord.ext import commands
+from discord.utils import MISSING
 from ditto import CONFIG, BotBase, Cog, Context
 from ditto.types import User
 
@@ -46,10 +47,14 @@ class Mode(discord.ui.View):
         super().__init__(timeout=None)
         self.game = game
         self.mode: Optional[vflip.types.Value] = None
+        self.message: discord.Message = MISSING
 
         self.add_item(ModeButton(None))
         for n in range(4):
             self.add_item(ModeButton(n))  # type: ignore
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return await self.game.interaction_check(interaction)
 
 
 class Button(discord.ui.Button["Game"]):
@@ -66,6 +71,9 @@ class Button(discord.ui.Button["Game"]):
         if self.view.mode is None:
             self.square.flip()
         else:
+            if self.square.flipped:
+                return await interaction.response.send_message("You can not mark a flipped square.", ephemeral=True)
+
             self.square.note(self.view.mode)
 
         if self.square.flipped:
@@ -85,6 +93,7 @@ class Button(discord.ui.Button["Game"]):
                     button.square.flip()
 
             self.view.stop()
+            await self.view.mode_switcher.message.edit(view=self.view.mode_switcher)
             content = "Game over!"
         else:
             content = None
@@ -144,7 +153,7 @@ class Game(discord.ui.View):
         game = cls(ctx.author, level)
         embed = game.embed.set_image(url=await game.render())
         await ctx.send(embed=embed, view=game)
-        await ctx.send(content="\u200b", view=game.mode_switcher)
+        game.mode_switcher.message = await ctx.send(content="\u200b", view=game.mode_switcher)
         return game
 
     @property
