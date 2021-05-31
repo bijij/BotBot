@@ -18,22 +18,27 @@ class Button(discord.ui.Button["Game"]):
         self.col = col
         super().__init__(style=discord.ButtonStyle.success, label="\u200b", row=row)
 
+    @property
+    def square(self):
+        return self.view.game[self.row, self.col]
+
     async def callback(self, interaction: discord.Interaction):
-        square = self.view.game[self.row, self.col]
-        square.flip()
+        self.square.flip()
 
         self.disabled = True
 
-        if square.value == 0:
+        if self.square.value == 0:
             self.label = "💥"
             self.style = discord.ButtonStyle.danger
         else:
-            self.label = str(square.value)
+            self.label = str(self.square.value)
             self.style = discord.ButtonStyle.secondary
 
         if self.view.game.over:
             for button in self.view.children:
                 button.disabled = True
+                if not button.square.flipped:
+                    button.square.flip()
 
             self.view.stop()
             content = "Game over!"
