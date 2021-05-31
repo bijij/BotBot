@@ -1,19 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Optional
-
 import io
 import logging
 import pathlib
+from typing import Optional
 
 import discord
 import pyboy
-from discord.enums import Enum
 from discord.ext import commands
 from ditto import CONFIG, BotBase, Cog, Context
 from ditto.types import User
-
+from donphan import Column, Enum, MaybeAcquire, SQLType, Table
 from PIL import Image
 
 # Ignore RTC Warnings
@@ -44,6 +42,12 @@ class Button(Enum):
     RIGHT = pyboy.WindowEvent.PRESS_ARROW_RIGHT
     START = pyboy.WindowEvent.PRESS_BUTTON_START
     SELECT = pyboy.WindowEvent.PRESS_BUTTON_SELECT
+
+
+class Clicks(Table, schema="tcpp"):
+    user_id: Column[SQLType.BigInt] = Column(primary_key=True)
+    timestamp: Column[SQLType.Timestamp] = Column(primary_key=True, default="NOW()")
+    click: Column[Button]
 
 
 INVERSE_BUTTON: dict[Button, int] = {
@@ -100,13 +104,17 @@ BUTTON_MAP: list[list[Optional[Button]]] = [  # type: ignore
 class UIButton(discord.ui.Button["GameBoyView"]):
     def __init__(self, button: Button, group: int):
         self.button = button
-        super().__init__(style=BUTTON_COLOR[self.button], label=BUTTON_TEXT[self.button], group=group)
+        super().__init__(style=BUTTON_COLOR[self.button], label=BUTTON_TEXT[self.button], row=group)
 
     async def callback(self, interaction: discord.Interaction):
         await self.view.input_queue.put(self.button)
 
+        await interaction.response.defer()
+
+        async with MaybeAcquire(pool=self.view.cog.bot.pool) as conn:
+            await Clicks.insert(conn, user_id=interaction.user.id, button=self.button)
+
         if self.view.game_lock.locked():
-            await interaction.response.defer()
             return
 
         async with self.view.game_lock:
@@ -118,7 +126,7 @@ class UIButton(discord.ui.Button["GameBoyView"]):
             await self.view.tick()
 
             image_url = await self.view.render()
-            await interaction.response.edit_message(embed=self.view.embed.set_image(url=image_url))
+            await interaction.message.edit(embed=self.view.embed.set_image(url=image_url))
 
 
 class SaveButton(UIButton):
@@ -153,7 +161,7 @@ class PowerButton(UIButton):
 
 class UIBlank(discord.ui.Button["GameBoyView"]):
     def __init__(self, group: int):
-        super().__init__(style=discord.ButtonStyle.secondary, label="\u200b", disabled=True, group=group)
+        super().__init__(style=discord.ButtonStyle.secondary, label="\u200b", disabled=True, row=group)
 
 
 class GameBoyView(discord.ui.View):

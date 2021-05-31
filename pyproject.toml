@@ -21,6 +21,7 @@ ics = ">=0.7"
 rsmarkov = ">=0.1.2"
 bottomify = ">=1.1.1"
 pyboy = "^1.0.0"
+vflip = {git = "https://github.com/bijij/vflip"}
 
 
 [tool.poetry.dev-dependencies]

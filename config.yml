@@ -60,6 +60,9 @@
         cogs.games.gameboy: !Config
             RENDER_CHANNEL: !Channel 551765961070608384 847779308793233428
 
+        cogs.games.voltorb_flip: !Config
+            RENDER_CHANNEL: !Channel 551765961070608384 847779308793233428
+
         # General Extensions
         cogs.reminders: ~
         

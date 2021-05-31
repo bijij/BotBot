@@ -218,7 +218,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3161+gc4752181"
+version = "2.0.0a3191+g4a3491cc"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -236,7 +236,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "c4752181128cb006f372c16bd296c0b5db31e8a7"
+resolved_reference = "4a3491cc0a012d5ea1594dd92c5e49f49739cad3"
 
 [[package]]
 name = "ditto"
@@ -282,7 +282,7 @@ docs = ["sphinx (>=3.5.3)", "sphinxcontrib_trio (>=1.1.2)", "sphinxcontrib-websu
 
 [[package]]
 name = "humanize"
-version = "3.5.0"
+version = "3.6.0"
 description = "Python humanize utilities"
 category = "main"
 optional = false
@@ -307,11 +307,11 @@ tatsu = ">4.2"
 
 [[package]]
 name = "idna"
-version = "3.1"
+version = "3.2"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
-python-versions = ">=3.4"
+python-versions = ">=3.5"
 
 [[package]]
 name = "import-expression"
@@ -584,6 +584,24 @@ optional = false
 python-versions = ">=2"
 
 [[package]]
+name = "vflip"
+version = "1.0.0"
+description = "Voltorb Flip engine and renderer"
+category = "main"
+optional = false
+python-versions = "^3.9"
+develop = false
+
+[package.dependencies]
+Pillow = "^8.0.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/bijij/vflip"
+reference = "master"
+resolved_reference = "70a1438b0082e3dc3290dda2f1bef42a7324af20"
+
+[[package]]
 name = "yarl"
 version = "1.6.3"
 description = "Yet another URL library"
@@ -598,7 +616,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "fbc109de5f6434fa832bdc2870064d465f037e4993a9103360f06ca204e4ee23"
+content-hash = "c1fab741122025ad3beff39ac3c48466138cfc2687f52975031dc0441a28814c"
 
 [metadata.files]
 aiohttp = [
@@ -759,8 +777,8 @@ donphan = [
     {file = "Donphan-4.4.2.tar.gz", hash = "sha256:b592643542a0709437b5ba8a65bf580a9e66416b6bf32f1726fcbba4a42a592f"},
 ]
 humanize = [
-    {file = "humanize-3.5.0-py3-none-any.whl", hash = "sha256:f584919f691ecfb67036a8639f2ac3d578f5f9073fb4cfd370a4cdf9f66aed78"},
-    {file = "humanize-3.5.0.tar.gz", hash = "sha256:a0474226e1494923f9106758e11f0c3bb4dbe5e7d84388fa78f90eb7713b5d65"},
+    {file = "humanize-3.6.0-py3-none-any.whl", hash = "sha256:6d9bee57f856418302b5d11d7229bc401882d800962a19fd6dcdd83672cb15e6"},
+    {file = "humanize-3.6.0.tar.gz", hash = "sha256:a31704cf41f023e268032c4813c6482573320150a0d986f76b245e0451bb89e1"},
 ]
 ics = [
     {file = "ics-0.7-py2.py3-none-any.whl", hash = "sha256:bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac"},
@@ -768,8 +786,8 @@ ics = [
     {file = "ics-0.7.tar.gz", hash = "sha256:81113a2bb3166c1afcd71cd450c968d40efc385601e9d8344733e00ad8f53429"},
 ]
 idna = [
-    {file = "idna-3.1-py3-none-any.whl", hash = "sha256:5205d03e7bcbb919cc9c19885f9920d622ca52448306f2377daede5cf3faac16"},
-    {file = "idna-3.1.tar.gz", hash = "sha256:c5b02147e01ea9920e6b0a3f1f7bb833612d507592c837a6c49552768f4054e1"},
+    {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
+    {file = "idna-3.2.tar.gz", hash = "sha256:467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3"},
 ]
 import-expression = [
     {file = "import_expression-1.1.4-py3-none-any.whl", hash = "sha256:292099910a4dcc65ba562377cd2265487ba573dd63d73bdee5deec36ca49555b"},
@@ -1075,6 +1093,7 @@ tzdata = [
     {file = "tzdata-2021.1-py2.py3-none-any.whl", hash = "sha256:9ad21eada54c97001e3e9858a674b3ee6bebe4a4fb2b58465930f2af0ba6c85d"},
     {file = "tzdata-2021.1.tar.gz", hash = "sha256:e19c7351f887522a1ac739d21041e592ddde6dd1b764fdefa8f7b2b3551d3d38"},
 ]
+vflip = []
 yarl = [
     {file = "yarl-1.6.3-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:0355a701b3998dcd832d0dc47cc5dedf3874f966ac7f870e0f3a6788d802d434"},
     {file = "yarl-1.6.3-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:bafb450deef6861815ed579c7a6113a879a6ef58aed4c3a4be54400ae8871478"},

@@ -136,7 +136,7 @@ class Button(discord.ui.Button["GameUI"]):
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
-        super().__init__(style=discord.ButtonStyle.blurple, label="\u200b", group=y)
+        super().__init__(style=discord.ButtonStyle.blurple, label="\u200b", row=y)
 
     @property
     def cell(self):

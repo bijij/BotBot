@@ -183,7 +183,7 @@ class NegamaxAI(AI):
 
 class Button(discord.ui.Button["Game"]):
     def __init__(self, r: int, c: int):
-        super().__init__(style=discord.ButtonStyle.secondary, label="\u200b", group=c)
+        super().__init__(style=discord.ButtonStyle.secondary, label="\u200b", row=c)
         self.r = r
         self.c = c
 
