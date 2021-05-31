@@ -29,8 +29,14 @@ class ModeButton(discord.ui.Button["Mode"]):
         super().__init__(style=style, label=label, disabled=disabled)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
         self.view.mode = self.value
+
+        for button in self.view.children:
+            button.disabled = True
+
+        self.disabled = False
+
+        await interaction.response.edit_message(view=self.view)
 
 
 class Mode(discord.ui.View):
@@ -64,12 +70,13 @@ class Button(discord.ui.Button["Game"]):
 
         self.disabled = True
 
-        if self.square.value == 0:
-            self.label = "💥"
-            self.style = discord.ButtonStyle.danger
-        else:
-            self.label = str(self.square.value)
-            self.style = discord.ButtonStyle.secondary
+        if self.square.flipped:
+            if self.square.value == 0:
+                self.label = "💥"
+                self.style = discord.ButtonStyle.danger
+            else:
+                self.label = str(self.square.value)
+                self.style = discord.ButtonStyle.secondary
 
         if self.view.game.over:
             for button in self.view.children:
