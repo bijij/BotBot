@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from PIL import Image
 
 import discord
 import vflip
@@ -12,17 +13,17 @@ COG_CONFIG = CONFIG.EXTENSIONS[__name__]
 
 
 class Button(discord.ui.Button["Game"]):
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-        super().__init__(style=discord.ButtonStyle.success, label="\u200b", row=y)
+    def __init__(self, row: int, col: int):
+        self.row = row
+        self.col = col
+        super().__init__(style=discord.ButtonStyle.success, label="\u200b", row=row)
 
     async def callback(self, interaction: discord.Interaction):
-        square = self.view.game[self.x, self.y]
+        square = self.view.game[self.col, self.row]
         square.flip()
 
         self.disabled = True
-        
+
         if square.value == 0:
             self.label = "💥"
             self.style = discord.ButtonStyle.danger
@@ -54,9 +55,9 @@ class Game(discord.ui.View):
 
         super().__init__(timeout=None)
 
-        for x in range(5):
-            for y in range(5):
-                self.add_item(Button(x, y))
+        for row in range(5):
+            for col in range(5):
+                self.add_item(Button(row, col))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.player:
@@ -69,7 +70,8 @@ class Game(discord.ui.View):
             await self.last_messsage.delete()
         fp = io.BytesIO()
 
-        self.game._render().save(fp, format="png")
+        image = self.game._render()
+        image.resize((image.width * 2, image.height * 2), Image.BILINEAR).save(fp, format="png")
         fp.seek(0)
 
         self.last_messsage = await COG_CONFIG.RENDER_CHANNEL.send(file=discord.File(fp, "voltorb.png"))
