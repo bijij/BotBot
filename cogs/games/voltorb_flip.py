@@ -33,9 +33,6 @@ class ModeButton(discord.ui.Button["Mode"]):
         self.view.mode = self.value
 
 
-MODE_BUTTONS = []
-
-
 class Mode(discord.ui.View):
     children: list[ModeButton]
 
@@ -44,8 +41,9 @@ class Mode(discord.ui.View):
         self.game = game
         self.mode: Optional[vflip.types.Value] = None
 
-        for button in MODE_BUTTONS:
-            self.add_item(button)
+        self.add_item(ModeButton(None))
+        for n in range(4):
+            self.add_item(ModeButton(n))  # type: ignore
 
 
 class Button(discord.ui.Button["Game"]):
