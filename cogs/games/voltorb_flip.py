@@ -32,9 +32,9 @@ class ModeButton(discord.ui.Button["Mode"]):
         self.view.mode = self.value
 
         for button in self.view.children:
-            button.disabled = True
+            button.disabled = False
 
-        self.disabled = False
+        self.disabled = True
 
         await interaction.response.edit_message(view=self.view)
 
