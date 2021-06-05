@@ -701,7 +701,7 @@ class Game(Generic[T]):
         if self.state.tooltip is not None:
             return self.state.tooltip.format(self.state)
         else:
-            return MISSING
+            return "idk why you saw this message tbh"
 
     @property
     def summary(self) -> str:
