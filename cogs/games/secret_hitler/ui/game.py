@@ -11,6 +11,7 @@ from ..game import *
 from .discard import DiscardUI
 from .peek import PeekUI
 from .player import PlayerUI
+from .select import SelectUI
 from .vote import VoteUI
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ SLEEP_FOR = 5
 
 class ResendMessageButton(discord.ui.Button["GameUI"]):
     def __init__(self) -> None:
-        super().__init__(style=discord.ButtonStyle.secondary, label="Re-send Game", disabled=True)
+        super().__init__(style=discord.ButtonStyle.secondary, label="Re-send Game")
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user != self.view.host:
@@ -36,7 +37,7 @@ class ResendMessageButton(discord.ui.Button["GameUI"]):
 
 class ResendViewButton(discord.ui.Button["GameUI"]):
     def __init__(self) -> None:
-        super().__init__(style=discord.ButtonStyle.secondary, label="Re-send Menu", disabled=True)
+        super().__init__(style=discord.ButtonStyle.secondary, label="Re-send Menu")
 
     async def callback(self, interaction: discord.Interaction):
         if not isinstance(self.view.view, PeekUI):
@@ -55,7 +56,7 @@ class ResendViewButton(discord.ui.Button["GameUI"]):
 
 class StopGameButton(discord.ui.Button["GameUI"]):
     def __init__(self) -> None:
-        super().__init__(style=discord.ButtonStyle.danger, label="Stop Game", disabled=True)
+        super().__init__(style=discord.ButtonStyle.danger, label="Stop Game")
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user != self.view.host:
