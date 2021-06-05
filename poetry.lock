@@ -92,7 +92,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "black"
-version = "21.5b1"
+version = "21.5b2"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -108,8 +108,9 @@ toml = ">=0.10.1"
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
-d = ["aiohttp (>=3.6.0)", "aiohttp-cors"]
+d = ["aiohttp (>=3.6.0)", "aiohttp-cors (>=0.4.0)"]
 python2 = ["typed-ast (>=1.4.2)"]
+uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "bottomify"
@@ -218,7 +219,7 @@ resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a3191+g4a3491cc"
+version = "2.0.0a3206+gdbd9ed2c"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -236,7 +237,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/rapptz/discord.py"
 reference = "master"
-resolved_reference = "4a3491cc0a012d5ea1594dd92c5e49f49739cad3"
+resolved_reference = "dbd9ed2c418b988d3413087ff1e724971a6c52a5"
 
 [[package]]
 name = "ditto"
@@ -264,7 +265,7 @@ tzdata = {version = ">=2021.1", markers = "sys_platform == \"win32\""}
 type = "git"
 url = "https://github.com/bijij/ditto"
 reference = "master"
-resolved_reference = "ae95e545d6a5caa96e8329a567114c1a32e1ce95"
+resolved_reference = "2d3665586dee40aa2534b38f8f4a1054ff175f00"
 
 [[package]]
 name = "donphan"
@@ -282,7 +283,7 @@ docs = ["sphinx (>=3.5.3)", "sphinxcontrib_trio (>=1.1.2)", "sphinxcontrib-websu
 
 [[package]]
 name = "humanize"
-version = "3.6.0"
+version = "3.7.0"
 description = "Python humanize utilities"
 category = "main"
 optional = false
@@ -345,9 +346,9 @@ python-versions = ">=3.8.0"
 develop = false
 
 [package.dependencies]
-braceexpand = ">=0.1.5"
-"discord.py" = ">=1.5.0"
-humanize = "*"
+braceexpand = ">=0.1.7"
+"discord.py" = ">=1.7.2"
+humanize = ">=3.7.0"
 import-expression = ">=1.0.0,<2.0.0"
 
 [package.extras]
@@ -360,7 +361,7 @@ voice = ["discord.py[voice] (>=1.5.0)", "youtube-dl"]
 type = "git"
 url = "https://github.com/Gorialis/jishaku"
 reference = "master"
-resolved_reference = "873f863052a663efab3b6184d2516e03bf16bcf9"
+resolved_reference = "a933c6f41418669764542e4c3d72f99f04f6addd"
 
 [[package]]
 name = "multidict"
@@ -585,7 +586,7 @@ python-versions = ">=2"
 
 [[package]]
 name = "vflip"
-version = "1.0.1"
+version = "1.0.2"
 description = "Voltorb Flip engine and renderer"
 category = "main"
 optional = false
@@ -599,7 +600,7 @@ Pillow = "^8.0.0"
 type = "git"
 url = "https://github.com/bijij/vflip"
 reference = "master"
-resolved_reference = "b0ba6f5a578f6508d3dd41c8feb4fc874cc851d9"
+resolved_reference = "a8f9ea62fd02ab1532cf841fd3210e4cd3383999"
 
 [[package]]
 name = "yarl"
@@ -700,8 +701,8 @@ attrs = [
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 black = [
-    {file = "black-21.5b1-py3-none-any.whl", hash = "sha256:8a60071a0043876a4ae96e6c69bd3a127dad2c1ca7c8083573eb82f92705d008"},
-    {file = "black-21.5b1.tar.gz", hash = "sha256:23695358dbcb3deafe7f0a3ad89feee5999a46be5fec21f4f1d108be0bcdb3b1"},
+    {file = "black-21.5b2-py3-none-any.whl", hash = "sha256:e5cf21ebdffc7a9b29d73912b6a6a9a4df4ce70220d523c21647da2eae0751ef"},
+    {file = "black-21.5b2.tar.gz", hash = "sha256:1fc0e0a2c8ae7d269dfcf0c60a89afa299664f3e811395d40b1922dff8f854b5"},
 ]
 bottomify = [
     {file = "bottomify-1.1.1-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:242895ded0f1a62b679828e3466491c0d04aa7e07b89d1b9de688e5ad1a14a87"},
@@ -777,8 +778,8 @@ donphan = [
     {file = "Donphan-4.4.2.tar.gz", hash = "sha256:b592643542a0709437b5ba8a65bf580a9e66416b6bf32f1726fcbba4a42a592f"},
 ]
 humanize = [
-    {file = "humanize-3.6.0-py3-none-any.whl", hash = "sha256:6d9bee57f856418302b5d11d7229bc401882d800962a19fd6dcdd83672cb15e6"},
-    {file = "humanize-3.6.0.tar.gz", hash = "sha256:a31704cf41f023e268032c4813c6482573320150a0d986f76b245e0451bb89e1"},
+    {file = "humanize-3.7.0-py3-none-any.whl", hash = "sha256:5eaafcd584fd01ab9a59f040e20b3daa35a24e8125d4c84788392d799be2012a"},
+    {file = "humanize-3.7.0.tar.gz", hash = "sha256:8b1463a17bf722c06712ac9d31f7e46efd048dd4e76fafeac9f3b8f972b0b8e3"},
 ]
 ics = [
     {file = "ics-0.7-py2.py3-none-any.whl", hash = "sha256:bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac"},

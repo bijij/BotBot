@@ -3,7 +3,7 @@ name = "botbot"
 version = "0.1.0"
 description = ""
 authors = ["bijij <josh@josh-is.gay>"]
-license = "Apache-2.0"
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
