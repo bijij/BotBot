@@ -662,8 +662,6 @@ class GameOver(GameState[T]):
 
 class Game(Generic[T]):
     def __init__(self, identifiers: Collection[T]) -> None:
-        self._message: str = MISSING
-        self.tooltip: str = MISSING
         self._summary: list[str] = []
 
         # Players
@@ -690,12 +688,20 @@ class Game(Generic[T]):
         self.veto_enabled: bool = False
 
         self.state: GameState[T] = PresidencyRotates(self, start=True)
+        
         self.game_over: bool = False
         self.winners: Party = MISSING
 
     @property
     def message(self) -> str:
-        return self._message + "\n\n" + BOARD.format(self)
+        return self.state.message.format(self.state) + "\n\n" + BOARD.format(self)
+
+    @property
+    def tooltip(self) -> str:
+        if self.state.tooltip is not None:
+            return self.state.tooltip.format(self.state)
+        else:
+            return MISSING
 
     @property
     def summary(self) -> str:
@@ -739,11 +745,6 @@ class Game(Generic[T]):
     def next_state(self):
         try:
             self.state = self.state.next_state()
-            self._message = self.state.message.format(self.state)
-            if self.state.tooltip is not None:
-                self.tooltip = self.state.tooltip.format(self.state)
-            else:
-                self.tooltip = MISSING
-            self._summary.append(self._message)
+            self._summary.append(self.state.message.format(self.state))
         except StopIteration:
             pass
