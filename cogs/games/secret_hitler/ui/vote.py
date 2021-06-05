@@ -7,6 +7,7 @@ from ditto.types import User
 from ditto.utils.collections import format_list
 
 from ..game import Player, VoteGameState
+from .input import InputUI
 
 if TYPE_CHECKING:
     from .game import GameUI
@@ -14,15 +15,15 @@ if TYPE_CHECKING:
 __all__ = ("VoteUI",)
 
 
-class VoteUI(discord.ui.View):
+class VoteUI(InputUI):
     def __init__(self, game: GameUI, voters: list[Player[User]]):
-        self.game: GameUI = game
         self.voters = voters
-        super().__init__(timeout=None)
+        super().__init__(game)
 
     @property
     def content(self) -> str:
-        return format_list(self.game.game.tooltip + "\nCurrently: {0} {1} voted.", *self.votes)
+        assert isinstance(self.game.game.state, VoteGameState)
+        return format_list(self.game.game.state.tooltip + "\nCurrently: {0} {1} voted.", *self.votes)
 
     @property
     def votes(self) -> dict[Player[User], bool]:

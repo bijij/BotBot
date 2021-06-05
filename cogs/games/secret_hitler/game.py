@@ -159,15 +159,18 @@ class GameState(Generic[T], metaclass=ABCMeta):
         raise NotImplementedError
 
     @property
-    def tooltip(self) -> str:
-        return "you shouldn't have seen this message, interesting."
-
-    @property
     def ready(self) -> bool:
         return Skip
 
     @abstractmethod
     def next_state(self) -> GameState[T]:
+        raise NotImplementedError
+
+
+class UserInputGameState(GameState[T], metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def tooltip(self) -> str:
         raise NotImplementedError
 
 
@@ -194,7 +197,7 @@ class AfterVoteGameState(GameState[T], metaclass=ABCMeta):
         return format_list("Ja: {0}", *ja) + "\n" + format_list("Nein: {0}", *nein)
 
 
-class SelectGameState(GameState[T], Generic[T, U], metaclass=ABCMeta):
+class SelectGameState(UserInputGameState[T], Generic[T, U], metaclass=ABCMeta):
     def __init__(self, game: Game[T]) -> None:
         super().__init__(game)
         self.item: U = MISSING
@@ -209,7 +212,7 @@ class SelectGameState(GameState[T], Generic[T, U], metaclass=ABCMeta):
         return self.item is not MISSING
 
 
-class VoteGameState(GameState[T], metaclass=ABCMeta):
+class VoteGameState(UserInputGameState[T], metaclass=ABCMeta):
     def __init__(self, game: Game[T]) -> None:
         super().__init__(game)
         self.votes: dict[Player[T], bool] = {}
@@ -449,7 +452,7 @@ class PresidencyRotates(GameState[T]):
         return PlayerToBeChancellor[T](self.game, self.president)
 
 
-class PolicyListPeek(GameState[T]):
+class PolicyListPeek(UserInputGameState[T]):
     message = "The Fascist policy mandates the President peek at the next 3 policies."
     tooltip = "These are the next three policies in the deck."
 
@@ -688,20 +691,13 @@ class Game(Generic[T]):
         self.veto_enabled: bool = False
 
         self.state: GameState[T] = PresidencyRotates(self, start=True)
-        
+        self._message: str = self.state.message.format(self.state)
         self.game_over: bool = False
         self.winners: Party = MISSING
 
     @property
     def message(self) -> str:
-        return self.state.message.format(self.state) + "\n\n" + BOARD.format(self)
-
-    @property
-    def tooltip(self) -> str:
-        if self.state.tooltip is not None:
-            return self.state.tooltip.format(self.state)
-        else:
-            return "idk why you saw this message tbh"
+        return self._message + "\n\n" + BOARD.format(self)
 
     @property
     def summary(self) -> str:
@@ -745,6 +741,7 @@ class Game(Generic[T]):
     def next_state(self):
         try:
             self.state = self.state.next_state()
-            self._summary.append(self.state.message.format(self.state))
+            self._message = self.state.message.format(self.state)
+            self._summary.append(self._message)
         except StopIteration:
             pass

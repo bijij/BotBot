@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import discord
 from ditto.types import User
@@ -13,9 +13,6 @@ from .peek import PeekUI
 from .player import PlayerUI
 from .select import SelectUI
 from .vote import VoteUI
-
-if TYPE_CHECKING:
-    from .select import *
 
 __all__ = ("GameUI",)
 
@@ -51,7 +48,7 @@ class ResendViewButton(discord.ui.Button["GameUI"]):
             )
             return
 
-        await interaction.response.send_message(self.view.game.tooltip, view=self.view.view, ephemeral=True)
+        await interaction.response.send_message(self.view.view.tooltip, view=self.view.view, ephemeral=True)
 
 
 class StopGameButton(discord.ui.Button["GameUI"]):
@@ -88,8 +85,10 @@ class GameUI(discord.ui.View):
 
         super().__init__(timeout=None)
 
+        self.resend_view = ResendViewButton()
+
         self.add_item(ResendMessageButton())
-        self.add_item(ResendViewButton())
+        self.add_item(self.resend_view)
         self.add_item(BlankButton())
         self.add_item(BlankButton())
         self.add_item(StopGameButton())
@@ -106,7 +105,8 @@ class GameUI(discord.ui.View):
         await old_message.delete()
 
     def stop(self) -> None:
-        del self.games[self.message.channel.id]
+        if self.channel.id in self.games:
+            del self.games[self.channel.id]
         super().stop()
 
     def cancel(self) -> None:
@@ -119,12 +119,12 @@ class GameUI(discord.ui.View):
         if isinstance(self.view, SelectUI):
             if isinstance(self.view, PeekUI):
                 interaction = self.interactions.pop(self.view.target.identifier)
-                await interaction.followup.send(self.game.tooltip, view=self.view, ephemeral=True)
+                await interaction.followup.send(self.view.tooltip, view=self.view, ephemeral=True)
             else:
-                await self.channel.send(self.game.tooltip, reference=self.message, view=self.view)
+                await self.channel.send(self.view.tooltip, reference=self.message, view=self.view)
 
         elif isinstance(self.view, VoteUI):
-            await self.channel.send(self.game.tooltip, reference=self.message, view=self.view)
+            await self.channel.send(self.view.tooltip, reference=self.message, view=self.view)
 
     async def update(self) -> None:
         state = self.game.state
@@ -139,7 +139,6 @@ class GameUI(discord.ui.View):
             else:
                 target = self.game.president
 
-            # Determine view type.
             if isinstance(state, PolicyListPeek):
                 self.view = PeekUI(self, target, state.policies)
             elif isinstance(state, PlayerWasInvestigated):
@@ -152,6 +151,11 @@ class GameUI(discord.ui.View):
 
         elif isinstance(state, VoteGameState):
             self.view = VoteUI(self, state.voters)
+
+        if isinstance(self.view, PeekUI):
+            self.resend_view.disabled = False
+        else:
+            self.resend_view.disabled = True
 
         await self.message.edit(content=self.game.message, view=self)
         if self.view is not None:

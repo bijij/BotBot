@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from ..game import Player, SelectGameState
-from typing import Any, TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import discord
-from discord.utils import MISSING
+
+from ..game import Player, SelectGameState, UserInputGameState
+from .input import InputUI
 
 if TYPE_CHECKING:
     from .game import GameUI
@@ -32,15 +33,13 @@ class SelectButton(discord.ui.Button[V], Generic[T, V]):
             self.view.game.waiting.set()
 
 
-class SelectUI(discord.ui.View, Generic[T], metaclass=ABCMeta):
+class SelectUI(InputUI, Generic[T], metaclass=ABCMeta):
     children: list[SelectButton]
 
     def __init__(self, game: GameUI, target: Player, options: list[T]):
-        self.game = game
         self.target = target
         self.options = options
-
-        super().__init__(timeout=None)
+        super().__init__(game)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         player = self.game.game.get_player(interaction.user)
