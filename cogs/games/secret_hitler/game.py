@@ -160,7 +160,7 @@ class GameState(Generic[T], metaclass=ABCMeta):
 
     @property
     def tooltip(self) -> str:
-        return ""
+        return "you shouldn't have seen this message, interesting."
 
     @property
     def ready(self) -> bool:
