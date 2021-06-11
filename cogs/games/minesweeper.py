@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from random import sample
+
 import discord
-
 from discord.ext import boardgames, commands
-
+from discord.utils import MISSING
 from ditto import Cog, Context
+from ditto.types import User, TextChannel
 
 
 class Cell:
@@ -133,14 +136,15 @@ class Game(boardgames.Board[Cell]):
 
 
 class Button(discord.ui.Button["GameUI"]):
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int, offset: int):
         self.x = x
         self.y = y
+        self.offset = offset
         super().__init__(style=discord.ButtonStyle.blurple, label="\u200b", row=y)
 
     @property
     def cell(self):
-        return self.view.board[self.x, self.y]
+        return self.view.meta.board[self.x, self.y + self.offset]
 
     def reveal(self):
         self.disabled = True
@@ -155,49 +159,74 @@ class Button(discord.ui.Button["GameUI"]):
             self.label = str(self.cell.number or "\u200b")
 
     def click(self):
-        self.view.board.click(self.y, self.x)
-        self.view.board.clean()
+        self.view.meta.board.click(self.y + self.offset, self.x)
+        self.view.meta.board.clean()
 
-        for child in self.view.children:
-            if child.cell.clicked:
-                child.reveal()
+        for view in self.view.meta.views:
+            for child in view.children:
+                if child.cell.clicked:
+                    child.reveal()
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         self.click()
-
-        content = "Minesweeper!"
-
-        if self.view.board.lost or self.view.board.solved:
-            if self.view.board.lost:
-                content = "💥"
-            elif self.view.board.solved:
-                content = "<:_:739613733474795520>"
-
-            for child in self.view.children:
-                child.disabled = True
-
-            self.view.stop()
-
-        await interaction.response.edit_message(content=content, view=self.view)
+        await self.view.meta.update()
 
 
 class GameUI(discord.ui.View):
     children: list[Button]
 
-    def __init__(self, player):
-        self.player = player
+    def __init__(self, meta: MetaGameUI, offset: int):
+        self.meta = meta
+        self.offset = offset
+        self.message = MISSING
+
         super().__init__(timeout=None)
-        self.board = Game(5, 5)
 
         for r in range(5):
             for c in range(5):
-                self.add_item(Button(r, c))
+                self.add_item(Button(r, c, offset))
 
     async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.user != self.player:
+        if interaction.user != self.meta.player:
             await interaction.response.send_message("Sorry, you are not playing", ephemeral=True)
             return False
         return True
+
+    async def update(self):
+        if self.offset != 0:
+            content = "\u200b"
+        else:
+            if self.meta.board.lost:
+                content = "💥"
+            elif self.meta.board.solved:
+                content = "<:_:739613733474795520>"
+            else:
+                content = "Minesweeper!"
+        await self.message.edit(content=content, view=self)
+
+
+class MetaGameUI:
+    def __init__(self, player: User, channel: TextChannel, size: int = 2):
+        self.player = player
+        self.channel = channel
+
+        self.board = Game(5, size * 5)
+        self.views = [GameUI(self, i * 5) for i in range(size)]
+
+    async def update(self):
+        if self.board.lost or self.board.solved:
+            for view in self.views:
+                for child in view.children:
+                    child.disabled = True
+                view.stop()
+
+        for view in self.views:
+            await view.update()
+
+    async def start(self):
+        for view in self.views:
+            view.message = await self.channel.send(content="Minesweeper" if view.offset == 0 else "\u200b", view=view)
 
 
 def is_no_game(ctx: Context):
@@ -231,8 +260,7 @@ class Minesweeper(Cog):
     async def ms_start(self, ctx):
         """Starts a Minesweeper game"""
         if ctx.invoked_subcommand is None:
-            game = GameUI(ctx.author)
-            await ctx.send("Minesweeper!", view=game)  # type: ignore
+            await MetaGameUI(ctx.author, ctx.channel).start()
 
     @ms_start.command(name="tiny")
     async def ms_start_tiny(self, ctx):
