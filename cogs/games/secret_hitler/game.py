@@ -120,9 +120,9 @@ POLICIES: dict[Party, int] = {
 }
 
 POWERS: dict[PlayerCount, list[Optional[Power]]] = {
-    5: [None, None, Power.Peek],
-    7: [None, Power.Investigate, Power.Election],
-    9: [Power.Investigate, Power.Investigate, Power.Election],
+    5: [None, None, None, Power.Peek],
+    7: [None, None, Power.Investigate, Power.Election],
+    9: [None, Power.Investigate, Power.Investigate, Power.Election],
 }
 
 [POWERS[k].extend([Power.Execution] * 2) for k in POWERS]

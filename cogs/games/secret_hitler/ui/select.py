@@ -49,9 +49,11 @@ class SelectUI(InputUI, Generic[T], metaclass=ABCMeta):
         return True
 
     async def disable(self, interaction: discord.Interaction) -> None:
-        for button in self.children:
-            button.disabled = True
-        await interaction.response.edit_message(view=self)
+        # for button in self.children:
+        #     button.disabled = True
+        # await interaction.response.edit_message(view=self)
+        player = self.game.game.get_player(interaction.user)
+        self.game.interactions[player.identifier] = interaction
         self.stop()
 
     @property
