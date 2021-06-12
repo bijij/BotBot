@@ -53,7 +53,7 @@ class Game(boardgames.Board[Cell]):
         cells = [(i // self.size_x, i % self.size_x) for i in range(self.size_x * self.size_y)]
         cells.remove((click_y, click_x))
 
-        for y, x in sample(cells, max(int((self.size_y * self.size_x) // (6 + 2 / 4)), 5)):
+        for y, x in sample(cells, int((self.size_x * self.size_y + 1) // ((self.size_x * self.size_y) ** 0.5))):
             self[x, y].mine = True
 
     @property

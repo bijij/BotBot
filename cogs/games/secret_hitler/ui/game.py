@@ -151,6 +151,8 @@ class GameUI(discord.ui.View):
 
         elif isinstance(state, VoteGameState):
             self.view = VoteUI(self, state.voters)
+        else:
+            self.view = None
 
         if isinstance(self.view, PeekUI):
             self.resend_view.disabled = False
