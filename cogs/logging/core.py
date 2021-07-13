@@ -188,7 +188,7 @@ class Logging(Cog):
                 message.id,
                 message.guild.id,
                 message.author.id,
-                message.content,
+                message.content.replace('\x00', ''),
                 message.channel.is_nsfw(),  # type: ignore
             )
         )
@@ -206,11 +206,11 @@ class Logging(Cog):
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if payload.data.get("content"):
             self.bot._message_update_log.append(
-                MessageUpdateLogEntry(payload.message_id, discord.utils.utcnow(), payload.data["content"])
+                MessageUpdateLogEntry(payload.message_id, discord.utils.utcnow(), payload.data["content"].replace('\x00', ''))
             )
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
+    async def on_presence_update(self, before: discord.Member, after: discord.Member):
         if before.status == after.status:
             changed = {a.type for a in before.activities} ^ {a.type for a in after.activities}
             if discord.ActivityType.streaming not in changed:
